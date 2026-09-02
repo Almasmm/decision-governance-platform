@@ -27,10 +27,19 @@ import {
   type DashboardAction,
 } from "@/lib/presentation/dashboard";
 import type { DecisionStatus } from "@/lib/domain";
-import { COMPANY_FACTS_2025, COMPANY_REPORT_SOURCE, COMPANY_REPORT_URL } from "@/lib/company";
+import {
+  COMPANY_1H2026_SOURCE,
+  COMPANY_1H2026_URL,
+  COMPANY_2025_REPORT_SOURCE,
+  COMPANY_2025_REPORT_URL,
+  COMPANY_ACTUALS_1H2026,
+  COMPANY_DIGITAL_FACTS_2025,
+  COMPANY_GUIDANCE_2026,
+  type CompanyFact,
+} from "@/lib/company";
 import { ru } from "@/lib/i18n/ru";
 import { cn } from "@/lib/utils";
-import { CriticalityBadge } from "@/components/ui/badge";
+import { Badge, CriticalityBadge } from "@/components/ui/badge";
 import { StageFunnel } from "@/components/charts/stage-funnel";
 import { MaturityCard } from "@/components/maturity-card";
 
@@ -216,36 +225,90 @@ export default async function DashboardPage() {
 
       <details className="border-y border-rule bg-sheet">
         <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-base font-medium text-ink sm:px-5">
-          <span>Публичный контекст компании · интегрированный годовой отчёт 2025</span>
+          <span>Публичный контекст Казатомпрома · факт на 30 июня 2026</span>
           <span className="text-meta font-normal text-ink-muted">раскрыть</span>
         </summary>
         <div className="border-t border-rule px-4 py-4 sm:px-5">
-          <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 xl:grid-cols-4">
-            {COMPANY_FACTS_2025.map((fact) => (
-              <div key={fact.label}>
-                <dt className="text-meta text-ink-muted">{fact.label}</dt>
-                <dd className="mt-0.5 text-base font-semibold text-ink">
-                  {fact.value}
-                  {fact.note && <span className="ml-1 text-meta font-normal text-ink-muted">{fact.note}</span>}
-                </dd>
-              </div>
-            ))}
-          </dl>
-          <a
-            href={COMPANY_REPORT_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-1.5 text-meta font-medium text-graphite hover:underline"
-          >
-            {COMPANY_REPORT_SOURCE}
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-          </a>
-          <p className="mt-1 text-meta text-ink-muted">
-            {ru.annualReportNote}. Показатели внутри паспортов решений — синтетические демо-данные.
+          <PublicFactSection
+            title="Результаты за 1 полугодие 2026"
+            badge={<Badge variant="fact">Факт</Badge>}
+            facts={COMPANY_ACTUALS_1H2026}
+          />
+          <PublicFactSection
+            title="Обновлённый прогноз на 2026 год"
+            badge={<Badge variant="forecast">Прогноз компании</Badge>}
+            facts={COMPANY_GUIDANCE_2026}
+            className="mt-5 border-t border-rule pt-5"
+          />
+          <PublicFactSection
+            title="Цифровая трансформация · 2025"
+            badge={<Badge variant="fact">Факт</Badge>}
+            facts={COMPANY_DIGITAL_FACTS_2025}
+            className="mt-5 border-t border-rule pt-5"
+          />
+          <div className="mt-5 flex flex-col gap-1 border-t border-rule pt-4">
+            <PublicSourceLink href={COMPANY_1H2026_URL} label={COMPANY_1H2026_SOURCE} />
+            <PublicSourceLink href={COMPANY_2025_REPORT_URL} label={COMPANY_2025_REPORT_SOURCE} />
+          </div>
+          <p className="mt-2 max-w-4xl text-meta text-ink-muted">
+            Внешние показатели приведены в агрегированном виде по официальным публикациям компании.
+            Прогноз не является фактом. Показатели внутри паспортов решений остаются синтетическими
+            демо-данными и не раскрывают внутреннюю информацию Казатомпрома.
           </p>
         </div>
       </details>
     </div>
+  );
+}
+
+function PublicFactSection({
+  title,
+  badge,
+  facts,
+  className,
+}: {
+  title: string;
+  badge: React.ReactNode;
+  facts: CompanyFact[];
+  className?: string;
+}) {
+  return (
+    <section className={className}>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <h3 className="text-base font-semibold text-ink">{title}</h3>
+        {badge}
+      </div>
+      <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 xl:grid-cols-4">
+        {facts.map((fact) => (
+          <div key={`${fact.label}-${fact.value}`}>
+            <dt className="text-meta text-ink-muted">{fact.label}</dt>
+            <dd className="mt-0.5 text-base font-semibold text-ink">
+              {fact.value}
+              {fact.comparison && (
+                <span className="ml-1 whitespace-nowrap text-meta font-normal text-ink-muted">
+                  {fact.comparison}
+                </span>
+              )}
+            </dd>
+            {fact.note && <p className="mt-0.5 text-meta text-ink-muted">{fact.note}</p>}
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+function PublicSourceLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex w-fit items-center gap-1.5 text-meta font-medium text-graphite hover:underline"
+    >
+      {label}
+      <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+    </a>
   );
 }
 
