@@ -4,6 +4,7 @@ import { ru } from "@/lib/i18n/ru";
 import { LogoutButton } from "@/components/logout-button";
 import { NavLink } from "@/components/nav-link";
 import { ContextBar } from "@/components/app-shell/context-bar";
+import { OnboardingBoundary } from "@/components/onboarding/onboarding-boundary";
 import type { Role } from "@/lib/domain";
 
 const NAV: Array<{
@@ -58,6 +59,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user) redirect("/login");
 
   return (
+    <OnboardingBoundary userId={user.id} role={user.role}>
     <div className="flex min-h-screen bg-paper">
       <a
         href="#main-content"
@@ -79,7 +81,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
-        <nav className="flex flex-1 flex-col px-2 py-2" aria-label="Основная навигация">
+        <nav
+          className="flex flex-1 flex-col px-2 py-2"
+          aria-label="Основная навигация"
+          data-tour="app-navigation"
+        >
           {NAV.map((group, index) => {
             const items = group.items.filter((item) => !item.roles || item.roles.includes(user.role));
             if (items.length === 0) return null;
@@ -125,5 +131,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+    </OnboardingBoundary>
   );
 }

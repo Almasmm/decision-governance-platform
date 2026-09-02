@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { ru } from "@/lib/i18n/ru";
+import { OnboardingBoundary } from "@/components/onboarding/onboarding-boundary";
+import { OnboardingHelp } from "@/components/onboarding/onboarding-help";
 
 type RoleKey = keyof typeof ru.roles;
 
@@ -109,6 +111,7 @@ export default function LoginPage() {
               className="group grid min-h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-rule px-1 py-2.5 text-left transition-colors duration-150 hover:bg-paper disabled:cursor-wait disabled:opacity-50"
               aria-label={busy ? `Выполняется вход как ${user.name}, ${ru.roles[user.role]}` : `Войти как ${user.name}, ${ru.roles[user.role]}`}
               aria-busy={busy}
+              data-tour="login-role-option"
             >
               <span className="min-w-0">
                 <span className="flex flex-wrap items-baseline gap-x-2">
@@ -131,18 +134,26 @@ export default function LoginPage() {
   );
 
   return (
-    <main className="min-h-screen bg-sheet">
+    <Suspense fallback={null}>
+    <OnboardingBoundary userId="demo-guest" role="GUEST">
+    <main className="min-h-screen bg-sheet" data-tour="login-welcome">
       <div className="grid min-h-screen lg:grid-cols-[minmax(340px,0.82fr)_minmax(0,1.18fr)]">
-        <section className="flex bg-graphite px-7 py-8 text-paper sm:px-10 lg:min-h-screen lg:px-12 lg:py-10 xl:px-16">
+        <section
+          className="flex bg-graphite px-7 py-8 text-paper sm:px-10 lg:min-h-screen lg:px-12 lg:py-10 xl:px-16"
+          data-tour="login-methodology"
+        >
           <div className="mx-auto flex w-full max-w-xl flex-col">
-            <header className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded border border-graphite-line font-technical text-base font-bold">
-                DP
+            <header className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded border border-graphite-line font-technical text-base font-bold">
+                  DP
+                </div>
+                <div>
+                  <p className="text-lead font-semibold">{ru.appName}</p>
+                  <p className="text-meta text-rule-strong">Executive Decision Intelligence</p>
+                </div>
               </div>
-              <div>
-                <p className="text-lead font-semibold">{ru.appName}</p>
-                <p className="text-meta text-rule-strong">Executive Decision Intelligence</p>
-              </div>
+              <OnboardingHelp variant="login" />
             </header>
 
             <div className="mt-8 lg:mt-10">
@@ -154,7 +165,11 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <ol className="mt-7 grid grid-cols-2 gap-x-5 gap-y-0 sm:grid-cols-4 lg:grid-cols-1" aria-label="Жизненный цикл решения">
+            <ol
+              className="mt-7 grid grid-cols-2 gap-x-5 gap-y-0 sm:grid-cols-4 lg:grid-cols-1"
+              aria-label="Жизненный цикл решения"
+              data-tour="login-lifecycle"
+            >
               {LIFECYCLE.map((stage, index) => (
                 <li key={stage} className="relative flex min-h-9 items-center gap-3 lg:min-h-10">
                   {index < LIFECYCLE.length - 1 && (
@@ -168,7 +183,7 @@ export default function LoginPage() {
               ))}
             </ol>
 
-            <div className="mt-7 border-l-2 border-rule-strong pl-4">
+            <div className="mt-7 border-l-2 border-rule-strong pl-4" data-tour="login-human-loop">
               <p className="text-base font-semibold text-paper">
                 Данные → Аналитика → Рекомендация → Решение человека
               </p>
@@ -184,7 +199,11 @@ export default function LoginPage() {
           </div>
         </section>
 
-        <section className="px-5 py-7 sm:px-8 lg:px-10 lg:py-9 xl:px-14" aria-label="Выбор роли">
+        <section
+          className="px-5 py-7 sm:px-8 lg:px-10 lg:py-9 xl:px-14"
+          aria-label="Выбор роли"
+          data-tour="login-role-selection"
+        >
           <div className="mx-auto max-w-4xl">
             <header className="border-b border-rule pb-5">
               <p className="text-meta font-semibold text-graphite">Демонстрационный доступ</p>
@@ -200,7 +219,7 @@ export default function LoginPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-6 sm:grid-cols-2">
+            <div className="mt-6 grid gap-6 sm:grid-cols-2" data-tour="login-role-groups">
               {roleGroup(ROLE_GROUPS[0]!)}
               <div className="space-y-5">
                 {ROLE_GROUPS.slice(1).map(roleGroup)}
@@ -258,5 +277,7 @@ export default function LoginPage() {
         </section>
       </div>
     </main>
+    </OnboardingBoundary>
+    </Suspense>
   );
 }

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { GlobalCommand } from "@/components/app-shell/global-command";
+import { OnboardingHelp } from "@/components/onboarding/onboarding-help";
 
 const CONTEXTS: Array<{ match: (pathname: string) => boolean; label: string; domain: string }> = [
   { match: (p) => p === "/search", label: "Глобальный поиск", domain: "Decision intelligence" },
@@ -36,6 +37,8 @@ export function ContextBar({ userName, roleLabel }: { userName: string; roleLabe
         </div>
 
         <GlobalCommand />
+
+        <OnboardingHelp />
 
         <div className="ml-auto min-w-0 shrink-0 border-l border-rule pl-4 text-right">
           <p className="hidden max-w-48 truncate text-meta text-ink-muted sm:block">{userName}</p>
