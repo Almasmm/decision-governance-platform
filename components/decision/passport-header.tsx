@@ -89,21 +89,21 @@ export function PassportHeader({
 
           <dl className="mt-5 grid gap-x-7 gap-y-3 border-t border-white/20 pt-4 text-table text-white/70 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <dt className="flex items-center gap-1.5 text-meta text-white/40">
+              <dt className="flex items-center gap-1.5 text-meta text-white/60">
                 <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
                 Орган, принимающий решение
               </dt>
               <dd className="mt-1 font-medium text-white">{decision.decisionBody.name}</dd>
             </div>
             <div>
-              <dt className="flex items-center gap-1.5 text-meta text-white/40">
+              <dt className="flex items-center gap-1.5 text-meta text-white/60">
                 <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
                 Инициатор
               </dt>
               <dd className="mt-1 font-medium text-white">{decision.initiator.name}</dd>
             </div>
             <div>
-              <dt className="flex items-center gap-1.5 text-meta text-white/40">
+              <dt className="flex items-center gap-1.5 text-meta text-white/60">
                 <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
                 Контрольный срок
               </dt>
@@ -114,7 +114,7 @@ export function PassportHeader({
               </dd>
             </div>
             <div>
-              <dt className="text-meta text-white/40">Регистрация</dt>
+              <dt className="text-meta text-white/60">Регистрация</dt>
               <dd className="mt-1 font-medium text-white">
                 {format(decision.registeredAt, "d MMMM yyyy", { locale: ruLocale })}
               </dd>

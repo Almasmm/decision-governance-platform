@@ -40,6 +40,7 @@ export function GlobalCommand() {
       <input
         ref={inputRef}
         type="search"
+        name="global-search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Поиск решения, показателя, модели или поручения…"

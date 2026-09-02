@@ -183,7 +183,7 @@ export default async function LessonsPage({
       </section>
 
       <section className="border-y border-line bg-surface py-4" aria-label="Поиск и фильтры уроков">
-        <form method="get" className="grid gap-3 px-1 lg:grid-cols-[minmax(260px,1fr)_220px_220px_auto] lg:items-end">
+        <form method="get" className="grid gap-3 px-1 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_220px_220px_auto] xl:items-end">
           <div>
             <label htmlFor="lesson-query" className="mb-1.5 block text-table font-medium text-text">
               Поиск похожей ситуации
@@ -225,7 +225,7 @@ export default async function LessonsPage({
               ))}
             </Select>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-1">
             <Button type="submit">
               <Search className="h-4 w-4" aria-hidden="true" />
               Найти

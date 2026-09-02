@@ -645,6 +645,12 @@ async function AiTab({
           id: s.id,
           tier: s.tier,
           modelName: s.model?.name ?? null,
+          modelVersion: s.model?.version ?? null,
+          modelValidatedAt: s.model?.validatedAt?.toISOString() ?? null,
+          modelAllowedForLevels: s.model
+            ? parseJson<string[]>(s.model.allowedForLevels, [])
+            : [],
+          modelLimitations: s.model?.limitations ?? null,
           content: s.content,
           explanation: s.explanation,
           sourceRefs: parseJson<Array<{ ref: string; note: string }>>(s.sourceRefs, []),
@@ -853,7 +859,7 @@ async function AuditTab({ decisionId }: { decisionId: string }) {
                           <h4 className="mt-1 text-base font-semibold text-text">{narrative.title}</h4>
                           {narrative.detail && <p className="mt-1 text-table leading-5 text-muted">{narrative.detail}</p>}
 
-                          <details className="group mt-3 rounded-control border border-line bg-canvas/70">
+                          <details className="group mt-3 rounded-control border border-line bg-canvas">
                             <summary className="flex min-h-9 cursor-pointer items-center justify-between gap-3 px-3 text-meta font-semibold text-muted hover:text-text">
                               Показать техническую запись
                               <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />

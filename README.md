@@ -27,6 +27,10 @@ npm run seed        # демо-данные: 9 пользователей, 12 р
 npm run dev         # http://localhost:3000
 ```
 
+Терминал с `npm run dev` должен оставаться открытым. Если браузер показывает
+`ERR_CONNECTION_REFUSED`, сервер не запущен: повторите `npm run dev`, дождитесь строки
+`Ready` и откройте `http://localhost:3000/login`.
+
 Приложение **полностью работает без единого внешнего API-ключа**: при отсутствии `AI_API_KEY` используется детерминированный `MockProvider`, строящий ответы из данных паспорта.
 
 Прочие команды:
@@ -75,8 +79,9 @@ npm run build          # production-сборка
 
 | Экран | Маршрут |
 | --- | --- |
-| Вход с карточками демо-ролей | `/login` |
+| Вход с ролями, сгруппированными по контуру ответственности | `/login` |
 | Дашборд руководителя | `/dashboard` |
+| Глобальный поиск решений, показателей, моделей и поручений | `/search?q=...` |
 | Реестр решений с фильтрами и поиском | `/decisions` |
 | Создание паспорта | `/decisions/new` |
 | **Паспорт решения** (9 блоков, степпер 7 стадий, чек-лист ворот) | `/decisions/[id]?tab=passport` |
@@ -84,7 +89,7 @@ npm run build          # production-сборка
 | Риск-профиль и ключевые допущения | `/decisions/[id]?tab=risks` |
 | Экономика: калькуляторы (1)–(3) и независимая проверка | `/decisions/[id]?tab=economics` |
 | Поручения с обязательной связью с KPI | `/decisions/[id]?tab=assignments` |
-| ИИ-помощник: три ступени и вердикт человека | `/decisions/[id]?tab=ai` |
+| AI Analysis Workspace: три ступени аналитики и обязательный вердикт человека | `/decisions/[id]?tab=ai` |
 | Аудит паспорта | `/decisions/[id]?tab=audit` |
 | Каталог показателей | `/indicators` |
 | Карточка показателя: история значений и data lineage | `/indicators/[id]` |
@@ -102,7 +107,7 @@ npm run build          # production-сборка
 
 ```
 app/
-  (app)/                    защищённая зона: layout с ролевой навигацией
+  (app)/                    защищённая зона: compact rail + contextual workspace
     dashboard/ decisions/ indicators/ kpi/ models/
     lessons/ boards/ roadmap/ audit/ admin/
   actions/                  server actions (мутации): проверка прав → изменение → AuditEvent
@@ -125,9 +130,9 @@ lib/
   i18n/ru.ts                все интерфейсные строки (готово к добавлению KZ/EN)
 components/
   decision/                 паспорт: шапка, степпер, чек-лист ворот, панели вкладок
-  charts/                   Recharts: воронка стадий, сравнение KPI, история значений
+  charts/                   Decision Flow, парное сравнение KPI, история значений
   provenance.tsx            происхождение любого числа
-  lineage-graph.tsx         граф происхождения данных (SVG без внешних библиотек)
+  lineage-graph.tsx         семантический путь source → evidence → decision → authority
 prisma/                     схема данных и сиды
 tests/ e2e/                 Vitest и Playwright
 ```

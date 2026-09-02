@@ -85,8 +85,9 @@ test("жизненный цикл решения уровня A с контро�
   await page.waitForURL(/\/decisions\/(?!new)[a-z0-9]{15,}/);
   const decisionUrl = new URL(page.url()).pathname;
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
-  // Бейдж уровня критичности в шапке
-  await expect(page.locator('span[title="Уровень критичности A"]')).toBeVisible();
+  // Уровень критичности показан в Decision Control Header, а не только цветом.
+  const decisionHeader = page.getByRole("region", { name: title });
+  await expect(decisionHeader.getByText("УРОВЕНЬ A", { exact: true })).toBeVisible();
 
   // ── 2. Стадия «Проблема» → «Данные»: цель, тип и орган заполнены ──────────
   await expectStage(page, "Проблема");
@@ -123,12 +124,12 @@ test("жизненный цикл решения уровня A с контро�
   // ── 6. Добавление альтернатив, включая статус-кво ─────────────────────────
   const addAlternative = async (name: string, statusQuo: boolean, economics: string) => {
     await page.goto(`${decisionUrl}?tab=alternatives`);
-    await page.getByRole("button", { name: "Развернуть форму" }).click();
+    await page.getByRole("button", { name: "Добавить вариант" }).click();
     await page.locator("#alt-name").fill(name);
     await page.locator("#alt-desc").fill(`Описание варианта: ${name}. Условия реализации и объём работ.`);
     await page.locator("#alt-sq").selectOption(statusQuo ? "true" : "false");
     await page.locator("#crit-economics").fill(economics);
-    await page.getByRole("button", { name: "Добавить альтернативу" }).click();
+    await page.getByRole("button", { name: "Добавить вариант в сравнение" }).click();
     await expect(page.getByText(name).first()).toBeVisible();
   };
 
@@ -151,7 +152,7 @@ test("жизненный цикл решения уровня A с контро�
 
   // ── 8. Риск-профиль заполняет риск-офицер ─────────────────────────────────
   await switchTo(page, USERS.riskOfficer, `${decisionUrl}?tab=risks`);
-  await page.getByRole("button", { name: "Развернуть форму" }).click();
+  await page.getByRole("button", { name: "Добавить риск", exact: true }).click();
   await page.locator("#risk-name").fill("Задержка изменения лицензии на недропользование");
   await page.locator("#risk-p0").fill("0.35");
   await page.locator("#risk-l0").fill("6500000000");
@@ -159,7 +160,7 @@ test("жизненный цикл решения уровня A с контро�
   await page.locator("#risk-l1").fill("3000000000");
   await page.locator("#risk-mit").fill("Раннее взаимодействие с регулятором и параллельная подготовка документации");
   await page.locator("#risk-trg").fill("Отсутствие решения регулятора к контрольной дате");
-  await page.getByRole("button", { name: "Добавить риск", exact: true }).click();
+  await page.getByRole("button", { name: "Добавить риск в профиль", exact: true }).click();
   await expect(page.getByText("Задержка изменения лицензии на недропользование").first()).toBeVisible();
 
   // ── 9. Расчёт эффекта и независимая проверка вторым пользователем ─────────
@@ -200,7 +201,11 @@ test("жизненный цикл решения уровня A с контро�
       "Поэтапный вариант обеспечивает достижение цели при приемлемом профиле риска и не требует единовременного пикового финансирования."
     );
   await page.getByRole("button", { name: "Утвердить выбранный вариант" }).click();
-  await expect(page.getByText("выбрано").first()).toBeVisible();
+  const humanDecision = page.getByRole("region", { name: "Решение человека" });
+  await expect(humanDecision.getByText("Зафиксированный выбор", { exact: true })).toBeVisible();
+  await expect(
+    humanDecision.getByText("Поэтапное расширение собственными силами", { exact: true }).first()
+  ).toBeVisible();
 
   // ── 12. Поручение, связанное с KPI результата ─────────────────────────────
   await switchTo(page, USERS.initiator, `${decisionUrl}?tab=assignments`);
@@ -250,9 +255,20 @@ test("жизненный цикл решения уровня A с контро�
 
   // ── 15. Аудит зафиксировал ключевые мутации ───────────────────────────────
   await page.goto(`${decisionUrl}?tab=audit`);
-  const auditText = await page.locator("table").innerText();
+  const auditPanel = page.locator('section[aria-labelledby="decision-audit-title"]');
+  await expect(auditPanel.getByRole("heading", { name: "История решения" })).toBeVisible();
+  await expect(auditPanel.locator("h4").first()).toBeVisible();
+
+  // Технические action codes существуют, но не подменяют человеческий timeline:
+  // каждый код скрыт внутри disclosure до явного раскрытия пользователем.
   for (const action of ["CREATE", "CONFIRM_QUALITY", "STAGE_ADVANCE", "DECIDE", "CLOSE"]) {
-    expect(auditText).toContain(action);
+    const actionValue = auditPanel.locator("dd").filter({ hasText: new RegExp(`^${action}$`) }).first();
+    const technicalRecord = actionValue.locator("xpath=ancestor::details");
+    await expect(technicalRecord).toHaveCount(1);
+    await expect(actionValue).toBeHidden();
+    await technicalRecord.getByText("Показать техническую запись", { exact: true }).click();
+    await expect(actionValue).toBeVisible();
+    await expect(actionValue).toHaveText(action);
   }
 
   // Урок попал в общую базу знаний
@@ -268,9 +284,14 @@ test("ИИ не применяет рекомендацию без вердик�
   const url = new URL(page.url()).pathname;
 
   await page.goto(`${url}?tab=ai`);
-  await expect(page.getByText("Принцип «человек в контуре»")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI-анализ решения" })).toBeVisible();
+  await expect(page.getByText("Governance gates")).toBeVisible();
   await expect(page.getByText("Ожидает вердикта").first()).toBeVisible();
-  // Отклонение рекомендации — отдельная равноправная кнопка
+  await expect(page.getByText("Рекомендация не применена").first()).toBeVisible();
+  await expect(page.getByText("Human verdict").first()).toBeVisible();
+  // Все три человеческих исхода доступны как равноправные действия.
+  await expect(page.getByRole("button", { name: "Принять рекомендацию" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Принять с изменениями" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Отклонить рекомендацию" })).toBeVisible();
 });
 

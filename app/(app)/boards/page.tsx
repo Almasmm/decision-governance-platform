@@ -99,10 +99,11 @@ export default async function BoardsPage({
       where: { type: { in: [...panel.types] } },
       include: {
         decisionBody: true,
-        blocks: { select: { completeness: true } },
+        blocks: { select: { kind: true, completeness: true } },
         indicatorLinks: { select: { isCritical: true, confirmedAt: true } },
         assumptions: { include: { owner: true }, orderBy: { validUntil: "asc" } },
         assignments: { include: { assignee: true, linkedKpi: true }, orderBy: { dueDate: "asc" } },
+        calculations: { orderBy: { calculatedAt: "desc" } },
         _count: { select: { alternatives: true, risks: true } },
       },
       orderBy: [{ criticality: "asc" }, { deadline: "asc" }, { registeredAt: "desc" }],
@@ -149,7 +150,7 @@ export default async function BoardsPage({
   const PanelIcon = panel.icon;
 
   return (
-    <main className="workspace space-y-7">
+    <div className="workspace space-y-7">
       <header className="border-b border-line pb-5">
         <p className="eyebrow">Единая доказательная база · четыре управленческие оптики</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
@@ -278,14 +279,14 @@ export default async function BoardsPage({
         Все панели читают единые паспорта решений и один каталог показателей. Демо-значения
         синтетические и не являются официальными показателями компании.
       </p>
-    </main>
+    </div>
   );
 }
 
 function Metric({ label, value, action = false }: { label: string; value: string; action?: boolean }) {
   return (
     <div>
-      <div className={cn("text-decision font-semibold tabular-nums", action && "text-[#F2B48F]")}>{value}</div>
+      <div className={cn("text-decision font-semibold tabular-nums", action && "text-signal-2")}>{value}</div>
       <div className="mt-1 text-meta text-white/55">{label}</div>
     </div>
   );
@@ -293,7 +294,7 @@ function Metric({ label, value, action = false }: { label: string; value: string
 
 type BoardDecision = Awaited<ReturnType<typeof prisma.decision.findMany>>[number] & {
   decisionBody: { id: string; name: string; kind: string };
-  blocks: Array<{ completeness: number }>;
+  blocks: Array<{ kind: string; completeness: number }>;
   indicatorLinks: Array<{ isCritical: boolean; confirmedAt: Date | null }>;
   assumptions: Array<{
     id: string; text: string; value: string | null; confidence: string; validUntil: Date;
@@ -303,6 +304,11 @@ type BoardDecision = Awaited<ReturnType<typeof prisma.decision.findMany>>[number
     id: string; text: string; status: string; dueDate: Date;
     assignee: { id: string; name: string; email: string; role: string; passwordHash: string; createdAt: Date };
     linkedKpi: { id: string; code: string; name: string } | null;
+  }>;
+  calculations: Array<{
+    id: string; kind: string; result: number; calculatedAt: Date;
+    decisionId: string; inputs: string; calculatedById: string;
+    isConservative: boolean; attributionNote: string | null;
   }>;
   _count: { alternatives: number; risks: number };
 };
@@ -369,36 +375,42 @@ function InvestmentWorkspace({ decisions }: { decisions: BoardDecision[] }) {
       <p className="eyebrow">Капитал и stage gates</p>
       <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
         <h2 className="text-section font-semibold text-text">Готовность инвестиционных пакетов</h2>
-        <p className="text-meta text-muted">Альтернативы и риск — обязательная цена необратимости</p>
+        <p className="text-meta text-muted">NPV, sensitivity и funding показываются только когда зафиксированы в evidence</p>
       </div>
       <div className="mt-4 overflow-x-auto border-y border-line">
-        <table className="w-full min-w-[860px] border-collapse text-left text-table">
+        <table className="w-full min-w-[980px] border-collapse text-left text-table">
           <thead className="bg-surface-raised text-meta uppercase tracking-wider text-muted">
             <tr>
               <th className="px-4 py-3 font-semibold">Решение</th>
-              <th className="px-3 py-3 font-semibold">Доказанность</th>
+              <th className="px-3 py-3 font-semibold">NPV</th>
+              <th className="px-3 py-3 font-semibold">Экономика / funding</th>
               <th className="px-3 py-3 font-semibold">Альтернативы</th>
               <th className="px-3 py-3 font-semibold">Риски</th>
-              <th className="px-3 py-3 font-semibold">Орган</th>
               <th className="px-4 py-3 text-right font-semibold">Вывод</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
             {decisions.map((decision) => {
               const coverage = evidenceCoverage(decision);
-              const ready = coverage >= 80 && decision._count.alternatives >= 2 && decision._count.risks > 0;
+              const latestNpv = decision.calculations.find((calculation) => calculation.kind === "NPV");
+              const economicsCoverage = decision.blocks.find((block) => block.kind === "ECONOMICS")?.completeness ?? 0;
+              const ready = coverage >= 80 && economicsCoverage >= 80 && decision._count.alternatives >= 2 && decision._count.risks > 0;
               return (
                 <tr key={decision.id} className="bg-surface align-top hover:bg-surface-raised">
                   <td className="px-4 py-4">
                     <Link href={`/decisions/${decision.id}`} className="font-medium text-text hover:text-accent hover:underline">{decision.title}</Link>
                     <span className="mt-1 block font-mono text-meta text-muted">{decision.code}</span>
                   </td>
-                  <td className="px-3 py-4 font-semibold tabular-nums text-text">{coverage}%</td>
+                  <td className="px-3 py-4 font-semibold tabular-nums text-text">{latestNpv ? formatMoney(latestNpv.result) : <span className="font-normal text-action">Не рассчитан</span>}</td>
+                  <td className="px-3 py-4">
+                    <span className="block font-semibold tabular-nums text-text">{economicsCoverage}%</span>
+                    <span className="text-meta text-muted">доказанность блока</span>
+                  </td>
                   <td className="px-3 py-4 tabular-nums text-text">{decision._count.alternatives}</td>
                   <td className="px-3 py-4 tabular-nums text-text">{decision._count.risks}</td>
-                  <td className="max-w-48 px-3 py-4 text-muted">{decision.decisionBody.name}</td>
                   <td className="px-4 py-4 text-right">
-                    <Badge variant={ready ? "resolvedSoft" : "partial"}>{ready ? "Пакет готов" : "Нужны доказательства"}</Badge>
+                    <Badge variant={ready ? "resolvedSoft" : "partial"}>{ready ? "Evidence покрыто" : "Есть пробелы"}</Badge>
+                    <span className="mt-1 block text-meta tabular-nums text-muted">всего {coverage}%</span>
                   </td>
                 </tr>
               );
@@ -513,6 +525,7 @@ function RiskWorkspace({
                 <div>
                   <p className="text-base font-medium text-text">{risk.name}</p>
                   <Link href={`/decisions/${risk.decision.id}`} className="mt-1 inline-block font-mono text-meta text-accent hover:underline">{risk.decision.code}</Link>
+                  <p className="mt-2 max-w-xl text-meta leading-5 text-muted">Мера контроля: {risk.mitigation}</p>
                 </div>
                 <SmallMetric label="Исходный" value={formatMoney(initial)} />
                 <SmallMetric label="Остаточный" value={formatMoney(residual)} />

@@ -59,6 +59,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-paper">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-control focus:bg-surface focus:px-4 focus:py-2 focus:text-base focus:font-semibold focus:text-text focus:shadow-overlay"
+      >
+        Перейти к основному содержимому
+      </a>
       <aside className="sticky top-0 z-40 flex h-screen w-[72px] shrink-0 flex-col border-r border-graphite-line bg-graphite xl:w-20">
         <div className="flex h-16 shrink-0 items-center justify-center border-b border-graphite-line">
           <div
@@ -114,7 +120,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <div className="min-w-0 flex-1">
         <ContextBar userName={user.name} roleLabel={ru.roles[user.role]} />
-        <main className="mx-auto min-w-0 w-full max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8">
+        <main id="main-content" tabIndex={-1} className="mx-auto min-w-0 w-full max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8">
           {children}
         </main>
       </div>

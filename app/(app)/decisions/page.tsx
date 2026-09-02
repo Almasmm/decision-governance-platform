@@ -85,11 +85,12 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
           </p>
         </div>
         {can(user.role, "decision.create") && (
-          <Link href="/decisions/new">
-            <Button size="lg">
-              <Plus className="h-4 w-4" />
-              Создать паспорт
-            </Button>
+          <Link
+            href="/decisions/new"
+            className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-control bg-accent px-5 font-ui text-lead font-semibold text-surface transition-colors duration-150 hover:bg-obsidian"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Создать паспорт
           </Link>
         )}
       </header>
@@ -101,7 +102,7 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
         </div>
         <div className="border-t border-obsidian-line px-5 py-4 sm:border-l sm:border-t-0">
           <div className="text-hero font-semibold tracking-[-0.04em] text-action-step-3">{blockedCount}</div>
-          <div className="text-table text-line-strong">заблокированы gate</div>
+          <div className="text-table text-line-strong">заблокированы контрольными воротами</div>
         </div>
         <div className="border-t border-obsidian-line px-5 py-4 sm:border-l sm:border-t-0">
           <div className="flex items-baseline gap-4">
@@ -113,41 +114,43 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
       </section>
 
       <section className="surface-band p-4" aria-label="Фильтры реестра">
-        <form method="get" className="grid gap-3 md:grid-cols-[minmax(260px,2fr)_repeat(3,minmax(140px,1fr))_auto]">
+        <form method="get" className="grid gap-3 lg:grid-cols-[minmax(260px,2fr)_repeat(3,minmax(140px,1fr))_auto]">
           <label className="relative">
             <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted" aria-hidden="true" />
             <input
+              type="search"
               name="q"
               defaultValue={f.q ?? ""}
               placeholder="Код, название или управленческая цель"
-              className="h-9 w-full rounded-control border border-line bg-surface pl-9 pr-3 text-base text-text placeholder:text-muted focus:border-accent focus:outline-none"
+              aria-label="Поиск по коду, названию или управленческой цели"
+              className="h-9 w-full rounded-control border border-line bg-surface pl-9 pr-3 text-base text-text placeholder:text-muted focus:border-accent"
             />
           </label>
-          <select name="criticality" defaultValue={f.criticality ?? ""} className="h-9 rounded-control border border-line bg-surface px-3 text-table">
+          <select name="criticality" defaultValue={f.criticality ?? ""} aria-label="Уровень критичности" className="h-9 rounded-control border border-line bg-surface px-3 text-table">
             <option value="">Все уровни</option>
             {CRITICALITIES.map((level) => <option key={level} value={level}>{ru.criticality[level]}</option>)}
           </select>
-          <select name="stage" defaultValue={f.stage ?? ""} className="h-9 rounded-control border border-line bg-surface px-3 text-table">
+          <select name="stage" defaultValue={f.stage ?? ""} aria-label="Стадия жизненного цикла" className="h-9 rounded-control border border-line bg-surface px-3 text-table">
             <option value="">Все стадии</option>
             {STAGES.map((stage) => <option key={stage} value={stage}>{ru.stages[stage]}</option>)}
           </select>
-          <select name="status" defaultValue={f.status ?? ""} className="h-9 rounded-control border border-line bg-surface px-3 text-table">
+          <select name="status" defaultValue={f.status ?? ""} aria-label="Статус решения" className="h-9 rounded-control border border-line bg-surface px-3 text-table">
             <option value="">Все статусы</option>
             {STATUSES.map((status) => <option key={status} value={status}>{ru.statuses[status]}</option>)}
           </select>
           <Button type="submit">
-            <Filter className="h-4 w-4" />
+            <Filter className="h-4 w-4" aria-hidden="true" />
             Применить
           </Button>
 
-          <details className="md:col-span-full">
+          <details className="lg:col-span-full">
             <summary className="cursor-pointer text-table font-medium text-accent">Дополнительные фильтры</summary>
             <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">
-              <select name="type" defaultValue={f.type ?? ""} className="h-9 rounded-control border border-line bg-surface px-3 text-table">
+              <select name="type" defaultValue={f.type ?? ""} aria-label="Тип решения" className="h-9 rounded-control border border-line bg-surface px-3 text-table">
                 <option value="">Все типы решений</option>
                 {DECISION_TYPES.map((type) => <option key={type} value={type}>{ru.decisionTypes[type]}</option>)}
               </select>
-              <select name="body" defaultValue={f.body ?? ""} className="h-9 min-w-56 rounded-control border border-line bg-surface px-3 text-table">
+              <select name="body" defaultValue={f.body ?? ""} aria-label="Орган принятия решения" className="h-9 min-w-56 rounded-control border border-line bg-surface px-3 text-table">
                 <option value="">Все органы принятия</option>
                 {bodies.map((body) => <option key={body.id} value={body.id}>{body.name}</option>)}
               </select>
@@ -155,26 +158,30 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
                 <input type="checkbox" name="overdue" value="1" defaultChecked={f.overdue === "1"} />
                 Только просроченные
               </label>
-              <Link href="/decisions">
-                <Button type="button" variant="ghost" size="sm">Сбросить</Button>
+              <Link
+                href="/decisions"
+                className="inline-flex min-h-8 items-center justify-center rounded-control px-3 text-table font-semibold text-muted transition-colors duration-150 hover:bg-surface-raised hover:text-text"
+              >
+                Сбросить
               </Link>
             </div>
           </details>
         </form>
       </section>
 
-      <section className="overflow-x-auto rounded-panel bg-surface shadow-panel" aria-label="Решения">
-        <Table>
+      <section className="overflow-hidden rounded-panel bg-surface shadow-panel" aria-label="Решения">
+        <Table tabIndex={0}>
+          <caption className="sr-only">Реестр управленческих решений с текущей стадией, состоянием контрольных ворот и ответственностью</caption>
           <THead>
             <TR>
-              <TH>Code / title</TH>
-              <TH>Criticality</TH>
-              <TH>Stage</TH>
-              <TH>Gate</TH>
-              <TH>Owner</TH>
-              <TH>Body</TH>
-              <TH>Deadline</TH>
-              <TH>Status</TH>
+              <TH scope="col">Код / предмет решения</TH>
+              <TH scope="col">Уровень</TH>
+              <TH scope="col">Стадия</TH>
+              <TH scope="col">Контрольные ворота</TH>
+              <TH scope="col">Текущая ответственность</TH>
+              <TH scope="col">Орган принятия</TH>
+              <TH scope="col">Срок</TH>
+              <TH scope="col">Статус</TH>
             </TR>
           </THead>
           <TBody>
@@ -208,7 +215,7 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
                     </Link>
                     {decision.returnCount > 0 && (
                       <span className="mt-1 inline-flex items-center gap-1 text-meta text-action">
-                        <RotateCcw className="h-3 w-3" /> {decision.returnCount} возврат(а)
+                        <RotateCcw className="h-3 w-3" aria-hidden="true" /> {decision.returnCount} возврат(а)
                       </span>
                     )}
                   </TD>

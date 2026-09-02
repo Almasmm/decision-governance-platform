@@ -39,6 +39,9 @@ const BODY_KIND: Record<string, string> = {
   EXECUTIVE: "Руководитель",
 };
 
+const LINEAGE_NOT_REGISTERED = "Не зарегистрировано";
+const LINEAGE_NOT_APPLICABLE = "Не применимо";
+
 export default async function IndicatorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser();
@@ -72,6 +75,7 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
   const qualityLabels = describeQualityRules(qualityRules, indicator.maxLagDays);
   const sourceName = ru.sourceSystems[indicator.sourceSystem as SourceSystem];
   const ownerName = indicator.owner?.name ?? "Не назначен";
+  const lineageOwner = indicator.owner?.name ?? LINEAGE_NOT_REGISTERED;
 
   const backbone: LineageNode[] = [
     {
@@ -87,11 +91,13 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
       status: indicator.sourceSystem === "MANUAL" ? "attention" : "neutral",
       statusLabel: indicator.sourceSystem === "MANUAL" ? "Ручной контроль" : "Зарегистрирован",
       metadata: [
+        { label: "Дата", value: LINEAGE_NOT_REGISTERED, attention: true },
+        { label: "Владелец", value: lineageOwner, attention: !indicator.owner },
+        { label: "Версия", value: LINEAGE_NOT_REGISTERED, attention: true },
         { label: "Канал", value: autoLoadable ? "Демо-коннектор" : "Ручная фиксация" },
-        { label: "Владелец данных", value: ownerName, attention: !indicator.owner },
       ],
     },
-    buildIntegrationNode(indicator.sourceSystem, ownerName),
+    buildIntegrationNode(indicator.sourceSystem),
     {
       id: "calculation",
       title: indicator.formula ?? "Прямое измерение",
@@ -102,8 +108,10 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
       status: "verified",
       statusLabel: "Определено",
       metadata: [
+        { label: "Дата", value: LINEAGE_NOT_REGISTERED, attention: true },
+        { label: "Владелец", value: lineageOwner, attention: !indicator.owner },
+        { label: "Версия", value: LINEAGE_NOT_REGISTERED, attention: true },
         { label: "Единица", value: indicator.unit },
-        { label: "Владелец определения", value: ownerName, attention: !indicator.owner },
         { label: "Контроль качества", value: `${qualityLabels.length} правил` },
       ],
     },
@@ -118,17 +126,26 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
       statusLabel: !latest ? "Нет значения" : stale ? "Требует обновления" : "Актуально",
       nature: latest ? "fact" : undefined,
       metadata: [
+        {
+          label: "Дата",
+          value: latest
+            ? format(latest.asOf, "d MMMM yyyy", { locale: ruLocale })
+            : LINEAGE_NOT_REGISTERED,
+          attention: !latest,
+        },
+        { label: "Владелец", value: lineageOwner, attention: !indicator.owner },
+        {
+          label: "Версия",
+          value: latest
+            ? latest.versionNote ?? LINEAGE_NOT_REGISTERED
+            : LINEAGE_NOT_APPLICABLE,
+          attention: Boolean(latest && !latest.versionNote),
+        },
         { label: "Источник", value: sourceName },
         {
           label: "Лаг",
           value: lag === null ? "Не рассчитывается" : `${lag} / ${indicator.maxLagDays} дн.`,
           attention: !latest || stale,
-        },
-        { label: "Владелец", value: ownerName, attention: !indicator.owner },
-        {
-          label: "Версия",
-          value: latest?.versionNote ?? (latest ? "Без примечания" : "—"),
-          attention: Boolean(latest && !latest.versionNote),
         },
       ],
     },
@@ -149,6 +166,12 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
       href: `/decisions/${link.decisionId}`,
       metadata: [
         {
+          label: "Дата",
+          value: format(link.decision.registeredAt, "d MMMM yyyy", { locale: ruLocale }),
+        },
+        { label: "Владелец", value: LINEAGE_NOT_REGISTERED, attention: true },
+        { label: "Версия", value: LINEAGE_NOT_REGISTERED, attention: true },
+        {
           label: "Этап",
           value: ru.stages[link.decision.stage as keyof typeof ru.stages] ?? link.decision.stage,
         },
@@ -167,6 +190,9 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
       status: "neutral",
       statusLabel: "Назначен",
       metadata: [
+        { label: "Дата", value: LINEAGE_NOT_REGISTERED, attention: true },
+        { label: "Владелец", value: LINEAGE_NOT_REGISTERED, attention: true },
+        { label: "Версия", value: LINEAGE_NOT_REGISTERED, attention: true },
         {
           label: "Тип",
           value: BODY_KIND[link.decision.decisionBody.kind] ?? link.decision.decisionBody.kind,
@@ -539,7 +565,7 @@ function describeQualityRules(rules: Record<string, unknown>, maxLagDays: number
   return labels;
 }
 
-function buildIntegrationNode(sourceSystem: string, ownerName: string): LineageNode {
+function buildIntegrationNode(sourceSystem: string): LineageNode {
   if (sourceSystem === "DWH") {
     return {
       id: "integration",
@@ -549,8 +575,10 @@ function buildIntegrationNode(sourceSystem: string, ownerName: string): LineageN
       status: "demo",
       statusLabel: "Демо-коннектор",
       metadata: [
+        { label: "Дата", value: LINEAGE_NOT_REGISTERED, attention: true },
+        { label: "Владелец", value: LINEAGE_NOT_REGISTERED, attention: true },
+        { label: "Версия", value: LINEAGE_NOT_REGISTERED, attention: true },
         { label: "Маршрут", value: "DWH → каталог" },
-        { label: "Владелец показателя", value: ownerName, attention: ownerName === "Не назначен" },
       ],
     };
   }
@@ -565,8 +593,10 @@ function buildIntegrationNode(sourceSystem: string, ownerName: string): LineageN
       status: "demo",
       statusLabel: "Демо-маршрут",
       metadata: [
+        { label: "Дата", value: LINEAGE_NOT_REGISTERED, attention: true },
+        { label: "Владелец", value: LINEAGE_NOT_REGISTERED, attention: true },
+        { label: "Версия", value: LINEAGE_NOT_REGISTERED, attention: true },
         { label: "Маршрут", value: `${routeSource} → DWH` },
-        { label: "Владелец интеграции", value: "Не задан в модели", attention: true },
       ],
     };
   }
@@ -579,8 +609,10 @@ function buildIntegrationNode(sourceSystem: string, ownerName: string): LineageN
     status: "unavailable",
     statusLabel: "Не подключён",
     metadata: [
+      { label: "Дата", value: LINEAGE_NOT_APPLICABLE },
+      { label: "Владелец", value: LINEAGE_NOT_APPLICABLE },
+      { label: "Версия", value: LINEAGE_NOT_APPLICABLE },
       { label: "Маршрут", value: "Ручная регистрация" },
-      { label: "Владелец интеграции", value: "Не назначен", attention: true },
     ],
   };
 }

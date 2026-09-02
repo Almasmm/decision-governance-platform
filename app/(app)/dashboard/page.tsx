@@ -371,7 +371,7 @@ function ActionQueue({ actions }: { actions: DashboardAction[] }) {
             <li
               key={item.id}
               className={cn(
-                "grid gap-x-4 gap-y-2 border-l-2 px-4 py-3 sm:grid-cols-[132px_minmax(0,1fr)_180px_120px_18px] sm:items-center sm:px-5",
+                "grid gap-x-4 gap-y-2 border-l-2 px-4 py-3 sm:px-5 lg:grid-cols-[132px_minmax(0,1fr)_180px_120px_32px] lg:items-center",
                 item.urgency === "normal" ? "border-l-rule-strong" : "border-l-signal"
               )}
             >
@@ -401,7 +401,11 @@ function ActionQueue({ actions }: { actions: DashboardAction[] }) {
                     ? "Высокий приоритет"
                     : "В очереди"}
               </div>
-              <Link href={item.href} aria-label={`Открыть ${item.decisionCode}: ${item.action}`} className="text-graphite">
+              <Link
+                href={item.href}
+                aria-label={`Открыть ${item.decisionCode}: ${item.action}`}
+                className="inline-flex h-8 w-8 items-center justify-center justify-self-end rounded-control text-graphite hover:bg-surface-raised"
+              >
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </li>

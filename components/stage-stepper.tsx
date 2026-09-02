@@ -29,7 +29,12 @@ export function StageStepper({
         </p>
       </div>
 
-      <div className="overflow-x-auto pb-1" aria-label="Стадии и контрольные ворота">
+      <div
+        className="overflow-x-auto pb-1"
+        role="region"
+        tabIndex={0}
+        aria-label="Стадии и контрольные ворота; при необходимости область прокручивается горизонтально"
+      >
         <ol className="flex min-w-[820px] items-stretch">
           {STAGES.map((stage, index) => {
             const complete = index < currentIdx;
@@ -117,7 +122,7 @@ function GateBetweenStages({
         : `Будущие ворота к стадии «${ru.stages[destination]}»`;
 
   return (
-    <div className="flex w-8 shrink-0 flex-col items-center justify-start pt-1" aria-label={label} title={label}>
+    <div className="flex w-8 shrink-0 flex-col items-center justify-start pt-1" role="img" aria-label={label} title={label}>
       <span className={cn("h-px w-full", open ? "bg-accent" : locked ? "bg-action" : "bg-line")} />
       <span
         className={cn(
@@ -133,7 +138,7 @@ function GateBetweenStages({
           <ShieldCheck className="h-3 w-3" aria-hidden="true" />
         )}
       </span>
-      <span className="mt-1 text-[10px] leading-3 text-muted">gate</span>
+      <span className="mt-1 text-meta leading-3 text-muted">ворота</span>
     </div>
   );
 }

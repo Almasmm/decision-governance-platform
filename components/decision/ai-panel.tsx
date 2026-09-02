@@ -17,7 +17,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge, CriticalityBadge } from "@/components/ui/badge";
 import { Label, Textarea } from "@/components/ui/input";
 import { runAiTier, setAiVerdict } from "@/app/actions/ai";
 import { ru } from "@/lib/i18n/ru";
@@ -27,6 +27,10 @@ export interface SuggestionView {
   id: string;
   tier: string;
   modelName: string | null;
+  modelVersion: string | null;
+  modelValidatedAt: string | null;
+  modelAllowedForLevels: string[];
+  modelLimitations: string | null;
   content: string;
   explanation: string;
   sourceRefs: Array<{ ref: string; note: string }>;
@@ -400,20 +404,50 @@ export function AiPanel({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-table sm:grid-cols-3">
+                    <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-table sm:grid-cols-3 xl:grid-cols-6">
                       <div>
-                        <p className="text-meta uppercase tracking-[0.08em] text-muted">Provider</p>
-                        <p className="mt-1 font-semibold text-text">{providerName}</p>
+                        <dt className="text-meta uppercase tracking-[0.08em] text-muted">Провайдер</dt>
+                        <dd className="mt-1 font-semibold text-text">{providerName}</dd>
                       </div>
                       <div>
-                        <p className="text-meta uppercase tracking-[0.08em] text-muted">Sources</p>
-                        <p className="mt-1 font-semibold text-text">{sourceCount}</p>
+                        <dt className="text-meta uppercase tracking-[0.08em] text-muted">Версия</dt>
+                        <dd className="mt-1 font-technical font-semibold text-text">
+                          {suggestion.modelVersion ? `v${suggestion.modelVersion}` : "Не применимо"}
+                        </dd>
                       </div>
-                      <div className="col-span-2 sm:col-span-1">
-                        <p className="text-meta uppercase tracking-[0.08em] text-muted">Verdict</p>
-                        <p className="mt-1 font-semibold text-text">{verdictLabel(suggestion.humanVerdict)}</p>
+                      <div>
+                        <dt className="text-meta uppercase tracking-[0.08em] text-muted">Валидация</dt>
+                        <dd className="mt-1 font-semibold text-text">
+                          {suggestion.modelValidatedAt
+                            ? format(new Date(suggestion.modelValidatedAt), "d MMM yyyy", {
+                                locale: ruLocale,
+                              })
+                            : suggestion.modelName
+                              ? "Не проводилась"
+                              : "Модель не использована"}
+                        </dd>
                       </div>
-                    </div>
+                      <div>
+                        <dt className="text-meta uppercase tracking-[0.08em] text-muted">Допуск</dt>
+                        <dd className="mt-1 flex flex-wrap gap-1">
+                          {suggestion.modelAllowedForLevels.length > 0 ? (
+                            suggestion.modelAllowedForLevels.map((level) => (
+                              <CriticalityBadge key={level} level={level} className="h-6 min-w-6 px-1.5" />
+                            ))
+                          ) : (
+                            <span className="font-semibold text-action">Не зафиксирован</span>
+                          )}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-meta uppercase tracking-[0.08em] text-muted">Источники</dt>
+                        <dd className="mt-1 font-semibold text-text">{sourceCount}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-meta uppercase tracking-[0.08em] text-muted">Вердикт</dt>
+                        <dd className="mt-1 font-semibold text-text">{verdictLabel(suggestion.humanVerdict)}</dd>
+                      </div>
+                    </dl>
                   </div>
 
                   <div className="p-4 sm:p-5">
@@ -439,7 +473,7 @@ export function AiPanel({
                           <div className="flex items-center gap-2">
                             <Cpu className="h-4 w-4 text-muted" aria-hidden="true" />
                             <h5 className="text-table font-semibold uppercase tracking-[0.08em] text-muted">
-                              Reasoning
+                              Обоснование и ключевые факторы
                             </h5>
                           </div>
                           <p className="mt-2 whitespace-pre-line text-base text-text">
@@ -451,16 +485,28 @@ export function AiPanel({
                           <div className="flex items-center gap-2">
                             <TriangleAlert className="h-4 w-4 text-action" aria-hidden="true" />
                             <h5 className="text-table font-semibold uppercase tracking-[0.08em] text-muted">
-                              Uncertainties & limits
+                              Неопределённости
                             </h5>
                           </div>
-                          <p className="mt-2 text-base text-text">
-                            {TIER_LIMIT[suggestionTier] ??
-                              "Вывод зависит от полноты и актуальности доступных источников."}
-                          </p>
-                          <p className="mt-1 text-table text-muted">
-                            Модель не подтверждает факты вне перечисленных источников и не обладает
-                            полномочием утвердить решение.
+                          <dl className="mt-2 space-y-3 text-table">
+                            <div>
+                              <dt className="font-semibold text-muted">Ограничения модели</dt>
+                              <dd className="mt-1 text-base text-text">
+                                {suggestion.modelLimitations ??
+                                  "Отдельная модель не использована; применяется процедурный анализ."}
+                              </dd>
+                            </div>
+                            <div className="border-t border-line pt-3">
+                              <dt className="font-semibold text-muted">Ограничение уровня анализа</dt>
+                              <dd className="mt-1 text-text">
+                                {TIER_LIMIT[suggestionTier] ??
+                                  "Вывод зависит от полноты и актуальности доступных источников."}
+                              </dd>
+                            </div>
+                          </dl>
+                          <p className="mt-3 border-l-2 border-action pl-3 text-table text-muted">
+                            Вывод ограничен перечисленными источниками. Модель не подтверждает
+                            внешние факты и не обладает полномочием утвердить решение.
                           </p>
                         </section>
                       </aside>

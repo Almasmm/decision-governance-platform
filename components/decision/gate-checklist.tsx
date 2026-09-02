@@ -42,7 +42,7 @@ export function DecisionGatePanel({
               КОНТРОЛЬНЫЕ ВОРОТА
             </p>
             <h2 id="decision-gate-title" className="mt-2 text-section font-semibold text-white sm:text-[24px] sm:leading-8">
-              {ru.stages[fromStage]} <span className="text-white/40">→</span> {ru.stages[toStage]}
+              {ru.stages[fromStage]} <span className="text-white/60">→</span> {ru.stages[toStage]}
             </h2>
             <p className="mt-1 max-w-2xl text-table text-white/60">
               Проверяется минимальная полнота доказательной базы. Итоговое решение остаётся за уполномоченным органом.
@@ -55,7 +55,7 @@ export function DecisionGatePanel({
             )}
           >
             {allowed ? <ShieldCheck className="h-4 w-4" aria-hidden="true" /> : <LockKeyhole className="h-4 w-4" aria-hidden="true" />}
-            {allowed ? "Ворота открыты" : "Переход заблокирован"}
+            {allowed ? "Ворота открыты" : "Решение не готово к переходу"}
           </span>
         </div>
 
@@ -111,7 +111,7 @@ export function DecisionGatePanel({
             )}
           </section>
 
-          <section className={cn("px-5 py-5 sm:px-6", actions.length > 0 && "bg-action-soft/50")} aria-labelledby="gate-actions-title">
+          <section className={cn("px-5 py-5 sm:px-6", actions.length > 0 && "bg-action-soft")} aria-labelledby="gate-actions-title">
             <h3 id="gate-actions-title" className={cn("text-meta font-semibold tracking-[0.1em]", actions.length > 0 ? "text-action" : "text-muted")}>
               ТРЕБУЕТ ДЕЙСТВИЯ
             </h3>
@@ -125,13 +125,13 @@ export function DecisionGatePanel({
                 {actions.map((result, index) => {
                   const destination = destinationForRule(decisionId, result.code);
                   return (
-                    <li key={result.code} className="grid grid-cols-[30px_minmax(0,1fr)] gap-3 border-b border-action/20 pb-4 last:border-0 last:pb-0">
+                    <li key={result.code} className="grid grid-cols-[30px_minmax(0,1fr)] gap-3 border-b border-line-strong pb-4 last:border-0 last:pb-0">
                       <span className="font-technical text-table font-semibold text-action">
                         {String(index + 1).padStart(2, "0")}
                       </span>
                       <div>
                         <p className="text-base font-semibold text-text">{ruleDescription(result.code)}</p>
-                        <p className="mt-1 text-table leading-5 text-text/75">{result.explanation}</p>
+                        <p className="mt-1 text-table leading-5 text-muted">{result.explanation}</p>
                         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                           <p className="flex items-center gap-1.5 text-meta text-muted">
                             <CircleAlert className="h-3.5 w-3.5 text-action" aria-hidden="true" />
@@ -155,7 +155,7 @@ export function DecisionGatePanel({
       <footer
         className={cn(
           "flex flex-col gap-4 border-t px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between",
-          allowed ? "border-accent/20 bg-accent-soft" : "border-action/20 bg-action-soft"
+          allowed ? "border-accent bg-accent-soft" : "border-action bg-action-soft"
         )}
       >
         <div className="flex items-start gap-2.5">
@@ -177,7 +177,7 @@ export function DecisionGatePanel({
             </p>
           </div>
         </div>
-        {children && <div className="flex shrink-0 flex-wrap items-start gap-3">{children}</div>}
+        {children && <div className="flex min-w-0 flex-wrap items-start gap-3 lg:justify-end">{children}</div>}
       </footer>
     </section>
   );

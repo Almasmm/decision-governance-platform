@@ -59,23 +59,26 @@ export function AdvanceButton({
   return (
     <div className="space-y-2">
       <Button
+        type="button"
         onClick={advance}
         disabled={busy}
+        aria-busy={busy}
         variant={gateAllowed === false ? "signalOutline" : "default"}
         size="lg"
+        className="h-auto min-h-11 whitespace-normal py-2 text-center"
       >
         {busy ? "Проверка ворот…" : `Перейти к стадии «${ru.stages[toStage]}»`}
-        <ArrowRight className="h-4 w-4" />
+        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
       </Button>
 
       {blocked && (
         <div
           role="alert"
-          className="max-w-xl rounded-control border border-action/30 border-l-4 bg-action-soft p-4"
+          className="max-w-xl rounded-control border border-action border-l-4 bg-action-soft p-4"
           data-testid="gate-blocked"
         >
           <div className="flex items-center gap-1.5 text-base font-semibold text-action">
-            <AlertTriangle className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
             Сервер подтвердил блокировку перехода
           </div>
           <p className="mt-1 text-table text-text">{blocked.message}</p>
@@ -83,7 +86,7 @@ export function AdvanceButton({
             {blocked.results
               .filter((r) => !r.passed)
               .map((r) => (
-                <li key={r.code} className="border-t border-action/20 pt-2 text-meta first:border-0 first:pt-0">
+                <li key={r.code} className="border-t border-line-strong pt-2 text-meta first:border-0 first:pt-0">
                   <div className="font-semibold text-text">{ruleDescription(r.code)}</div>
                   <div className="mt-0.5 leading-5 text-action">{r.explanation}</div>
                   <div className="mt-0.5 text-muted">Ответственный: {r.responsible}</div>

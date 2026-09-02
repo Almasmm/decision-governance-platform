@@ -1,7 +1,5 @@
 "use client";
 
-// Поручения по исполнению решения. Каждое поручение обязано быть связано
-// с KPI результата — иначе исполнение невозможно измерить.
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -9,11 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, isBefore } from "date-fns";
 import { ru as ruLocale } from "date-fns/locale";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Plus, Target, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
 import { addAssignment, completeAssignment } from "@/app/actions/evidence";
 import { ru } from "@/lib/i18n/ru";
@@ -38,11 +35,11 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 
-const STATUS_VARIANT: Record<string, "neutral" | "default" | "success" | "warn"> = {
+const STATUS_VARIANT: Record<string, "neutral" | "accent" | "resolvedSoft" | "action"> = {
   OPEN: "neutral",
-  IN_PROGRESS: "default",
-  DONE: "success",
-  OVERDUE: "warn",
+  IN_PROGRESS: "accent",
+  DONE: "resolvedSoft",
+  OVERDUE: "action",
 };
 
 export function AssignmentsPanel({
@@ -71,166 +68,240 @@ export function AssignmentsPanel({
     defaultValues: { text: "", assigneeId: "", dueDate: "", linkedKpiId: "" },
   });
 
-  const unlinked = assignments.filter((a) => !a.kpiCode);
+  const unlinked = assignments.filter((assignment) => !assignment.kpiCode);
+  const overdueCount = assignments.filter(
+    (assignment) =>
+      assignment.status !== "DONE" && isBefore(new Date(assignment.dueDate), new Date())
+  ).length;
+  const completedCount = assignments.filter((assignment) => assignment.status === "DONE").length;
 
   async function complete(id: string) {
     setBusy(true);
     setError(null);
-    const res = await completeAssignment(id);
+    const result = await completeAssignment(id);
     setBusy(false);
-    if (!res.ok) {
-      setError(res.error);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     router.refresh();
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      <header className="flex flex-col justify-between gap-4 border-b border-line pb-4 lg:flex-row lg:items-end">
+        <div className="max-w-3xl">
+          <p className="eyebrow">Execution control</p>
+          <h2 className="mt-1 text-decision font-semibold tracking-[-0.02em] text-text">
+            Поручения по исполнению
+          </h2>
+          <p className="mt-2 text-base text-muted">
+            Каждое поручение связывает ответственность, контрольный срок и измеримый KPI
+            результата. Без этой цепочки исполнение не проходит gate.
+          </p>
+        </div>
+        <dl className="grid grid-cols-3 divide-x divide-line border-y border-line py-2 text-center">
+          <div className="px-4">
+            <dt className="text-meta text-muted">Всего</dt>
+            <dd className="font-technical text-lead font-semibold text-text">{assignments.length}</dd>
+          </div>
+          <div className="px-4">
+            <dt className="text-meta text-muted">Исполнено</dt>
+            <dd className="font-technical text-lead font-semibold text-success">{completedCount}</dd>
+          </div>
+          <div className="px-4">
+            <dt className="text-meta text-muted">Просрочено</dt>
+            <dd className="font-technical text-lead font-semibold text-action">{overdueCount}</dd>
+          </div>
+        </dl>
+      </header>
+
       {unlinked.length > 0 && (
-        <div className="flex items-start gap-2 rounded border border-amber-300 bg-amber-50 p-3 text-xs text-brand-warn">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>
-            Поручений без связи с KPI результата: {unlinked.length}. Контрольные ворота перехода к
-            исполнению не пропустят решение уровней A и B.
-          </span>
+        <div className="flex items-start gap-3 border-l-2 border-action bg-action-soft px-4 py-3 text-table text-action">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <p>
+            <span className="font-semibold">Gate blocker:</span> поручений без KPI — {unlinked.length}.
+            Переход к исполнению для уровней A и B будет заблокирован.
+          </p>
         </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Поручения по исполнению решения</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <THead>
+      <section className="overflow-hidden border-y border-line bg-surface" aria-labelledby="assignment-register-heading">
+        <div className="flex flex-col justify-between gap-2 border-b border-line px-4 py-3 sm:flex-row sm:items-center">
+          <h3 id="assignment-register-heading" className="text-section font-semibold text-text">
+            Контур ответственности
+          </h3>
+          <p className="text-table text-muted">Поручение → исполнитель → срок → KPI → статус</p>
+        </div>
+        <Table className="min-w-[940px]">
+          <THead>
+            <TR>
+              <TH scope="col" className="w-[34%]">Поручение</TH>
+              <TH scope="col">Исполнитель</TH>
+              <TH scope="col">Контрольный срок</TH>
+              <TH scope="col">KPI результата</TH>
+              <TH scope="col">Статус</TH>
+              <TH scope="col" aria-label="Действие" />
+            </TR>
+          </THead>
+          <TBody>
+            {assignments.length === 0 && (
               <TR>
-                <TH>Поручение</TH>
-                <TH>Исполнитель</TH>
-                <TH>Срок</TH>
-                <TH>KPI результата</TH>
-                <TH>Статус</TH>
-                <TH />
+                <TD colSpan={6} className="py-8 text-center text-base text-muted">
+                  Поручения не созданы.
+                </TD>
               </TR>
-            </THead>
-            <TBody>
-              {assignments.length === 0 && (
-                <TR>
-                  <TD colSpan={6} className="py-4 text-center text-sm text-slate-500">
-                    Поручения не созданы.
+            )}
+            {assignments.map((assignment) => {
+              const overdue =
+                assignment.status !== "DONE" &&
+                isBefore(new Date(assignment.dueDate), new Date());
+              const displayStatus = overdue ? "OVERDUE" : assignment.status;
+              return (
+                <TR key={assignment.id}>
+                  <TD>
+                    <p className="text-base font-semibold text-text">{assignment.text}</p>
+                    {assignment.completedAt && (
+                      <p className="mt-1 text-meta text-muted">
+                        Завершено {format(new Date(assignment.completedAt), "d MMM yyyy", { locale: ruLocale })}
+                      </p>
+                    )}
+                  </TD>
+                  <TD>
+                    <span className="inline-flex items-center gap-2 text-table font-semibold text-text">
+                      <UserRound className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
+                      {assignment.assigneeName}
+                    </span>
+                  </TD>
+                  <TD className="whitespace-nowrap font-technical text-table">
+                    <span className={overdue ? "font-semibold text-action" : "text-text"}>
+                      {format(new Date(assignment.dueDate), "d MMM yyyy", { locale: ruLocale })}
+                    </span>
+                  </TD>
+                  <TD>
+                    {assignment.kpiCode ? (
+                      <span className="inline-flex items-start gap-2" title={assignment.kpiName ?? undefined}>
+                        <Target className="mt-0.5 h-3.5 w-3.5 text-accent" aria-hidden="true" />
+                        <span>
+                          <span className="block font-technical text-table font-semibold text-text">
+                            {assignment.kpiCode}
+                          </span>
+                          {assignment.kpiName && (
+                            <span className="mt-0.5 block max-w-52 text-meta text-muted">
+                              {assignment.kpiName}
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-table font-semibold text-action">Не связано</span>
+                    )}
+                  </TD>
+                  <TD>
+                    <Badge variant={STATUS_VARIANT[displayStatus] ?? "neutral"}>
+                      {displayStatus === "DONE" && <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />}
+                      {ru.assignmentStatuses[displayStatus as AssignmentStatus]}
+                    </Badge>
+                  </TD>
+                  <TD className="text-right">
+                    {canManage && assignment.status !== "DONE" && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={busy}
+                        onClick={() => complete(assignment.id)}
+                      >
+                        Отметить исполненным
+                      </Button>
+                    )}
                   </TD>
                 </TR>
-              )}
-              {assignments.map((a) => {
-                const overdue =
-                  a.status !== "DONE" && isBefore(new Date(a.dueDate), new Date());
-                return (
-                  <TR key={a.id}>
-                    <TD className="max-w-80 text-sm">{a.text}</TD>
-                    <TD className="text-xs">{a.assigneeName}</TD>
-                    <TD className="whitespace-nowrap text-xs">
-                      <span className={overdue ? "text-brand-warn" : ""}>
-                        {format(new Date(a.dueDate), "d MMM yyyy", { locale: ruLocale })}
-                      </span>
-                    </TD>
-                    <TD className="text-xs">
-                      {a.kpiCode ? (
-                        <span title={a.kpiName ?? undefined}>
-                          <Badge variant="outline">{a.kpiCode}</Badge>
-                        </span>
-                      ) : (
-                        <span className="text-brand-warn">не связано</span>
-                      )}
-                    </TD>
-                    <TD>
-                      <Badge variant={STATUS_VARIANT[overdue ? "OVERDUE" : a.status] ?? "neutral"}>
-                        {ru.assignmentStatuses[(overdue ? "OVERDUE" : a.status) as AssignmentStatus]}
-                      </Badge>
-                    </TD>
-                    <TD>
-                      {canManage && a.status !== "DONE" && (
-                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => complete(a.id)}>
-                          Отметить исполненным
-                        </Button>
-                      )}
-                    </TD>
-                  </TR>
-                );
-              })}
-            </TBody>
-          </Table>
-          {error && <p className="px-4 py-2 text-xs text-red-700">{error}</p>}
-        </CardContent>
-      </Card>
+              );
+            })}
+          </TBody>
+        </Table>
+      </section>
+
+      {error && (
+        <p className="rounded-control border border-action bg-action-soft px-3 py-2 text-table text-action" role="alert">
+          {error}
+        </p>
+      )}
 
       {canManage && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Создать поручение</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form
-              onSubmit={handleSubmit(async (values) => {
-                setError(null);
-                const res = await addAssignment(decisionId, values);
-                if (!res.ok) {
-                  setError(res.error);
-                  return;
-                }
-                reset();
-                router.refresh();
-              })}
-              className="space-y-3"
-            >
+        <section className="surface-band p-5" aria-labelledby="new-assignment-heading">
+          <div className="border-b border-line pb-4">
+            <p className="eyebrow">New accountability</p>
+            <h3 id="new-assignment-heading" className="mt-1 text-section font-semibold text-text">
+              Создать поручение
+            </h3>
+          </div>
+          <form
+            onSubmit={handleSubmit(async (values) => {
+              setError(null);
+              const result = await addAssignment(decisionId, values);
+              if (!result.ok) {
+                setError(result.error);
+                return;
+              }
+              reset();
+              router.refresh();
+            })}
+            className="mt-5 space-y-4"
+          >
+            <div>
+              <Label htmlFor="asg-text">Формулировка поручения</Label>
+              <Textarea id="asg-text" {...register("text")} />
+              {errors.text && <p className="mt-1 text-table text-action">{errors.text.message}</p>}
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div>
-                <Label htmlFor="asg-text">Формулировка поручения</Label>
-                <Textarea id="asg-text" {...register("text")} />
-                {errors.text && <p className="mt-1 text-xs text-red-700">{errors.text.message}</p>}
+                <Label htmlFor="asg-user">Исполнитель</Label>
+                <Select id="asg-user" {...register("assigneeId")}>
+                  <option value="">— выберите —</option>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </Select>
+                {errors.assigneeId && (
+                  <p className="mt-1 text-table text-action">{errors.assigneeId.message}</p>
+                )}
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div>
-                  <Label htmlFor="asg-user">Исполнитель</Label>
-                  <Select id="asg-user" {...register("assigneeId")}>
-                    <option value="">— выберите —</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name}
-                      </option>
-                    ))}
-                  </Select>
-                  {errors.assigneeId && (
-                    <p className="mt-1 text-xs text-red-700">{errors.assigneeId.message}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="asg-due">Срок исполнения</Label>
-                  <Input id="asg-due" type="date" {...register("dueDate")} />
-                  {errors.dueDate && (
-                    <p className="mt-1 text-xs text-red-700">{errors.dueDate.message}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="asg-kpi">KPI результата (обязательно)</Label>
-                  <Select id="asg-kpi" {...register("linkedKpiId")}>
-                    <option value="">— выберите показатель —</option>
-                    {indicators.map((i) => (
-                      <option key={i.id} value={i.id}>
-                        {i.code} — {i.name}
-                      </option>
-                    ))}
-                  </Select>
-                  {errors.linkedKpiId && (
-                    <p className="mt-1 text-xs text-red-700">{errors.linkedKpiId.message}</p>
-                  )}
-                </div>
+              <div>
+                <Label htmlFor="asg-due">Срок исполнения</Label>
+                <Input id="asg-due" type="date" {...register("dueDate")} />
+                {errors.dueDate && (
+                  <p className="mt-1 text-table text-action">{errors.dueDate.message}</p>
+                )}
               </div>
-              {error && <p className="text-xs text-red-700">{error}</p>}
-              <Button type="submit" size="sm" disabled={isSubmitting}>
+              <div className="md:col-span-2 xl:col-span-1">
+                <Label htmlFor="asg-kpi">KPI результата (обязательно)</Label>
+                <Select id="asg-kpi" {...register("linkedKpiId")}>
+                  <option value="">— выберите показатель —</option>
+                  {indicators.map((indicator) => (
+                    <option key={indicator.id} value={indicator.id}>
+                      {indicator.code} — {indicator.name}
+                    </option>
+                  ))}
+                </Select>
+                {errors.linkedKpiId && (
+                  <p className="mt-1 text-table text-action">{errors.linkedKpiId.message}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <Button type="submit" disabled={isSubmitting}>
+                <Plus className="h-4 w-4" aria-hidden="true" />
                 {isSubmitting ? "Создание…" : "Создать поручение"}
               </Button>
-            </form>
-          </CardContent>
-        </Card>
+              <p className="text-meta text-muted">
+                Автор, исполнитель, срок и KPI сохраняются в evidence trail решения.
+              </p>
+            </div>
+          </form>
+        </section>
       )}
     </div>
   );

@@ -1,9 +1,8 @@
 "use client";
 
-// Отправка на экспертизу и возврат на доработку.
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Send, RotateCcw } from "lucide-react";
+import { RotateCcw, Send, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea, Label } from "@/components/ui/input";
 import { submitForReview, returnDecision } from "@/app/actions/decisions";
@@ -33,10 +32,10 @@ export function WorkflowActions({
   async function submit() {
     setBusy(true);
     setError(null);
-    const res = await submitForReview(decisionId);
+    const result = await submitForReview(decisionId);
     setBusy(false);
-    if (!res.ok) {
-      setError(res.error);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     router.refresh();
@@ -45,10 +44,10 @@ export function WorkflowActions({
   async function doReturn() {
     setBusy(true);
     setError(null);
-    const res = await returnDecision(decisionId, reason);
+    const result = await returnDecision(decisionId, reason);
     setBusy(false);
-    if (!res.ok) {
-      setError(res.error);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     setShowReturn(false);
@@ -57,37 +56,70 @@ export function WorkflowActions({
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2" aria-label="Действия workflow">
         {submittable && (
-          <Button variant="secondary" size="sm" disabled={busy} onClick={submit}>
-            <Send className="h-3.5 w-3.5" />
-            Отправить на экспертизу
+          <Button type="button" size="sm" disabled={busy} onClick={submit}>
+            <Send className="h-3.5 w-3.5" aria-hidden="true" />
+            {busy ? "Отправка…" : "Отправить на экспертизу"}
           </Button>
         )}
         {returnable && (
-          <Button variant="outline" size="sm" onClick={() => setShowReturn((v) => !v)}>
-            <RotateCcw className="h-3.5 w-3.5" />
+          <Button
+            type="button"
+            variant="signalOutline"
+            size="sm"
+            aria-expanded={showReturn}
+            aria-controls="return-decision-reason"
+            onClick={() => setShowReturn((visible) => !visible)}
+          >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
             Вернуть на доработку
           </Button>
         )}
       </div>
+
       {showReturn && (
-        <div className="rounded border border-slate-200 p-2.5">
-          <Label htmlFor="ret-reason">Причина возврата (фиксируется в аудите)</Label>
+        <section
+          id="return-decision-reason"
+          className="max-w-2xl border-l-2 border-action bg-action-soft px-4 py-3"
+          aria-labelledby="return-reason-label"
+        >
+          <div className="mb-3 flex items-start gap-2 text-action">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p className="text-table">
+              Возврат останавливает экспертизу. Причина попадёт в audit trail и должна точно
+              указывать отсутствующее доказательство или требуемую доработку.
+            </p>
+          </div>
+          <Label id="return-reason-label" htmlFor="ret-reason">
+            Причина возврата (фиксируется в аудите)
+          </Label>
           <Textarea
             id="ret-reason"
-            className="min-h-16"
+            className="min-h-20"
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={(event) => setReason(event.target.value)}
             placeholder="Чего именно не хватает в доказательной базе"
           />
-          <Button className="mt-2" size="sm" variant="warn" disabled={busy || reason.trim().length < 5} onClick={doReturn}>
-            Вернуть на доработку
+          <Button
+            type="button"
+            className="mt-3"
+            size="sm"
+            variant="signal"
+            disabled={busy || reason.trim().length < 5}
+            onClick={doReturn}
+          >
+            {busy ? "Возврат…" : "Вернуть на доработку"}
           </Button>
-        </div>
+        </section>
       )}
-      {error && <p className="text-xs text-red-700">{error}</p>}
+
+      {error && (
+        <p className="text-table text-action" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

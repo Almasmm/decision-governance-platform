@@ -107,7 +107,8 @@ export default function LoginPage() {
               onClick={() => void doLogin(user.email, DEMO_PASSWORD)}
               disabled={busyEmail !== null}
               className="group grid min-h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-rule px-1 py-2.5 text-left transition-colors duration-150 hover:bg-paper disabled:cursor-wait disabled:opacity-50"
-              aria-label={`Войти как ${user.name}, ${ru.roles[user.role]}`}
+              aria-label={busy ? `Выполняется вход как ${user.name}, ${ru.roles[user.role]}` : `Войти как ${user.name}, ${ru.roles[user.role]}`}
+              aria-busy={busy}
             >
               <span className="min-w-0">
                 <span className="flex flex-wrap items-baseline gap-x-2">
@@ -227,6 +228,7 @@ export default function LoginPage() {
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="initiator@kap.kz"
                     autoComplete="username"
+                    required
                   />
                 </div>
                 <div>
@@ -238,13 +240,19 @@ export default function LoginPage() {
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder={DEMO_PASSWORD}
                     autoComplete="current-password"
+                    aria-describedby="demo-password-hint"
+                    required
                   />
                 </div>
-                <Button type="submit" disabled={busyEmail !== null}>
+                <Button
+                  type="submit"
+                  disabled={busyEmail !== null}
+                  aria-busy={Boolean(busyEmail === email && email)}
+                >
                   {busyEmail === email && email ? "Вход…" : ru.common.login}
                 </Button>
               </form>
-              <p className="mt-2 text-meta text-ink-muted">Пароль всех демо-аккаунтов: {DEMO_PASSWORD}</p>
+              <p id="demo-password-hint" className="mt-2 text-meta text-ink-muted">Пароль всех демо-аккаунтов: {DEMO_PASSWORD}</p>
             </details>
           </div>
         </section>

@@ -37,7 +37,7 @@ export function ContextBar({ userName, roleLabel }: { userName: string; roleLabe
 
         <GlobalCommand />
 
-        <div className="min-w-0 shrink-0 border-l border-rule pl-4 text-right">
+        <div className="ml-auto min-w-0 shrink-0 border-l border-rule pl-4 text-right">
           <p className="hidden max-w-48 truncate text-meta text-ink-muted sm:block">{userName}</p>
           <p className="max-w-44 truncate text-base font-semibold text-ink">
             <span className="hidden xl:inline">Полномочие · </span>{roleLabel}

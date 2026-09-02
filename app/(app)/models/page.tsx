@@ -26,6 +26,25 @@ const HUMAN_LOOP = [
   { label: "Решение человека", note: "Мотивированный вердикт", icon: UserRoundCheck },
 ] as const;
 
+const MODEL_CRITICALITY_LABELS: Record<string, string> = {
+  HIGH: "Высокая",
+  MEDIUM: "Средняя",
+  LOW: "Низкая",
+};
+
+const QUALITY_METRIC_LABELS: Record<string, string> = {
+  backtestAgreement: "Совпадение на ретроспективе",
+  expertAgreement: "Согласованность с экспертами",
+  precision: "Точность положительных выводов",
+  recall: "Полнота выявления",
+};
+
+function presentMetricValue(value: number): string {
+  return value >= 0 && value <= 1
+    ? value.toLocaleString("ru-RU", { style: "percent", maximumFractionDigits: 1 })
+    : value.toLocaleString("ru-RU");
+}
+
 export default async function ModelsPage() {
   await requireUser();
   const models = await prisma.aiModel.findMany({
@@ -36,7 +55,7 @@ export default async function ModelsPage() {
   const provider = getAiProvider();
 
   return (
-    <main className="workspace space-y-7">
+    <div className="workspace space-y-7">
       <header className="grid gap-5 border-b border-line pb-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
         <div>
           <p className="eyebrow">Аналитико-интеллектуальный контур</p>
@@ -116,7 +135,7 @@ export default async function ModelsPage() {
                   <p className="mt-2 text-table leading-5 text-muted">{model.purpose}</p>
                   <dl className="mt-4 space-y-2 text-meta">
                     <div className="flex justify-between gap-3"><dt className="text-muted">Владелец</dt><dd className="text-right font-medium text-text">{model.owner.name}</dd></div>
-                    <div className="flex justify-between gap-3"><dt className="text-muted">Критичность</dt><dd className="font-medium text-text">{model.criticality}</dd></div>
+                    <div className="flex justify-between gap-3"><dt className="text-muted">Критичность</dt><dd className="font-medium text-text">{MODEL_CRITICALITY_LABELS[model.criticality] ?? "Не классифицирована"}</dd></div>
                     <div className="flex justify-between gap-3"><dt className="text-muted">Валидация</dt><dd className="text-right font-medium text-text">{model.validatedAt ? format(model.validatedAt, "d MMM yyyy", { locale: ruLocale }) : "Не проводилась"}</dd></div>
                   </dl>
                 </div>
@@ -129,8 +148,8 @@ export default async function ModelsPage() {
                     <div className="mt-2 flex flex-wrap gap-x-6 gap-y-3">
                       {Object.entries(metrics).length ? Object.entries(metrics).map(([key, value]) => (
                         <div key={key}>
-                          <span className="block text-section font-semibold tabular-nums text-text">{value}</span>
-                          <span className="font-mono text-meta text-muted">{key}</span>
+                          <span className="block text-section font-semibold tabular-nums text-text">{presentMetricValue(value)}</span>
+                          <span className="text-meta text-muted">{QUALITY_METRIC_LABELS[key] ?? "Метрика качества"}</span>
                         </div>
                       )) : <span className="text-table text-action">Метрики качества не заданы</span>}
                     </div>
@@ -164,6 +183,6 @@ export default async function ModelsPage() {
         Для решений уровня A любая рекомендательная аналитика требует явного человеческого
         вердикта с мотивировкой. Принятие, изменение и отклонение одинаково фиксируются в аудите.
       </p>
-    </main>
+    </div>
   );
 }

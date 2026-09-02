@@ -69,7 +69,6 @@
     -webkit-font-smoothing: antialiased;
     /* Финансовый и производственный инструмент: цифры выравниваются по разрядам */
     font-variant-numeric: tabular-nums;
-    overflow-x: clip;
   }
 
   h1,

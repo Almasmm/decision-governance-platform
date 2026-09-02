@@ -133,7 +133,7 @@ export default async function AuditPage({
   }
 
   return (
-    <main className="workspace space-y-7">
+    <div className="workspace space-y-7">
       <header className="grid gap-5 border-b border-line pb-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
         <div>
           <p className="eyebrow">Контрольный контур</p>
@@ -346,6 +346,6 @@ export default async function AuditPage({
           ) : <span />}
         </nav>
       )}
-    </main>
+    </div>
   );
 }

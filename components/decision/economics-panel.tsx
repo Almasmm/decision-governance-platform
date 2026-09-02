@@ -1,17 +1,20 @@
 "use client";
 
-// Экономика решения: калькуляторы формул (1) Eₜ, (2) Eᵣ, (3) NPV.
-// Денежная величина не показывается, пока не введены все параметры —
-// вместо результата выводится перечень недостающих параметров.
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ru as ruLocale } from "date-fns/locale";
-import { Calculator, ShieldCheck, AlertTriangle } from "lucide-react";
+import {
+  AlertTriangle,
+  Calculator,
+  CheckCircle2,
+  Plus,
+  ShieldAlert,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input, Label, Textarea } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Provenance } from "@/components/provenance";
 import { addCalculation, reviewCalculation } from "@/app/actions/evidence";
 import {
@@ -34,7 +37,13 @@ export interface CalcView {
   calculatedByName: string;
   calculatedById: string;
   attributionNote: string | null;
-  reviews: Array<{ id: string; reviewerName: string; reviewerId: string; verdict: string; comment: string | null }>;
+  reviews: Array<{
+    id: string;
+    reviewerName: string;
+    reviewerId: string;
+    verdict: string;
+    comment: string | null;
+  }>;
 }
 
 const PARAM_LABELS: Record<string, string> = {
@@ -46,25 +55,46 @@ const PARAM_LABELS: Record<string, string> = {
   l0: "L₀ — потенциальные потери до, ₸",
   p1: "P₁ — вероятность события после, 0–1",
   l1: "L₁ — потенциальные потери после, ₸",
+  attributionShare: "Доля атрибуции цифровому механизму",
   rate: "r — ставка дисконтирования",
   years: "Годы прогнозного периода",
 };
 
+const EFFECT_CLASS: Record<string, string> = {
+  AUTOMATION: "Прямой эффект",
+  RISK: "Косвенный эффект",
+  NPV: "Инвестиционная оценка",
+};
+
 function paramLabel(key: string): string {
   if (PARAM_LABELS[key]) return PARAM_LABELS[key];
-  const m = /^years\[(\d+)\]\.(\w+)$/.exec(key);
-  if (m) {
-    const idx = Number(m[1]) + 1;
-    const field = m[2] === "et" ? "Eₜ" : m[2] === "er" ? "Eᵣ" : "TCO";
-    return `Год ${idx}: ${field}`;
+  const match = /^years\[(\d+)\]\.(\w+)$/.exec(key);
+  if (match) {
+    const index = Number(match[1]) + 1;
+    const field = match[2] === "et" ? "Eₜ" : match[2] === "er" ? "Eᵣ" : "TCO";
+    return `Год ${index}: ${field}`;
   }
   return key;
 }
 
-function num(v: string): number | null {
-  if (v.trim() === "") return null;
-  const n = Number(v);
-  return Number.isNaN(n) ? null : n;
+function num(value: string): number | null {
+  if (value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function displayInput(value: unknown): string {
+  if (typeof value === "number") return value.toLocaleString("ru-RU", { maximumFractionDigits: 4 });
+  if (typeof value === "string") return value;
+  return JSON.stringify(value);
+}
+
+function FormulaBand({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="border-l-2 border-accent bg-accent-soft px-3 py-2 font-technical text-table text-text">
+      {children}
+    </p>
+  );
 }
 
 function ResultBox({
@@ -82,21 +112,22 @@ function ResultBox({
 }) {
   if (!res.ok) {
     return (
-      <div className="rounded border border-amber-300 bg-amber-50 p-3">
-        <div className="flex items-center gap-1.5 text-sm font-semibold text-brand-warn">
-          <AlertTriangle className="h-4 w-4" />
+      <div className="border-l-2 border-action bg-action-soft px-4 py-3">
+        <div className="flex items-center gap-2 text-base font-semibold text-action">
+          <AlertTriangle className="h-4 w-4" aria-hidden="true" />
           {ru.common.notEnoughData}
         </div>
-        <p className="mt-1 text-xs text-slate-700">
+        <p className="mt-1 text-table text-text">
           {ru.common.missingParams}: {res.missing.map(paramLabel).join("; ")}.
         </p>
       </div>
     );
   }
+
   return (
-    <div className="rounded border border-slate-200 bg-brand-card/50 p-3">
-      <div className="text-xs text-slate-600">{label}</div>
-      <div className="mt-0.5 text-lg font-bold text-brand">
+    <div className="rounded-control border border-accent bg-surface p-4">
+      <p className="text-table text-muted">{label}</p>
+      <div className="mt-1 text-section font-semibold text-text">
         <Provenance
           value={formatMoney(res.value)}
           nature={nature}
@@ -105,12 +136,14 @@ function ResultBox({
           note={note}
         />
       </div>
-      <dl className="mt-2 space-y-0.5 text-[11px] text-slate-600">
-        {Object.entries(res.details).map(([k, v]) => (
-          <div key={k} className="flex justify-between gap-2">
-            <dt>{k}</dt>
-            <dd className="tabular-nums">
-              {Math.abs(v) >= 1e6 ? formatMoney(v) : v.toLocaleString("ru-RU", { maximumFractionDigits: 3 })}
+      <dl className="mt-3 grid gap-x-4 gap-y-1 border-t border-line pt-3 text-meta sm:grid-cols-2">
+        {Object.entries(res.details).map(([key, value]) => (
+          <div key={key} className="flex justify-between gap-2">
+            <dt className="text-muted">{key}</dt>
+            <dd className="font-technical tabular-nums text-text">
+              {Math.abs(value) >= 1e6
+                ? formatMoney(value)
+                : value.toLocaleString("ru-RU", { maximumFractionDigits: 3 })}
             </dd>
           </div>
         ))}
@@ -136,7 +169,6 @@ export function EconomicsPanel({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // (1) Трудоёмкость
   const [t0, setT0] = useState("");
   const [t1, setT1] = useState("");
   const [n, setN] = useState("");
@@ -146,7 +178,6 @@ export function EconomicsPanel({
     [t0, t1, n, c]
   );
 
-  // (2) Риск
   const [p0, setP0] = useState("");
   const [l0, setL0] = useState("");
   const [p1, setP1] = useState("");
@@ -156,13 +187,15 @@ export function EconomicsPanel({
   const riskRes = useMemo(
     () =>
       riskEffect({
-        p0: num(p0), l0: num(l0), p1: num(p1), l1: num(l1),
+        p0: num(p0),
+        l0: num(l0),
+        p1: num(p1),
+        l1: num(l1),
         attributionShare: num(share) ?? DEFAULT_ATTRIBUTION_SHARE,
       }),
     [p0, l0, p1, l1, share]
   );
 
-  // (3) NPV
   const [rate, setRate] = useState("");
   const [years, setYears] = useState<Array<{ et: string; er: string; tco: string }>>([
     { et: "", er: "", tco: "" },
@@ -171,24 +204,35 @@ export function EconomicsPanel({
     () =>
       npvEffect({
         rate: num(rate),
-        years: years.map((y) => ({ et: num(y.et), er: num(y.er), tco: num(y.tco) })),
+        years: years.map((year) => ({
+          et: num(year.et),
+          er: num(year.er),
+          tco: num(year.tco),
+        })),
       }),
     [rate, years]
   );
 
+  const confirmedCount = calculations.filter((calculation) =>
+    calculation.reviews.some(
+      (review) =>
+        review.verdict === "CONFIRMED" && review.reviewerId !== calculation.calculatedById
+    )
+  ).length;
+
   async function save(kind: EffectKind, inputs: Record<string, unknown>, note?: string) {
     setBusy(true);
     setError(null);
-    const res = await addCalculation(decisionId, kind, inputs, note);
+    const result = await addCalculation(decisionId, kind, inputs, note);
     setBusy(false);
-    if (!res.ok) {
-      setError(res.error);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     router.refresh();
   }
 
-  async function review(calcId: string, verdict: "CONFIRMED" | "REJECTED") {
+  async function review(calculationId: string, verdict: "CONFIRMED" | "REJECTED") {
     const comment = window.prompt(
       verdict === "CONFIRMED"
         ? "Комментарий независимой проверки (что именно проверено):"
@@ -197,332 +241,506 @@ export function EconomicsPanel({
     if (comment === null) return;
     setBusy(true);
     setError(null);
-    const res = await reviewCalculation(calcId, verdict, comment);
+    const result = await reviewCalculation(calculationId, verdict, comment);
     setBusy(false);
-    if (!res.ok) {
-      setError(res.error);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     router.refresh();
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Выполненные расчёты и независимая проверка</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {calculations.length === 0 && (
-            <p className="text-sm text-slate-500">
-              Расчёты эффекта не выполнены. Для уровня A требуется как минимум один расчёт с
-              независимой проверкой вторым пользователем.
-            </p>
-          )}
-          {calculations.map((calc) => {
-            const confirmed = calc.reviews.some(
-              (r) => r.verdict === "CONFIRMED" && r.reviewerId !== calc.calculatedById
-            );
-            const isDirect = calc.kind === "AUTOMATION";
-            return (
-              <div
-                key={calc.id}
-                className={`rounded border p-3 ${isDirect ? "border-slate-200" : "border-dashed border-slate-300 bg-slate-50/60"}`}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={isDirect ? "accent" : "outline"}>
-                      {isDirect ? "прямой эффект" : "косвенный эффект"}
-                    </Badge>
-                    <span className="text-sm font-medium text-slate-900">
-                      {ru.effectKinds[calc.kind as EffectKind]}
-                    </span>
-                    {confirmed ? (
-                      <Badge variant="success">
-                        <ShieldCheck className="h-3 w-3" /> независимо подтверждён
-                      </Badge>
-                    ) : (
-                      <Badge variant="warn">ожидает независимой проверки</Badge>
-                    )}
-                  </div>
-                  <div className="text-sm font-bold text-brand">
-                    <Provenance
-                      value={formatMoney(calc.result)}
-                      nature="forecast"
-                      source={`Расчёт: ${calc.calculatedByName}`}
-                      asOf={format(new Date(calc.calculatedAt), "d MMMM yyyy", { locale: ruLocale })}
-                      formula={
-                        calc.kind === "AUTOMATION"
-                          ? "Eₜ = (T₀ − T₁) × N × C"
-                          : calc.kind === "RISK"
-                            ? "Eᵣ = [(P₀×L₀) − (P₁×L₁)] × доля атрибуции"
-                            : "NPV = Σ (Eₜ + Eᵣ − TCOₜ) / (1 + r)ᵗ"
-                      }
-                      note="Величина рассчитана только из введённых параметров"
-                    />
-                  </div>
-                </div>
-                <dl className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-600">
-                  {Object.entries(calc.inputs).map(([k, v]) => (
-                    <div key={k} className="flex gap-1">
-                      <dt className="text-slate-400">{k}:</dt>
-                      <dd className="tabular-nums">
-                        {typeof v === "number" ? v.toLocaleString("ru-RU") : JSON.stringify(v)}
-                      </dd>
+    <div className="space-y-5">
+      <header className="flex flex-col justify-between gap-4 border-b border-line pb-4 lg:flex-row lg:items-end">
+        <div className="max-w-3xl">
+          <p className="eyebrow">Economic evidence</p>
+          <h2 className="mt-1 text-decision font-semibold tracking-[-0.02em] text-text">
+            Экономика решения
+          </h2>
+          <p className="mt-2 text-base text-muted">
+            Эффект отображается только при полном наборе параметров. Формула, автор, дата и
+            независимая проверка сохраняются вместе с результатом.
+          </p>
+        </div>
+        <dl className="grid grid-cols-2 divide-x divide-line border-y border-line py-2 text-center">
+          <div className="px-5">
+            <dt className="text-meta text-muted">Расчётов</dt>
+            <dd className="font-technical text-lead font-semibold text-text">{calculations.length}</dd>
+          </div>
+          <div className="px-5">
+            <dt className="text-meta text-muted">Подтверждено</dt>
+            <dd className="font-technical text-lead font-semibold text-success">{confirmedCount}</dd>
+          </div>
+        </dl>
+      </header>
+
+      {calculations.length > confirmedCount && (
+        <div className="flex items-start gap-3 border-l-2 border-action bg-action-soft px-4 py-3 text-table text-action">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <p>
+            <span className="font-semibold">Independent review required:</span>{" "}
+            {calculations.length - confirmedCount} расчёт(а) ожидают проверки вторым пользователем.
+          </p>
+        </div>
+      )}
+
+      <section aria-labelledby="calculation-register-heading">
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <p className="eyebrow">Evidence register</p>
+            <h3 id="calculation-register-heading" className="mt-1 text-section font-semibold text-text">
+              Сохранённые расчёты
+            </h3>
+          </div>
+          <p className="hidden text-table text-muted sm:block">Автор → формула → результат → review</p>
+        </div>
+
+        {calculations.length === 0 ? (
+          <div className="border-y border-line bg-surface px-5 py-8 text-base text-muted">
+            Расчёты эффекта не выполнены. Для уровня A требуется как минимум один расчёт с
+            независимой проверкой вторым пользователем.
+          </div>
+        ) : (
+          <div className="divide-y divide-line border-y border-line">
+            {calculations.map((calculation, index) => {
+              const confirmed = calculation.reviews.some(
+                (reviewItem) =>
+                  reviewItem.verdict === "CONFIRMED" &&
+                  reviewItem.reviewerId !== calculation.calculatedById
+              );
+              const effectKind = calculation.kind as EffectKind;
+              const formula =
+                calculation.kind === "AUTOMATION"
+                  ? "Eₜ = (T₀ − T₁) × N × C"
+                  : calculation.kind === "RISK"
+                    ? "Eᵣ = [(P₀×L₀) − (P₁×L₁)] × доля атрибуции"
+                    : "NPV = Σ (Eₜ + Eᵣ − TCOₜ) / (1 + r)ᵗ";
+
+              return (
+                <article key={calculation.id} className="bg-surface px-4 py-5 sm:px-5">
+                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+                    <div className="flex min-w-0 gap-3">
+                      <span className="font-technical text-meta font-semibold text-muted">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant={calculation.kind === "AUTOMATION" ? "accent" : "forecast"}>
+                            {EFFECT_CLASS[calculation.kind] ?? "Расчётный эффект"}
+                          </Badge>
+                          {confirmed ? (
+                            <Badge variant="resolvedSoft">
+                              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                              независимо подтверждён
+                            </Badge>
+                          ) : (
+                            <Badge variant="action">ожидает независимой проверки</Badge>
+                          )}
+                        </div>
+                        <h4 className="mt-2 text-lead font-semibold text-text">
+                          {ru.effectKinds[effectKind]}
+                        </h4>
+                        <p className="mt-1 text-table text-muted">
+                          Автор: <span className="font-semibold text-text">{calculation.calculatedByName}</span>
+                          {" · "}
+                          {format(new Date(calculation.calculatedAt), "d MMMM yyyy", {
+                            locale: ruLocale,
+                          })}
+                        </p>
+                      </div>
                     </div>
-                  ))}
-                </dl>
-                {calc.attributionNote && (
-                  <p className="mt-1 text-[11px] italic text-slate-500">
-                    Обоснование коэффициента атрибуции: {calc.attributionNote}
-                  </p>
-                )}
-                {calc.reviews.length > 0 && (
-                  <ul className="mt-1.5 space-y-0.5">
-                    {calc.reviews.map((r) => (
-                      <li key={r.id} className="text-[11px] text-slate-600">
-                        {r.verdict === "CONFIRMED" ? "✔" : "✘"} {r.reviewerName}: {r.comment ?? "—"}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {canReview && calc.calculatedById !== currentUserId && !confirmed && (
-                  <div className="mt-2 flex gap-2">
-                    <Button size="sm" variant="secondary" disabled={busy} onClick={() => review(calc.id, "CONFIRMED")}>
-                      Подтвердить расчёт
-                    </Button>
-                    <Button size="sm" variant="outline" disabled={busy} onClick={() => review(calc.id, "REJECTED")}>
-                      Отклонить расчёт
-                    </Button>
+
+                    <div className="text-left lg:text-right">
+                      <p className="text-meta uppercase tracking-[0.08em] text-muted">Результат</p>
+                      <div className="mt-1 text-section font-semibold text-text">
+                        <Provenance
+                          value={formatMoney(calculation.result)}
+                          nature="forecast"
+                          source={`Расчёт: ${calculation.calculatedByName}`}
+                          asOf={format(new Date(calculation.calculatedAt), "d MMMM yyyy", {
+                            locale: ruLocale,
+                          })}
+                          formula={formula}
+                          note="Величина рассчитана только из введённых параметров"
+                        />
+                      </div>
+                    </div>
                   </div>
-                )}
-                {canReview && calc.calculatedById === currentUserId && !confirmed && (
-                  <p className="mt-2 text-[11px] text-brand-warn">
-                    Независимую проверку не может выполнить автор расчёта — требуется второй
-                    пользователь.
-                  </p>
-                )}
-              </div>
-            );
-          })}
-          {error && <p className="text-xs text-red-700">{error}</p>}
-        </CardContent>
-      </Card>
+
+                  {calculation.attributionNote && (
+                    <p className="mt-4 border-l-2 border-accent bg-accent-soft px-3 py-2 text-table text-text">
+                      <span className="font-semibold">Обоснование коэффициента:</span>{" "}
+                      {calculation.attributionNote}
+                    </p>
+                  )}
+
+                  <details className="mt-4 border-t border-line pt-3">
+                    <summary className="cursor-pointer text-table font-semibold text-muted">
+                      Входные параметры и формула
+                    </summary>
+                    <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.7fr)]">
+                      <dl className="grid gap-x-5 gap-y-2 text-table sm:grid-cols-2">
+                        {Object.entries(calculation.inputs).map(([key, value]) => (
+                          <div key={key} className="border-b border-line pb-2">
+                            <dt className="text-muted">{paramLabel(key)}</dt>
+                            <dd className="mt-1 break-all font-technical text-text">
+                              {displayInput(value)}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <FormulaBand>{formula}</FormulaBand>
+                    </div>
+                  </details>
+
+                  {calculation.reviews.length > 0 && (
+                    <section className="mt-4 border-t border-line pt-3" aria-label="История независимой проверки">
+                      <p className="text-meta font-semibold uppercase tracking-[0.08em] text-muted">
+                        Review trail
+                      </p>
+                      <ul className="mt-2 space-y-2">
+                        {calculation.reviews.map((reviewItem) => (
+                          <li key={reviewItem.id} className="flex items-start gap-2 text-table text-text">
+                            {reviewItem.verdict === "CONFIRMED" ? (
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+                            ) : (
+                              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-action" aria-hidden="true" />
+                            )}
+                            <p>
+                              <span className="font-semibold">{reviewItem.reviewerName}:</span>{" "}
+                              {reviewItem.comment ?? "Комментарий не указан"}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
+
+                  {canReview && calculation.calculatedById !== currentUserId && !confirmed && (
+                    <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={busy}
+                        onClick={() => review(calculation.id, "CONFIRMED")}
+                      >
+                        Подтвердить расчёт
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="signalOutline"
+                        disabled={busy}
+                        onClick={() => review(calculation.id, "REJECTED")}
+                      >
+                        Отклонить расчёт
+                      </Button>
+                    </div>
+                  )}
+                  {canReview && calculation.calculatedById === currentUserId && !confirmed && (
+                    <p className="mt-4 border-l-2 border-action bg-action-soft px-3 py-2 text-table text-action">
+                      Независимую проверку не может выполнить автор расчёта — требуется второй
+                      пользователь.
+                    </p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {error && (
+        <p className="rounded-control border border-action bg-action-soft px-3 py-2 text-table text-action" role="alert">
+          {error}
+        </p>
+      )}
 
       {canCalculate && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                <span className="inline-flex items-center gap-1.5">
-                  <Calculator className="h-4 w-4" />
-                  (1) Эффект снижения трудоёмкости — прямой
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-700">
-                Eₜ = (T₀ − T₁) × N × C
-              </p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="t0">T₀, ч</Label>
-                  <Input id="t0" type="number" value={t0} onChange={(e) => setT0(e.target.value)} placeholder="напр. 46" />
-                </div>
-                <div>
-                  <Label htmlFor="t1">T₁, ч</Label>
-                  <Input id="t1" type="number" value={t1} onChange={(e) => setT1(e.target.value)} placeholder="напр. 28" />
-                </div>
-                <div>
-                  <Label htmlFor="n">N, пакетов/год</Label>
-                  <Input id="n" type="number" value={n} onChange={(e) => setN(e.target.value)} placeholder="напр. 120" />
-                </div>
-                <div>
-                  <Label htmlFor="c">C, ₸/ч</Label>
-                  <Input id="c" type="number" value={c} onChange={(e) => setC(e.target.value)} placeholder="напр. 9500" />
-                </div>
-              </div>
-              <ResultBox
-                res={autoRes}
-                label="Годовой эффект снижения трудоёмкости"
-                nature="forecast"
-                formula="Eₜ = (T₀ − T₁) × N × C"
-                note="Прямой эффект: высвобожденное время участников процесса"
-              />
-              <Button
-                size="sm"
-                disabled={!autoRes.ok || busy}
-                onClick={() =>
-                  save("AUTOMATION", { t0: num(t0), t1: num(t1), n: num(n), c: num(c) })
-                }
-              >
-                Сохранить расчёт в паспорт
-              </Button>
-            </CardContent>
-          </Card>
+        <section aria-labelledby="calculation-workspace-heading">
+          <div className="mb-3 border-b border-line pb-3">
+            <p className="eyebrow">Calculation workspace</p>
+            <h3 id="calculation-workspace-heading" className="mt-1 text-section font-semibold text-text">
+              Подготовить новый расчёт
+            </h3>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                <span className="inline-flex items-center gap-1.5">
-                  <Calculator className="h-4 w-4" />
-                  (2) Эффект снижения ожидаемого ущерба — косвенный
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-700">
-                Eᵣ = [(P₀ × L₀) − (P₁ × L₁)] × доля атрибуции
-              </p>
-              <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-5 xl:grid-cols-2">
+            <section className="surface-band p-5" aria-labelledby="automation-effect-heading">
+              <div className="flex items-start gap-3 border-b border-line pb-4">
+                <span className="font-technical text-section font-semibold text-muted">01</span>
                 <div>
-                  <Label htmlFor="p0">P₀ (0–1)</Label>
-                  <Input id="p0" type="number" step="0.01" value={p0} onChange={(e) => setP0(e.target.value)} />
-                </div>
-                <div>
-                  <Label htmlFor="l0">L₀, ₸</Label>
-                  <Input id="l0" type="number" value={l0} onChange={(e) => setL0(e.target.value)} />
-                </div>
-                <div>
-                  <Label htmlFor="p1">P₁ (0–1)</Label>
-                  <Input id="p1" type="number" step="0.01" value={p1} onChange={(e) => setP1(e.target.value)} />
-                </div>
-                <div>
-                  <Label htmlFor="l1">L₁, ₸</Label>
-                  <Input id="l1" type="number" value={l1} onChange={(e) => setL1(e.target.value)} />
+                  <p className="eyebrow">Direct effect</p>
+                  <h4 id="automation-effect-heading" className="mt-1 text-lead font-semibold text-text">
+                    Эффект снижения трудоёмкости
+                  </h4>
                 </div>
               </div>
-              <div>
-                <Label htmlFor="share">
-                  Консервативный коэффициент влияния цифрового механизма (по умолчанию 0.5)
-                </Label>
-                <Input id="share" type="number" step="0.05" min={0} max={1} value={share} onChange={(e) => setShare(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="share-note">Обоснование коэффициента</Label>
-                <Textarea
-                  id="share-note"
-                  value={shareNote}
-                  onChange={(e) => setShareNote(e.target.value)}
-                  placeholder="Какая часть снижения риска обеспечена именно цифровым контуром, а какая — иными мерами"
-                />
-              </div>
-              <ResultBox
-                res={riskRes}
-                label="Годовой эффект снижения ожидаемого ущерба (с учётом атрибуции)"
-                nature="forecast"
-                formula="Eᵣ = [(P₀×L₀) − (P₁×L₁)] × доля атрибуции"
-                note="Косвенный эффект: снижение ожидаемых потерь, а не денежный приток"
-              />
-              <Button
-                size="sm"
-                disabled={!riskRes.ok || busy}
-                onClick={() =>
-                  save(
-                    "RISK",
-                    { p0: num(p0), l0: num(l0), p1: num(p1), l1: num(l1), attributionShare: num(share) },
-                    shareNote
-                  )
-                }
-              >
-                Сохранить расчёт в паспорт
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>
-                <span className="inline-flex items-center gap-1.5">
-                  <Calculator className="h-4 w-4" />
-                  (3) NPV — только для стадии масштабирования
-                </span>
-              </CardTitle>
-              <span className="text-[11px] text-slate-500">
-                TCO включает лицензии, инфраструктуру, интеграцию, сопровождение, киберзащиту,
-                обучение и валидацию моделей
-              </span>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-700">
-                NPV = Σₜ (Eₜ + Eᵣ − TCOₜ) / (1 + r)ᵗ
-              </p>
-              <div className="w-48">
-                <Label htmlFor="rate">Ставка дисконтирования r (доля)</Label>
-                <Input id="rate" type="number" step="0.01" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="напр. 0.12" />
-              </div>
-              <div className="space-y-2">
-                {years.map((y, i) => (
-                  <div key={i} className="grid gap-2 sm:grid-cols-[60px_1fr_1fr_1fr]">
-                    <div className="flex items-end pb-2 text-xs text-slate-500">Год {i + 1}</div>
-                    <div>
-                      <Label htmlFor={`et-${i}`}>Eₜ, ₸</Label>
-                      <Input
-                        id={`et-${i}`}
-                        type="number"
-                        value={y.et}
-                        onChange={(e) =>
-                          setYears((prev) => prev.map((p, j) => (j === i ? { ...p, et: e.target.value } : p)))
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`er-${i}`}>Eᵣ, ₸</Label>
-                      <Input
-                        id={`er-${i}`}
-                        type="number"
-                        value={y.er}
-                        onChange={(e) =>
-                          setYears((prev) => prev.map((p, j) => (j === i ? { ...p, er: e.target.value } : p)))
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`tco-${i}`}>TCOₜ, ₸</Label>
-                      <Input
-                        id={`tco-${i}`}
-                        type="number"
-                        value={y.tco}
-                        onChange={(e) =>
-                          setYears((prev) => prev.map((p, j) => (j === i ? { ...p, tco: e.target.value } : p)))
-                        }
-                      />
-                    </div>
+              <div className="mt-4 space-y-4">
+                <FormulaBand>Eₜ = (T₀ − T₁) × N × C</FormulaBand>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="t0">T₀, ч</Label>
+                    <Input id="t0" type="number" value={t0} onChange={(event) => setT0(event.target.value)} placeholder="напр. 46" />
                   </div>
-                ))}
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => setYears((p) => [...p, { et: "", er: "", tco: "" }])}>
+                  <div>
+                    <Label htmlFor="t1">T₁, ч</Label>
+                    <Input id="t1" type="number" value={t1} onChange={(event) => setT1(event.target.value)} placeholder="напр. 28" />
+                  </div>
+                  <div>
+                    <Label htmlFor="n">N, пакетов/год</Label>
+                    <Input id="n" type="number" value={n} onChange={(event) => setN(event.target.value)} placeholder="напр. 120" />
+                  </div>
+                  <div>
+                    <Label htmlFor="c">C, ₸/ч</Label>
+                    <Input id="c" type="number" value={c} onChange={(event) => setC(event.target.value)} placeholder="напр. 9500" />
+                  </div>
+                </div>
+                <ResultBox
+                  res={autoRes}
+                  label="Годовой эффект снижения трудоёмкости"
+                  nature="forecast"
+                  formula="Eₜ = (T₀ − T₁) × N × C"
+                  note="Прямой эффект: высвобождённое время участников процесса"
+                />
+                <Button
+                  type="button"
+                  disabled={!autoRes.ok || busy}
+                  onClick={() =>
+                    save("AUTOMATION", { t0: num(t0), t1: num(t1), n: num(n), c: num(c) })
+                  }
+                >
+                  Сохранить расчёт в паспорт
+                </Button>
+              </div>
+            </section>
+
+            <section className="surface-band p-5" aria-labelledby="risk-effect-heading">
+              <div className="flex items-start gap-3 border-b border-line pb-4">
+                <span className="font-technical text-section font-semibold text-muted">02</span>
+                <div>
+                  <p className="eyebrow">Indirect effect</p>
+                  <h4 id="risk-effect-heading" className="mt-1 text-lead font-semibold text-text">
+                    Снижение ожидаемого ущерба
+                  </h4>
+                </div>
+              </div>
+              <div className="mt-4 space-y-4">
+                <FormulaBand>Eᵣ = [(P₀ × L₀) − (P₁ × L₁)] × доля атрибуции</FormulaBand>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="p0">P₀ (0–1)</Label>
+                    <Input id="p0" type="number" step="0.01" value={p0} onChange={(event) => setP0(event.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="l0">L₀, ₸</Label>
+                    <Input id="l0" type="number" value={l0} onChange={(event) => setL0(event.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="p1">P₁ (0–1)</Label>
+                    <Input id="p1" type="number" step="0.01" value={p1} onChange={(event) => setP1(event.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="l1">L₁, ₸</Label>
+                    <Input id="l1" type="number" value={l1} onChange={(event) => setL1(event.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="share">
+                    Консервативный коэффициент влияния цифрового механизма (по умолчанию 0.5)
+                  </Label>
+                  <Input
+                    id="share"
+                    type="number"
+                    step="0.05"
+                    min={0}
+                    max={1}
+                    value={share}
+                    onChange={(event) => setShare(event.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="share-note">Обоснование коэффициента</Label>
+                  <Textarea
+                    id="share-note"
+                    value={shareNote}
+                    onChange={(event) => setShareNote(event.target.value)}
+                    placeholder="Какая часть снижения риска обеспечена цифровым контуром, а какая — иными мерами"
+                  />
+                </div>
+                <ResultBox
+                  res={riskRes}
+                  label="Годовой эффект снижения ожидаемого ущерба (с учётом атрибуции)"
+                  nature="forecast"
+                  formula="Eᵣ = [(P₀×L₀) − (P₁×L₁)] × доля атрибуции"
+                  note="Косвенный эффект: снижение ожидаемых потерь, а не денежный приток"
+                />
+                <Button
+                  type="button"
+                  disabled={!riskRes.ok || busy}
+                  onClick={() =>
+                    save(
+                      "RISK",
+                      {
+                        p0: num(p0),
+                        l0: num(l0),
+                        p1: num(p1),
+                        l1: num(l1),
+                        attributionShare: num(share),
+                      },
+                      shareNote
+                    )
+                  }
+                >
+                  Сохранить расчёт в паспорт
+                </Button>
+              </div>
+            </section>
+
+            <section className="surface-band p-5 xl:col-span-2" aria-labelledby="npv-heading">
+              <div className="flex flex-col justify-between gap-3 border-b border-line pb-4 lg:flex-row lg:items-start">
+                <div className="flex items-start gap-3">
+                  <span className="font-technical text-section font-semibold text-muted">03</span>
+                  <div>
+                    <p className="eyebrow">Scale-stage investment case</p>
+                    <h4 id="npv-heading" className="mt-1 text-lead font-semibold text-text">
+                      NPV — только для стадии масштабирования
+                    </h4>
+                  </div>
+                </div>
+                <p className="max-w-2xl text-table text-muted">
+                  TCO включает лицензии, инфраструктуру, интеграцию, сопровождение, киберзащиту,
+                  обучение и валидацию моделей.
+                </p>
+              </div>
+              <div className="mt-4 space-y-4">
+                <FormulaBand>NPV = Σₜ (Eₜ + Eᵣ − TCOₜ) / (1 + r)ᵗ</FormulaBand>
+                <div className="max-w-xs">
+                  <Label htmlFor="rate">Ставка дисконтирования r (доля)</Label>
+                  <Input
+                    id="rate"
+                    type="number"
+                    step="0.01"
+                    value={rate}
+                    onChange={(event) => setRate(event.target.value)}
+                    placeholder="напр. 0.12"
+                  />
+                </div>
+
+                <div className="overflow-x-auto border-y border-line">
+                  <div className="min-w-[700px] divide-y divide-line">
+                    {years.map((year, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-[70px_repeat(3,minmax(180px,1fr))] gap-3 px-3 py-3"
+                      >
+                        <div className="flex items-center font-technical text-table font-semibold text-muted">
+                          Год {index + 1}
+                        </div>
+                        <div>
+                          <Label htmlFor={`et-${index}`}>Eₜ, ₸</Label>
+                          <Input
+                            id={`et-${index}`}
+                            type="number"
+                            value={year.et}
+                            onChange={(event) =>
+                              setYears((previous) =>
+                                previous.map((item, itemIndex) =>
+                                  itemIndex === index ? { ...item, et: event.target.value } : item
+                                )
+                              )
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`er-${index}`}>Eᵣ, ₸</Label>
+                          <Input
+                            id={`er-${index}`}
+                            type="number"
+                            value={year.er}
+                            onChange={(event) =>
+                              setYears((previous) =>
+                                previous.map((item, itemIndex) =>
+                                  itemIndex === index ? { ...item, er: event.target.value } : item
+                                )
+                              )
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`tco-${index}`}>TCOₜ, ₸</Label>
+                          <Input
+                            id={`tco-${index}`}
+                            type="number"
+                            value={year.tco}
+                            onChange={(event) =>
+                              setYears((previous) =>
+                                previous.map((item, itemIndex) =>
+                                  itemIndex === index ? { ...item, tco: event.target.value } : item
+                                )
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() =>
+                      setYears((previous) => [...previous, { et: "", er: "", tco: "" }])
+                    }
+                  >
+                    <Plus className="h-4 w-4" aria-hidden="true" />
                     Добавить год
                   </Button>
                   {years.length > 1 && (
-                    <Button size="sm" variant="ghost" onClick={() => setYears((p) => p.slice(0, -1))}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setYears((previous) => previous.slice(0, -1))}
+                    >
                       Убрать год
                     </Button>
                   )}
                 </div>
+
+                <ResultBox
+                  res={npvRes}
+                  label="Чистая приведённая стоимость проекта"
+                  nature="forecast"
+                  formula="NPV = Σₜ (Eₜ + Eᵣ − TCOₜ) / (1 + r)ᵗ"
+                  note="Считается только при заполненных Eₜ, Eᵣ и TCO по каждому году"
+                />
+                <Button
+                  type="button"
+                  disabled={!npvRes.ok || busy}
+                  onClick={() =>
+                    save("NPV", {
+                      rate: num(rate),
+                      years: years.map((year) => ({
+                        et: num(year.et),
+                        er: num(year.er),
+                        tco: num(year.tco),
+                      })),
+                    })
+                  }
+                >
+                  <Calculator className="h-4 w-4" aria-hidden="true" />
+                  Сохранить расчёт в паспорт
+                </Button>
               </div>
-              <ResultBox
-                res={npvRes}
-                label="Чистая приведённая стоимость проекта"
-                nature="forecast"
-                formula="NPV = Σₜ (Eₜ + Eᵣ − TCOₜ) / (1 + r)ᵗ"
-                note="Считается только при заполненных Eₜ, Eᵣ и TCO по каждому году"
-              />
-              <Button
-                size="sm"
-                disabled={!npvRes.ok || busy}
-                onClick={() =>
-                  save("NPV", {
-                    rate: num(rate),
-                    years: years.map((y) => ({ et: num(y.et), er: num(y.er), tco: num(y.tco) })),
-                  })
-                }
-              >
-                Сохранить расчёт в паспорт
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </section>
+          </div>
+        </section>
       )}
     </div>
   );

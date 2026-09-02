@@ -75,7 +75,8 @@ export function CriticalityBadge({ level, className }: { level: string; classNam
         styles[level] ?? styles.C,
         className
       )}
-      title={label[level] ?? label.C}
+      title={`Уровень критичности ${level}`}
+      aria-label={label[level] ?? label.C}
     >
       {level}
     </span>
