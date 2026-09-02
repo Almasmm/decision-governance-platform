@@ -1,11 +1,16 @@
-// Индекс зрелости процесса — всегда с контекстом расчёта и обязательной пометкой.
+// Авторская шкала зрелости процесса — continuous 1–5 с обязательным контекстом.
 import { format } from "date-fns";
 import { ru as ruLocale } from "date-fns/locale";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ru } from "@/lib/i18n/ru";
 import type { MaturityResult } from "@/lib/maturity";
 import { cn } from "@/lib/utils";
+
+const LEVELS = [1, 2, 3, 4, 5] as const;
+
+function continuumPosition(index: number): number {
+  return Math.max(0, Math.min(100, ((index - 1) / 4) * 100));
+}
 
 export function MaturityCard({
   result,
@@ -20,94 +25,149 @@ export function MaturityCard({
 }) {
   if (!result) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Индекс зрелости процесса</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-brand-warn">
-            {ru.common.notEnoughData}: нет измерений KPI пилотной выборки.
-          </p>
-        </CardContent>
-      </Card>
+      <section className="border-y border-rule bg-sheet px-4 py-4">
+        <h2 className="font-ui text-section font-semibold text-ink">Зрелость процесса</h2>
+        <p className="mt-2 text-base text-signal">
+          {ru.common.notEnoughData}: нет измерений KPI пилотной выборки.
+        </p>
+      </section>
     );
   }
 
+  const currentPosition = continuumPosition(result.index);
+  const baselinePosition = baseline ? continuumPosition(baseline.index) : null;
+  const period =
+    periodNote ??
+    (result.periodFrom && result.periodTo
+      ? `${format(result.periodFrom, "d MMM yyyy", { locale: ruLocale })} – ${format(result.periodTo, "d MMM yyyy", { locale: ruLocale })}`
+      : "не указан");
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Индекс зрелости процесса принятия решений</CardTitle>
-        <Badge variant="warn">{ru.demoBadge}</Badge>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap items-end gap-6">
-          <div>
-            <div className="text-3xl font-bold tabular-nums text-brand">{result.index.toFixed(2)}</div>
-            <div className="text-xs text-slate-500">из 5.00</div>
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-brand">
-              Уровень {result.levelNumber} — {ru.maturityLevels[result.levelNumber]}
+    <section className="border-y border-rule bg-sheet" aria-labelledby="maturity-title">
+      <header className="flex flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-5">
+        <div>
+          <h2 id="maturity-title" className="font-ui text-section font-semibold text-ink">
+            Зрелость процесса принятия решений
+          </h2>
+          <p className="mt-0.5 text-meta text-ink-muted">Авторская шкала 1–5 · пилотная оценка</p>
+        </div>
+        <Badge variant="technical">{ru.demoBadge}</Badge>
+      </header>
+
+      <div className={cn("border-t border-rule px-4 py-4 sm:px-5", compact ? "pb-4" : "sm:py-5")}>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex items-end gap-3">
+            <strong className="text-hero font-semibold tabular-nums text-ink">
+              {result.index.toFixed(2)}
+            </strong>
+            <div className="pb-1">
+              <p className="text-base font-semibold text-ink">
+                Уровень {result.levelNumber} · {ru.maturityLevels[result.levelNumber]}
+              </p>
+              <p className="text-meta text-ink-muted">из 5.00</p>
             </div>
-            {baseline && (
-              <div className="text-xs text-slate-600">
-                Базовая выборка: {baseline.index.toFixed(2)} — уровень {baseline.levelNumber} (
-                {ru.maturityLevels[baseline.levelNumber]})
-              </div>
+          </div>
+          {baseline && (
+            <p className="text-meta text-ink-muted">
+              Базовая выборка: <strong className="font-semibold tabular-nums text-ink">{baseline.index.toFixed(2)}</strong>
+            </p>
+          )}
+        </div>
+
+        <div
+          className="relative mt-10 px-1"
+          role="img"
+          aria-label={`Шкала зрелости от 1 до 5. Текущее значение ${result.index.toFixed(2)}, уровень ${result.levelNumber} — ${ru.maturityLevels[result.levelNumber]}.`}
+        >
+          <div className="relative h-1 bg-rule-strong">
+            <span
+              className="absolute inset-y-0 left-0 bg-graphite"
+              style={{ width: `${currentPosition}%` }}
+              aria-hidden="true"
+            />
+            {baselinePosition !== null && (
+              <span
+                className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-graphite bg-sheet"
+                style={{ left: `${baselinePosition}%` }}
+                title={`Базовая выборка: ${baseline?.index.toFixed(2)}`}
+                aria-hidden="true"
+              />
             )}
-          </div>
-        </div>
-
-        <div className="mt-3 flex gap-1">
-          {[1, 2, 3, 4, 5].map((lvl) => (
-            <div
-              key={lvl}
+            <span
               className={cn(
-                "flex-1 rounded px-1.5 py-1 text-center text-[10px]",
-                lvl <= result.levelNumber ? "bg-brand text-white" : "bg-slate-100 text-slate-500"
+                "absolute -top-7 whitespace-nowrap font-technical text-meta font-semibold text-ink",
+                currentPosition < 12
+                  ? "translate-x-0"
+                  : currentPosition > 88
+                    ? "-translate-x-full"
+                    : "-translate-x-1/2"
               )}
+              style={{ left: `${currentPosition}%` }}
+              aria-hidden="true"
             >
-              {lvl} {ru.maturityLevels[lvl]}
-            </div>
-          ))}
+              PILOT {result.index.toFixed(2)}
+            </span>
+            <span
+              className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-graphite"
+              style={{ left: `${currentPosition}%` }}
+              aria-hidden="true"
+            />
+          </div>
+
+          <ol className="mt-3 grid grid-cols-5 gap-1">
+            {LEVELS.map((level) => (
+              <li
+                key={level}
+                className={cn(
+                  "relative min-w-0 text-center text-meta",
+                  level === result.levelNumber ? "font-semibold text-ink" : "text-ink-muted"
+                )}
+              >
+                <span className="mx-auto mb-1 block h-2 w-px bg-rule-strong" aria-hidden="true" />
+                <span className="block font-technical">{level}</span>
+                <span className="hidden leading-4 sm:block">{ru.maturityLevels[level]}</span>
+              </li>
+            ))}
+          </ol>
         </div>
 
-        <dl className="mt-3 grid gap-1 text-xs text-slate-600 sm:grid-cols-2">
-          <div className="flex gap-1">
-            <dt className="text-slate-500">{ru.common.sampleSize}:</dt>
-            <dd>{result.totalSampleSize} наблюдений</dd>
+        <dl className="mt-5 grid gap-x-5 gap-y-2 border-t border-rule pt-3 text-meta sm:grid-cols-3">
+          <div>
+            <dt className="text-ink-muted">Пилотная выборка</dt>
+            <dd className="mt-0.5 font-medium text-ink">n = {result.totalSampleSize}</dd>
           </div>
-          <div className="flex gap-1">
-            <dt className="text-slate-500">{ru.common.period}:</dt>
-            <dd>
-              {periodNote ??
-                (result.periodFrom && result.periodTo
-                  ? `${format(result.periodFrom, "d MMM yyyy", { locale: ruLocale })} – ${format(result.periodTo, "d MMM yyyy", { locale: ruLocale })}`
-                  : "не указан")}
-            </dd>
+          <div>
+            <dt className="text-ink-muted">Учтено показателей</dt>
+            <dd className="mt-0.5 font-medium text-ink">{result.usedMetrics.length} KPI</dd>
+          </div>
+          <div>
+            <dt className="text-ink-muted">Период</dt>
+            <dd className="mt-0.5 font-medium text-ink">{period}</dd>
           </div>
         </dl>
 
         {!compact && (
-          <details className="mt-2">
-            <summary className="cursor-pointer text-xs text-brand-accent">
-              Учтённые KPI ({result.usedMetrics.length})
+          <details className="mt-3 border-t border-rule pt-3">
+            <summary className="cursor-pointer text-meta font-medium text-graphite">
+              Методика и учтённые KPI ({result.usedMetrics.length})
             </summary>
-            <ul className="mt-1 space-y-0.5">
-              {result.usedMetrics.map((m) => (
-                <li key={m.code} className="flex justify-between gap-3 text-[11px] text-slate-600">
-                  <span>{m.name}</span>
-                  <span className="tabular-nums">норм. {m.normalized.toFixed(2)}</span>
+            <ul className="mt-2 divide-y divide-rule">
+              {result.usedMetrics.map((metric) => (
+                <li key={metric.code} className="flex justify-between gap-4 py-1.5 text-meta text-ink-muted">
+                  <span>{metric.name}</span>
+                  <span className="shrink-0 font-technical tabular-nums text-ink">
+                    норм. {metric.normalized.toFixed(2)}
+                  </span>
                 </li>
               ))}
             </ul>
           </details>
         )}
 
-        <p className="mt-2 rounded bg-amber-50 px-2 py-1.5 text-[11px] text-brand-warn">
+        <p className="mt-3 border-l-2 border-rule-strong pl-3 text-meta font-medium text-ink">
           {result.disclaimer}
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
