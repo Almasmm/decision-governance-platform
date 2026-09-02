@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-white text-slate-900 antialiased;
+  font-feature-settings: "tnum";
+}
+
+::selection {
+  background: #2e6db4;
+  color: #fff;
+}

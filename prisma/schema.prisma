@@ -1,0 +1,310 @@
+// DecisionPassport — схема данных.
+// Провайдер SQLite (переносимо на PostgreSQL сменой provider + DATABASE_URL).
+// Перечисления хранятся как String: SQLite не поддерживает Prisma-enum.
+// Допустимые значения задаются константами и zod-схемами в lib/domain.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  role         String // INITIATOR | DATA_OWNER | RISK_OFFICER | ANALYST | SECRETARY | BOARD_MEMBER | ADMIN
+  position     String?
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  initiatedDecisions Decision[]       @relation("initiator")
+  ownedIndicators    Indicator[]      @relation("indicatorOwner")
+  ownedRisks         Risk[]           @relation("riskOwner")
+  ownedAssumptions   Assumption[]     @relation("assumptionOwner")
+  assignments        Assignment[]     @relation("assignee")
+  confirmedBlocks    DecisionBlock[]  @relation("blockConfirmer")
+  auditEvents        AuditEvent[]     @relation("actor")
+  aiModels           AiModel[]        @relation("modelOwner")
+  aiVerdicts         AiSuggestion[]   @relation("verifier")
+  calculations       EffectCalculation[] @relation("calculator")
+  reviews            CalcReview[]     @relation("reviewer")
+}
+
+model DecisionBody {
+  id        String     @id @default(cuid())
+  name      String
+  kind      String // BOARD | COMMITTEE | MANAGEMENT | EXECUTIVE
+  decisions Decision[]
+}
+
+model Decision {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  title          String
+  type           String // INVESTMENT | PRODUCTION | PROCUREMENT | HR | RISK | STRATEGY | DIGITAL
+  criticality    String // A | B | C
+  stage          String // PROBLEM | DATA | ALTERNATIVES | RISKS | DECISION | EXECUTION | FEEDBACK
+  status         String // DRAFT | IN_REVIEW | RETURNED | APPROVED | REJECTED | IN_EXECUTION | POST_EVALUATION | CLOSED
+  goal           String
+  initiatorId    String
+  decisionBodyId String
+  registeredAt   DateTime  @default(now())
+  packageReadyAt DateTime? // готовность аналитического пакета (для KPI скорости)
+  decidedAt      DateTime?
+  deadline       DateTime?
+  returnCount    Int       @default(0)
+  motivation     String? // мотивировка принятого решения
+
+  initiator    User            @relation("initiator", fields: [initiatorId], references: [id])
+  decisionBody DecisionBody    @relation(fields: [decisionBodyId], references: [id])
+  blocks       DecisionBlock[]
+  alternatives Alternative[]
+  assumptions  Assumption[]
+  risks        Risk[]
+  assignments  Assignment[]
+  calculations EffectCalculation[]
+  suggestions  AiSuggestion[]
+  lessons      Lesson[]
+  kpiMeasurements KpiMeasurement[]
+  indicatorLinks  DecisionIndicator[]
+}
+
+// Связь паспорта с показателями каталога (какие показатели входят в доказательную базу)
+model DecisionIndicator {
+  id          String    @id @default(cuid())
+  decisionId  String
+  indicatorId String
+  isCritical  Boolean   @default(false) // критический для данного решения
+  confirmedById String? // владелец данных подтвердил качество
+  confirmedAt DateTime?
+
+  decision  Decision  @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  indicator Indicator @relation(fields: [indicatorId], references: [id])
+
+  @@unique([decisionId, indicatorId])
+}
+
+model DecisionBlock {
+  id            String    @id @default(cuid())
+  decisionId    String
+  kind          String // IDENTIFICATION | DATA | ALTERNATIVES | ECONOMICS | SAFETY | RISKS | DECISION | EXECUTION | POST_EVALUATION
+  payload       String    @default("{}") // Json (строка для переносимости SQLite)
+  completeness  Int       @default(0) // 0–100
+  confirmedById String?
+  confirmedAt   DateTime?
+
+  decision    Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  confirmedBy User?    @relation("blockConfirmer", fields: [confirmedById], references: [id])
+
+  @@unique([decisionId, kind])
+}
+
+model Indicator {
+  id              String  @id @default(cuid())
+  code            String  @unique
+  name            String
+  businessMeaning String
+  formula         String?
+  unit            String
+  sourceSystem    String // SAP | EKAP | POWERBI | DWH | MANUAL | EXTERNAL
+  frequency       String // DAILY | WEEKLY | MONTHLY | QUARTERLY | YEARLY
+  ownerId         String?
+  maxLagDays      Int     @default(30)
+  qualityRules    String  @default("{}")
+  isCritical      Boolean @default(false)
+
+  owner         User?               @relation("indicatorOwner", fields: [ownerId], references: [id])
+  values        IndicatorValue[]
+  decisionLinks DecisionIndicator[]
+  assignments   Assignment[]        @relation("assignmentKpi")
+}
+
+model IndicatorValue {
+  id          String   @id @default(cuid())
+  indicatorId String
+  value       Float
+  asOf        DateTime
+  loadedAt    DateTime @default(now())
+  loadType    String // AUTO | MANUAL
+  versionNote String?
+
+  indicator Indicator @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+}
+
+model Alternative {
+  id             String  @id @default(cuid())
+  decisionId     String
+  name           String
+  isStatusQuo    Boolean @default(false)
+  description    String
+  criteriaScores String  @default("{}") // Json: safety, regulatory, economics, timeline, resources, hr, cyber, sustainability
+  selected       Boolean @default(false)
+
+  decision Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+}
+
+model Assumption {
+  id         String   @id @default(cuid())
+  decisionId String
+  text       String
+  value      String?
+  confidence String // HIGH | MEDIUM | LOW
+  validUntil DateTime
+  ownerId    String?
+
+  decision Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  owner    User?    @relation("assumptionOwner", fields: [ownerId], references: [id])
+}
+
+model Risk {
+  id                  String  @id @default(cuid())
+  decisionId          String
+  name                String
+  probability         Float // 0–1 до мер
+  impact              Float // тенге до мер
+  mitigation          String
+  residualProbability Float?
+  residualImpact      Float?
+  ownerId             String?
+  triggers            String? // триггеры пересмотра
+
+  decision Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  owner    User?    @relation("riskOwner", fields: [ownerId], references: [id])
+}
+
+model Assignment {
+  id          String    @id @default(cuid())
+  decisionId  String
+  text        String
+  assigneeId  String
+  dueDate     DateTime
+  linkedKpiId String? // связь с показателем результата
+  status      String    @default("OPEN") // OPEN | IN_PROGRESS | DONE | OVERDUE
+  completedAt DateTime?
+
+  decision  Decision   @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  assignee  User       @relation("assignee", fields: [assigneeId], references: [id])
+  linkedKpi Indicator? @relation("assignmentKpi", fields: [linkedKpiId], references: [id])
+}
+
+model KpiMeasurement {
+  id         String   @id @default(cuid())
+  decisionId String?
+  group      String // SPEED | DATA | JUSTIFICATION | EXECUTION | LEARNING
+  metricCode String
+  phase      String // BASELINE | PILOT
+  value      Float
+  measuredAt DateTime
+  sampleSize Int
+  periodNote String? // период выборки, показывается рядом с результатом
+
+  decision Decision? @relation(fields: [decisionId], references: [id])
+}
+
+model EffectCalculation {
+  id             String   @id @default(cuid())
+  decisionId     String
+  kind           String // AUTOMATION | RISK | NPV
+  inputs         String   @default("{}")
+  result         Float
+  calculatedAt   DateTime @default(now())
+  calculatedById String
+  isConservative Boolean  @default(true)
+  attributionNote String? // обоснование attributionShare
+
+  decision     Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  calculatedBy User     @relation("calculator", fields: [calculatedById], references: [id])
+  reviews      CalcReview[]
+}
+
+// Независимая проверка критических расчётов вторым пользователем (правило ворот уровня A)
+model CalcReview {
+  id            String   @id @default(cuid())
+  calculationId String
+  reviewerId    String
+  verdict       String // CONFIRMED | REJECTED
+  comment       String?
+  reviewedAt    DateTime @default(now())
+
+  calculation EffectCalculation @relation(fields: [calculationId], references: [id], onDelete: Cascade)
+  reviewer    User              @relation("reviewer", fields: [reviewerId], references: [id])
+}
+
+model AiModel {
+  id              String   @id @default(cuid())
+  name            String
+  purpose         String
+  ownerId         String
+  inputs          String
+  version         String
+  validatedAt     DateTime?
+  qualityMetrics  String   @default("{}")
+  limitations     String
+  criticality     String // LOW | MEDIUM | HIGH
+  allowedForLevels String  @default("[]") // Json-массив ["A","B","C"]
+
+  owner       User           @relation("modelOwner", fields: [ownerId], references: [id])
+  suggestions AiSuggestion[]
+}
+
+model AiSuggestion {
+  id           String   @id @default(cuid())
+  decisionId   String
+  tier         String // INFORMATIONAL | ANALYTICAL | RECOMMENDATIONAL
+  modelId      String?
+  content      String
+  explanation  String
+  sourceRefs   String   @default("[]")
+  humanVerdict String   @default("PENDING") // ACCEPTED | REJECTED | MODIFIED | PENDING
+  verdictReason String?
+  verifiedById String?
+  createdAt    DateTime @default(now())
+
+  decision   Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  model      AiModel? @relation(fields: [modelId], references: [id])
+  verifiedBy User?    @relation("verifier", fields: [verifiedById], references: [id])
+}
+
+model Lesson {
+  id            String   @id @default(cuid())
+  decisionId    String
+  whatPlanned   String
+  whatHappened  String
+  causeCategory String // EXTERNAL | DATA_QUALITY | WRONG_MODEL | EXECUTION | UNFORESEEN_RISK
+  conclusion    String
+  createdAt     DateTime @default(now())
+
+  decision Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  entity    String
+  entityId  String
+  action    String
+  actorId   String
+  before    String? // Json
+  after     String? // Json
+  createdAt DateTime @default(now())
+
+  actor User @relation("actor", fields: [actorId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model GateCheck {
+  id          String  @id @default(cuid())
+  fromStage   String
+  toStage     String
+  criticality String // A | B | C
+  rule        String // код правила из lib/gates.ts
+  description String
+  isBlocking  Boolean @default(true)
+
+  @@unique([fromStage, toStage, criticality, rule])
+}
