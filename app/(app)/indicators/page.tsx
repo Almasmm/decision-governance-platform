@@ -215,7 +215,7 @@ export default async function IndicatorsPage({
                   </TD>
                 </TR>
               )}
-              {indicators.map((indicator) => {
+              {indicators.map((indicator, index) => {
                 const latest = indicator.values[0];
                 const lag = latest ? differenceInCalendarDays(today, latest.asOf) : null;
                 const isStale = lag !== null && lag > indicator.maxLagDays;
@@ -226,7 +226,11 @@ export default async function IndicatorsPage({
                   <TR key={indicator.id}>
                     <TD>
                       <div className="flex flex-wrap items-center gap-2">
-                        <Link href={`/indicators/${indicator.id}`} className="font-technical text-table font-semibold text-accent hover:underline">
+                        <Link
+                          href={`/indicators/${indicator.id}`}
+                          className="font-technical text-table font-semibold text-accent hover:underline"
+                          data-tour={index === 0 ? "indicator-open-detail" : undefined}
+                        >
                           {indicator.code}
                         </Link>
                         {indicator.isCritical && <Badge variant="outline">Критический</Badge>}

@@ -64,6 +64,11 @@ export function IndicatorPanel({
   const evidenceGaps = criticalIndicators.filter(
     (indicator) => !indicator.sourceSystem || !indicator.ownerId || !indicator.confirmedBy
   ).length;
+  const guidedQualityLinkId =
+    linked.find(
+      (indicator) =>
+        !indicator.confirmedBy && canConfirm && (isAdmin || indicator.ownerId === currentUserId)
+    )?.linkId ?? linked[0]?.linkId;
 
   async function doLink() {
     if (!selected) return;
@@ -223,7 +228,13 @@ export function IndicatorPanel({
                     <span className="text-table text-muted">Нет значений</span>
                   )}
                 </TD>
-                <TD>
+                <TD
+                  data-tour={
+                    indicator.linkId === guidedQualityLinkId
+                      ? "decision-indicator-quality-control"
+                      : undefined
+                  }
+                >
                   {indicator.confirmedBy ? (
                     <div className="flex items-start gap-2 text-table text-success">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />

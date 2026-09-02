@@ -94,11 +94,15 @@ export function resolvePageTour(
     mergeSearchParams(parsed.searchParams, searchParams)
   );
 
-  return TOUR_REGISTRY.find(
+  return TOUR_REGISTRY.filter(
     (tour) =>
       tour.mode === "PAGE" &&
       tour.routeRef.routeId === route.id &&
       queryMatches(tour.routeRef.query, query) &&
       isTourAvailableToRole(tour, role)
-  );
+  ).sort(
+    (left, right) =>
+      Object.keys(right.routeRef.query ?? {}).length -
+      Object.keys(left.routeRef.query ?? {}).length
+  )[0];
 }

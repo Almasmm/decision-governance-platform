@@ -25,7 +25,7 @@ function ConnectedOnboardingHelp({
     progress,
     replayPageTour,
     startRoleTour,
-    startThesisTour,
+    startTourById,
     resetTraining,
   } = onboarding;
   const [open, setOpen] = useState(false);
@@ -39,7 +39,7 @@ function ConnectedOnboardingHelp({
   }, []);
 
   const roleTour = availableTours.find((tour) => tour.mode === "ROLE");
-  const thesisTour = availableTours.find((tour) => tour.mode === "THESIS");
+  const thesisTours = availableTours.filter((tour) => tour.mode === "THESIS");
   const pageTours = availableTours.filter((tour) => tour.mode === "PAGE");
   const completedCount = pageTours.filter((tour) =>
     progress.some(
@@ -148,17 +148,20 @@ function ConnectedOnboardingHelp({
                   Экскурсия по моей роли
                 </Button>
               )}
-              {thesisTour && (
+              {thesisTours.map((tour) => (
                 <Button
+                  key={tour.id}
                   type="button"
                   variant="secondary"
-                  className="justify-start"
-                  onClick={() => launch(startThesisTour)}
+                  className="h-auto min-h-10 justify-start whitespace-normal py-2 text-left"
+                  onClick={() => launch(() => startTourById(tour.id))}
                 >
-                  <GraduationCap className="h-4 w-4" aria-hidden="true" />
-                  Демонстрация научной модели
+                  <GraduationCap className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {tour.id === "thesis-jury-methodology"
+                    ? "Демонстрация научной модели"
+                    : tour.title}
                 </Button>
-              )}
+              ))}
             </div>
 
             {pageTours.length > 0 && (

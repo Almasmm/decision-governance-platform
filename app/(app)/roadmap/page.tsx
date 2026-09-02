@@ -376,7 +376,7 @@ function PhaseGate({ phase, index }: { phase: PhaseView; index: number }) {
           {phase.results.map((result, resultIndex) => (
             <div
               key={result.metricCode}
-              className="grid gap-3 py-4 md:grid-cols-[minmax(220px,1fr)_150px_150px_minmax(190px,0.8fr)] md:items-center"
+              className="grid gap-3 py-4 lg:grid-cols-[minmax(220px,1fr)_150px_150px_minmax(190px,0.8fr)] lg:items-center"
             >
               <div>
                 <p className="font-medium text-text">

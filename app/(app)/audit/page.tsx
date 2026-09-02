@@ -146,11 +146,12 @@ export default async function AuditPage({
         <div className="border-l-2 border-accent pl-4">
           <div className="flex items-center gap-2 text-table font-semibold text-text">
             <ShieldCheck className="h-4 w-4 text-accent" aria-hidden="true" />
-            Неизменяемый цифровой след
+            Системный журнал событий
           </div>
           <p className="mt-1 text-meta leading-5 text-muted">
             {total.toLocaleString("ru-RU")} событий по текущей выборке · технические данные доступны
-            внутри каждой записи.
+            внутри каждой записи. Роль берётся из текущей учётной записи участника, а основание
+            отображается только когда оно сохранено в payload события.
           </p>
         </div>
       </header>

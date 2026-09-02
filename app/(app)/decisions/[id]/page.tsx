@@ -260,7 +260,10 @@ async function PassportTab({
       )}
 
       {!gate.targetStage && (
-        <section className="flex items-start gap-3 rounded-panel border-l-4 border-accent bg-accent-soft px-5 py-4 shadow-panel">
+        <section
+          className="flex items-start gap-3 rounded-panel border-l-4 border-accent bg-accent-soft px-5 py-4 shadow-panel"
+          data-tour="decision-gate"
+        >
           <div>
             <h2 className="text-lead font-semibold text-text">Цикл решения замкнут</h2>
             <p className="mt-1 text-table text-muted">
@@ -541,20 +544,22 @@ async function BlockContent({
     case "POST_EVALUATION":
       return (
         <div className="space-y-4">
-          <BlockTextForm
-            decisionId={decision.id}
-            kind="POST_EVALUATION"
-            initial={payload}
-            disabled={!perms.editBlocks}
-            fields={[
-              {
-                key: "planFact",
-                label: "Сопоставление плана и факта",
-                placeholder: "Что планировалось достичь и что достигнуто фактически, с указанием периода",
-                required: true,
-              },
-            ]}
-          />
+          <section data-tour="post-evaluation-plan-fact" aria-label="Обязательное сопоставление плана и факта">
+            <BlockTextForm
+              decisionId={decision.id}
+              kind="POST_EVALUATION"
+              initial={payload}
+              disabled={!perms.editBlocks}
+              fields={[
+                {
+                  key: "planFact",
+                  label: "Сопоставление плана и факта",
+                  placeholder: "Что планировалось достичь и что достигнуто фактически, с указанием периода",
+                  required: true,
+                },
+              ]}
+            />
+          </section>
           <PostEvaluationPanel
             decisionId={decision.id}
             lessons={decision.lessons.map((l) => ({
@@ -829,7 +834,9 @@ async function AuditTab({ decisionId }: { decisionId: string }) {
             История решения
           </h2>
           <p className="mt-1 max-w-2xl text-table text-muted">
-            Человеческое описание событий показано первым. Технические коды и исходные данные доступны только по раскрытию.
+            Человеческое описание событий показано первым. Технические коды и исходные данные доступны
+            только по раскрытию. Роль отражает текущую роль учётной записи, а не исторический snapshot;
+            основание показывается только когда оно сохранено в payload события.
           </p>
         </div>
         <span className="font-technical text-meta text-muted">{events.length} событий</span>

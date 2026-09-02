@@ -183,7 +183,7 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
           <THead>
             <TR>
               <TH scope="col" data-tour="decision-registry-code">Код / предмет решения</TH>
-              <TH scope="col" data-tour="decision-registry-criticality">Уровень</TH>
+              <TH scope="col" data-tour="decision-criticality">Уровень</TH>
               <TH scope="col" data-tour="decision-registry-stage">Стадия</TH>
               <TH scope="col" data-tour="decisions-gate">Контрольные ворота</TH>
               <TH scope="col" data-tour="decisions-responsibility">Текущая ответственность</TH>

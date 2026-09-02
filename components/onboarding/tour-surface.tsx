@@ -31,7 +31,9 @@ interface TourSurfaceProps {
   onDismiss: () => void;
   onRestart?: () => void;
   onChooseRole?: () => void;
+  allowTargetInteraction?: boolean;
   requireTargetAction?: boolean;
+  closing?: boolean;
 }
 
 const VIEWPORT_MARGIN = 12;
@@ -145,7 +147,9 @@ export function TourSurface({
   onDismiss,
   onRestart,
   onChooseRole,
+  allowTargetInteraction = false,
   requireTargetAction = false,
+  closing = false,
 }: TourSurfaceProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -181,7 +185,7 @@ export function TourSurface({
       return;
     }
     card.focus({ preventScroll: true });
-  }, [requireTargetAction, step.id, step.target]);
+  }, [mounted, requireTargetAction, step.id, step.target]);
 
   function trapFocus(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "Tab" || requireTargetAction) return;
@@ -212,10 +216,15 @@ export function TourSurface({
 
   return createPortal(
     <div
-      className="pointer-events-none fixed inset-0 z-[89]"
+      className={`fixed inset-0 z-[89] transition-opacity duration-[140ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+        closing ? "pointer-events-none opacity-0" : "pointer-events-none opacity-100"
+      }`}
       data-testid="onboarding-tour"
       data-tour-id={step.id}
     >
+      {closing && (
+        <div className="pointer-events-auto fixed inset-0 z-[110]" aria-hidden="true" />
+      )}
       {targetRect ? (
         <>
           <div className={dimmerClass} style={{ inset: `0 0 auto 0`, height: targetRect.top }} />
@@ -237,7 +246,15 @@ export function TourSurface({
             className="pointer-events-none fixed z-[91] rounded-control border-2 border-paper shadow-[0_0_0_2px_var(--obsidian)] transition-[top,left,width,height] duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
             style={targetRect}
             aria-hidden="true"
+            data-testid="onboarding-spotlight"
           />
+          {!allowTargetInteraction && (
+            <div
+              className="pointer-events-auto fixed z-[92]"
+              style={targetRect}
+              aria-hidden="true"
+            />
+          )}
         </>
       ) : (
         <div className="pointer-events-auto fixed inset-0 z-[90] bg-obsidian/55" aria-hidden="true" />

@@ -111,7 +111,7 @@ export default function LoginPage() {
               className="group grid min-h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-rule px-1 py-2.5 text-left transition-colors duration-150 hover:bg-paper disabled:cursor-wait disabled:opacity-50"
               aria-label={busy ? `Выполняется вход как ${user.name}, ${ru.roles[user.role]}` : `Войти как ${user.name}, ${ru.roles[user.role]}`}
               aria-busy={busy}
-              data-tour="login-role-option"
+              data-tour={user.email === "initiator@kap.kz" ? "login-role-option" : undefined}
             >
               <span className="min-w-0">
                 <span className="flex flex-wrap items-baseline gap-x-2">

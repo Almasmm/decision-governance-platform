@@ -74,6 +74,10 @@ describe("onboarding route and role coverage", () => {
     const cases: ReadonlyArray<readonly [string, string]> = [
       ["/decisions/demo", "page-decision-passport"],
       ["/decisions/demo?tab=passport", "page-decision-passport"],
+      [
+        "/decisions/demo?tab=passport&block=POST_EVALUATION",
+        "page-decision-post-evaluation",
+      ],
       ["/decisions/demo?tab=alternatives", "page-decision-alternatives"],
       ["/decisions/demo?tab=risks", "page-decision-risks"],
       ["/decisions/demo?tab=economics", "page-decision-economics"],
@@ -92,6 +96,20 @@ describe("onboarding route and role coverage", () => {
     expect(resolvePageTour("/decisions/demo?tab=unknown", "ANALYST")?.id).toBe(
       "page-decision-passport"
     );
+
+    const postEvaluation = resolvePageTour(
+      "/decisions/demo?tab=passport&block=POST_EVALUATION",
+      "INITIATOR"
+    );
+    expect(postEvaluation?.steps.map((step) => step.target)).toEqual([
+      '[data-tour="post-evaluation-workspace"]',
+      '[data-tour="post-evaluation-plan-fact"]',
+      '[data-tour="post-evaluation-actual"]',
+      '[data-tour="post-evaluation-deviation"]',
+      '[data-tour="post-evaluation-cause"]',
+      '[data-tour="post-evaluation-lesson"]',
+      '[data-tour="post-evaluation-close-cycle"]',
+    ]);
   });
 
   it("provides one subject-specific ROLE tour for every domain role", () => {
@@ -109,7 +127,9 @@ describe("onboarding route and role coverage", () => {
 
   it("makes login and the self-guided thesis tour available before role resolution", () => {
     const guestTours = listToursForRole("GUEST");
-    expect(resolvePageTour("/login", "GUEST")?.id).toBe("page-login");
+    const loginTour = resolvePageTour("/login", "GUEST");
+    expect(loginTour?.id).toBe("page-login");
+    expect(loginTour?.steps).toHaveLength(5);
     expect(guestTours.some((tour) => tour.id === "page-login")).toBe(true);
     const thesis = guestTours.find((tour) => tour.id === "thesis-jury-methodology");
     expect(thesis?.roles ?? []).toHaveLength(0);

@@ -131,7 +131,8 @@ function VerdictForm({
           <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-accent-soft" aria-hidden="true" />
           <p className="text-base text-white/75">
             Вердикт может вынести инициатор, аналитик или член Совета директоров с соответствующим
-            полномочием.
+            полномочием; администратор имеет аварийное техническое полномочие демо-контура, и его
+            действие отдельно фиксируется в аудите.
           </p>
         </div>
       ) : (
@@ -167,6 +168,7 @@ function VerdictForm({
               className="h-auto min-h-11 whitespace-normal border-white/25 bg-transparent px-3 py-2 text-surface hover:border-accent-soft hover:bg-white/10"
               disabled={busy}
               onClick={() => submit("MODIFIED")}
+              data-tour="ai-human-verdict"
             >
               Принять с изменениями
             </Button>
@@ -193,6 +195,7 @@ function RecordedVerdict({ suggestion }: { suggestion: SuggestionView }) {
     <section
       className="rounded-panel bg-obsidian p-4 text-surface shadow-panel sm:p-5"
       aria-label="Зафиксированный человеческий вердикт"
+      data-tour="ai-human-verdict"
     >
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
@@ -417,15 +420,15 @@ export function AiPanel({
               const sourceCount = suggestion.sourceRefs.length;
               return (
                 <article key={suggestion.id} className="overflow-hidden rounded-panel border border-line bg-surface shadow-panel">
-                  <div className="grid gap-4 border-b border-line bg-surface-raised px-4 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-                    <div className="flex gap-3">
+                  <div className="grid gap-4 border-b border-line bg-surface-raised px-4 py-4 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-start">
+                    <div className="flex min-w-0 gap-3">
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-obsidian font-technical text-table font-semibold text-surface">
                         {String(suggestions.length - index).padStart(2, "0")}
                       </span>
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="accent">{tierLabel(suggestion.tier)}</Badge>
-                          <span className="text-table font-semibold text-text">
+                          <span className="min-w-0 break-words text-table font-semibold text-text">
                             {suggestion.modelName ?? "Процедурный анализ"}
                           </span>
                         </div>
@@ -591,7 +594,7 @@ export function AiPanel({
                       )}
                     </section>
 
-                    <div className="mt-5" data-tour={index === 0 ? "ai-human-verdict" : undefined}>
+                    <div className="mt-5">
                       {suggestion.humanVerdict === "PENDING" ? (
                         <VerdictForm
                           suggestionId={suggestion.id}

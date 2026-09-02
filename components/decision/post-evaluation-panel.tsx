@@ -101,6 +101,43 @@ export function PostEvaluationPanel({
         </div>
       </header>
 
+      <section
+        className="border-y border-line bg-surface px-4 py-5 sm:px-5"
+        aria-labelledby="post-evaluation-method-heading"
+        data-tour="post-evaluation-method"
+      >
+        <p className="eyebrow">Plan → Actual → Deviation → Cause → Lesson</p>
+        <h3 id="post-evaluation-method-heading" className="mt-1 text-section font-semibold text-text">
+          Как замыкается цикл решения
+        </h3>
+        <div className="mt-4 grid gap-2 lg:grid-cols-[minmax(0,1fr)_20px_minmax(0,1fr)_20px_minmax(0,1fr)_20px_minmax(0,1fr)_20px_minmax(0,1fr)] lg:items-stretch">
+          <article className="rounded-control border border-line bg-canvas p-3" data-tour="post-evaluation-plan">
+            <p className="font-technical text-meta font-semibold text-muted">01 · Plan</p>
+            <p className="mt-2 text-table leading-5 text-text">Ожидаемый результат и период фиксируются до исполнения.</p>
+          </article>
+          <ArrowRight className="mx-auto h-4 w-4 rotate-90 self-center text-muted lg:rotate-0" aria-hidden="true" />
+          <article className="rounded-control border border-line bg-canvas p-3" data-tour="post-evaluation-actual">
+            <p className="font-technical text-meta font-semibold text-muted">02 · Actual</p>
+            <p className="mt-2 text-table leading-5 text-text">После исполнения заносится наблюдаемый фактический результат.</p>
+          </article>
+          <ArrowRight className="mx-auto h-4 w-4 rotate-90 self-center text-muted lg:rotate-0" aria-hidden="true" />
+          <article className="rounded-control border border-line bg-canvas p-3" data-tour="post-evaluation-deviation">
+            <p className="font-technical text-meta font-semibold text-muted">03 · Deviation</p>
+            <p className="mt-2 text-table leading-5 text-text">Сопоставление плана и факта показывает направление отклонения.</p>
+          </article>
+          <ArrowRight className="mx-auto h-4 w-4 rotate-90 self-center text-muted lg:rotate-0" aria-hidden="true" />
+          <article className="rounded-control border border-line bg-canvas p-3" data-tour="post-evaluation-cause">
+            <p className="font-technical text-meta font-semibold text-muted">04 · Cause</p>
+            <p className="mt-2 text-table leading-5 text-text">Причина объясняет отклонение, не подменяя его оправданием.</p>
+          </article>
+          <ArrowRight className="mx-auto h-4 w-4 rotate-90 self-center text-muted lg:rotate-0" aria-hidden="true" />
+          <article className="rounded-control border border-line bg-canvas p-3" data-tour="post-evaluation-lesson">
+            <p className="font-technical text-meta font-semibold text-muted">05 · Lesson</p>
+            <p className="mt-2 text-table leading-5 text-text">Применимый вывод возвращается в подготовку следующих решений.</p>
+          </article>
+        </div>
+      </section>
+
       <section aria-labelledby="recorded-lessons-heading" data-tour="post-evaluation-loop">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
@@ -143,7 +180,7 @@ export function PostEvaluationPanel({
                 <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_32px_minmax(0,1fr)_32px_minmax(0,1.1fr)] lg:items-stretch">
                   <section
                     className="rounded-control border border-dotted border-action bg-action-soft p-4"
-                    data-tour={index === 0 ? "post-evaluation-plan" : undefined}
+                    data-tour={index === 0 ? "post-evaluation-recorded-plan" : undefined}
                   >
                     <p className="eyebrow !text-action">01 · Plan</p>
                     <p className="mt-3 whitespace-pre-line text-base text-text">{lesson.whatPlanned}</p>
@@ -154,7 +191,7 @@ export function PostEvaluationPanel({
                   <ArrowRight className="mx-auto h-5 w-5 rotate-90 text-muted lg:hidden" aria-hidden="true" />
                   <section
                     className="rounded-control border border-text bg-surface p-4"
-                    data-tour={index === 0 ? "post-evaluation-fact" : undefined}
+                    data-tour={index === 0 ? "post-evaluation-recorded-fact" : undefined}
                   >
                     <p className="eyebrow">02 · Fact</p>
                     <p className="mt-3 whitespace-pre-line text-base text-text">{lesson.whatHappened}</p>
@@ -165,7 +202,7 @@ export function PostEvaluationPanel({
                   <ArrowRight className="mx-auto h-5 w-5 rotate-90 text-muted lg:hidden" aria-hidden="true" />
                   <section
                     className="rounded-control bg-obsidian p-4 text-surface"
-                    data-tour={index === 0 ? "post-evaluation-lesson" : undefined}
+                    data-tour={index === 0 ? "post-evaluation-recorded-lesson" : undefined}
                   >
                     <p className="font-technical text-meta uppercase tracking-[0.14em] text-accent-soft">
                       03 · Lesson

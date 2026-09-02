@@ -162,9 +162,12 @@ export function OnboardingProvider({
   const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<SpotlightRect | null>(null);
   const [targetReady, setTargetReady] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [progressRevision, setProgressRevision] = useState(0);
   const [restorationComplete, setRestorationComplete] = useState(false);
   const previousFocus = useRef<HTMLElement | null>(null);
+  const closeTimer = useRef(0);
+  const closingRef = useRef(false);
   const autoStartGuard = useRef<string | null>(null);
   const requiredMissingSteps = useRef(new Set<string>());
 
@@ -214,12 +217,22 @@ export function OnboardingProvider({
   }, [pathname]);
 
   const closeTour = useCallback(() => {
-    setActiveTour(null);
-    setStepIndex(0);
-    setTargetRect(null);
-    setTargetReady(false);
-    window.requestAnimationFrame(() => previousFocus.current?.focus({ preventScroll: true }));
+    window.clearTimeout(closeTimer.current);
+    closingRef.current = true;
+    setClosing(true);
+    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 140;
+    closeTimer.current = window.setTimeout(() => {
+      setActiveTour(null);
+      setStepIndex(0);
+      setTargetRect(null);
+      setTargetReady(false);
+      setClosing(false);
+      closingRef.current = false;
+      window.requestAnimationFrame(() => previousFocus.current?.focus({ preventScroll: true }));
+    }, delay);
   }, []);
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
 
   const startTour = useCallback(
     (tour: TourDefinition) => {
@@ -229,6 +242,9 @@ export function OnboardingProvider({
       if (eligibleSteps.length === 0) return;
       const runnableTour =
         eligibleSteps.length === tour.steps.length ? tour : { ...tour, steps: eligibleSteps };
+      window.clearTimeout(closeTimer.current);
+      closingRef.current = false;
+      setClosing(false);
       setActiveTour(runnableTour);
       setStepIndex(0);
       setTargetRect(null);
@@ -264,7 +280,7 @@ export function OnboardingProvider({
 
   const finishWith = useCallback(
     (status: "completed" | "skipped" | "dismissed") => {
-      if (!activeTour) return;
+      if (!activeTour || closingRef.current) return;
       setTourState(progressKey(activeTour), { status });
       writeActiveSession(null);
       setProgressRevision((value) => value + 1);
@@ -275,7 +291,7 @@ export function OnboardingProvider({
 
   const moveToStep = useCallback(
     (direction: 1 | -1) => {
-      if (!activeTour) return;
+      if (!activeTour || closingRef.current) return;
       let candidate = stepIndex + direction;
       while (
         candidate >= 0 &&
@@ -289,6 +305,7 @@ export function OnboardingProvider({
         return;
       }
       if (candidate < 0) return;
+      setClosing(false);
       setStepIndex(candidate);
       setTargetReady(false);
       setTourState(progressKey(activeTour), {
@@ -386,7 +403,11 @@ export function OnboardingProvider({
     if (activeStep.route && !routeMatches(activeStep.route, currentRoute)) {
       if (role === "GUEST" && activeStep.routeRef.routeId !== "login") return;
       const destination = concreteRoute(activeStep.route, currentRoute);
-      if (destination) router.push(destination);
+      if (destination) {
+        setTargetRect(null);
+        setTargetReady(false);
+        router.push(destination);
+      }
       else {
         console.warn(`[onboarding] Cannot resolve route "${activeStep.route}" for step "${activeStep.id}".`);
         moveToStep(1);
@@ -476,7 +497,7 @@ export function OnboardingProvider({
           if (
             activeStep.target === '[data-tour="login-role-groups"]' &&
             (!(event.target instanceof Element) ||
-              !event.target.closest('[data-tour="login-role-option"]'))
+              !event.target.closest("button:not([disabled])"))
           ) {
             return;
           }
@@ -542,6 +563,8 @@ export function OnboardingProvider({
     window.addEventListener("scroll", updateRect, true);
 
     if (!findTarget()) {
+      setTargetRect(null);
+      setTargetReady(false);
       scheduleMissingTarget();
     }
 
@@ -590,7 +613,7 @@ export function OnboardingProvider({
   }, [closeTour, role, userId]);
 
   const restartActiveTour = useCallback(() => {
-    if (!activeTour || activeTour.steps.length === 0) return;
+    if (!activeTour || activeTour.steps.length === 0 || closingRef.current) return;
     setStepIndex(0);
     setTargetReady(false);
     setTourState(progressKey(activeTour), {
@@ -608,7 +631,7 @@ export function OnboardingProvider({
   }, [activeTour, progressKey, role, userId]);
 
   const chooseAnotherRole = useCallback(() => {
-    if (!activeTour) return;
+    if (!activeTour || closingRef.current) return;
     setTourState(progressKey(activeTour), { status: "completed" });
     writeActiveSession(null);
     setProgressRevision((value) => value + 1);
@@ -645,7 +668,7 @@ export function OnboardingProvider({
   return (
     <OnboardingContext.Provider value={value}>
       {children}
-      {activeTour && activeStep && targetReady && (
+      {activeTour && activeStep && (targetReady || targetRect !== null) && (
         <TourSurface
           tourTitle={activeTour.title}
           step={activeStep}
@@ -658,7 +681,9 @@ export function OnboardingProvider({
           onDismiss={() => finishWith("dismissed")}
           onRestart={activeTour.mode === "THESIS" ? restartActiveTour : undefined}
           onChooseRole={activeTour.mode === "THESIS" ? chooseAnotherRole : undefined}
+          allowTargetInteraction={activeStep.advance === "target-click"}
           requireTargetAction={role === "GUEST" && activeStep.advance === "target-click"}
+          closing={closing}
         />
       )}
     </OnboardingContext.Provider>

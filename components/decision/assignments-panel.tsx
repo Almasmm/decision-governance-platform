@@ -104,11 +104,11 @@ export function AssignmentsPanel({
           </p>
         </div>
         <dl className="grid grid-cols-3 divide-x divide-line border-y border-line py-2 text-center">
-          <div className="px-4" data-tour="assignments-actual">
+          <div className="px-4">
             <dt className="text-meta text-muted">Всего</dt>
             <dd className="font-technical text-lead font-semibold text-text">{assignments.length}</dd>
           </div>
-          <div className="px-4">
+          <div className="px-4" data-tour="assignments-completion">
             <dt className="text-meta text-muted">Исполнено</dt>
             <dd className="font-technical text-lead font-semibold text-success">{completedCount}</dd>
           </div>

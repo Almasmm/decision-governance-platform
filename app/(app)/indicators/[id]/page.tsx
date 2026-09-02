@@ -199,6 +199,27 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
         },
       ],
     },
+    conclusion: {
+      id: `conclusion-${link.decisionId}`,
+      title: link.decision.motivation ?? "Бизнес-вывод ещё не зафиксирован",
+      description: link.decision.motivation
+        ? "Мотивированный человеческий вывод, для которого использовано это доказательство."
+        : "Показатель уже связан с вопросом, но итоговая мотивировка органа пока отсутствует.",
+      kind: "conclusion",
+      status: link.decision.motivation ? "verified" : "attention",
+      statusLabel: link.decision.motivation ? "Зафиксирован" : "Ожидается",
+      metadata: [
+        {
+          label: "Дата",
+          value: link.decision.decidedAt
+            ? format(link.decision.decidedAt, "d MMMM yyyy", { locale: ruLocale })
+            : LINEAGE_NOT_REGISTERED,
+          attention: !link.decision.decidedAt,
+        },
+        { label: "Владелец", value: link.decision.decisionBody.name },
+        { label: "Версия", value: `Паспорт ${link.decision.code}` },
+      ],
+    },
   }));
 
   return (
@@ -383,13 +404,16 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
           <LineageGraph backbone={backbone} uses={uses} />
           <p className="mt-4 border-t border-line pt-3 text-meta leading-5 text-muted">
             Пунктирный интеграционный узел обозначает демонстрационный маршрут, а не действующее
-            промышленное подключение. Каждая связь с решением соответствует записи в реестре доказательств.
+            промышленное подключение. Каждая связь с решением соответствует записи в реестре
+            доказательств. Верхняя цепочка показывает последнюю текущую версию факта: связь решения
+            пока не закрепляет отдельный snapshot версии IndicatorValue, поэтому точную версию на дату
+            решения нужно сверять по истории значений и audit trail.
           </p>
         </CardContent>
       </Card>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <Card data-tour="indicator-history">
+        <Card className="min-w-0" data-tour="indicator-history">
           <CardHeader className="items-start">
             <div>
               <p className="flex items-center gap-2 text-meta font-semibold tracking-[0.1em] text-muted">
@@ -426,7 +450,7 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
           </CardContent>
         </Card>
 
-        <Card data-tour="indicator-version-history">
+        <Card className="min-w-0" data-tour="indicator-version-history">
           <CardHeader>
             <div>
               <p className="flex items-center gap-2 text-meta font-semibold tracking-[0.1em] text-muted">

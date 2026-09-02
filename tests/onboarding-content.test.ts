@@ -72,7 +72,25 @@ describe("onboarding content registry", () => {
       expect(TOUR_REGISTRY.some((tour) => tour.mode === mode), mode).toBe(true);
     }
     expect(TOUR_REGISTRY.filter((tour) => tour.mode === "ROLE")).toHaveLength(ROLES.length);
-    expect(TOUR_REGISTRY.some((tour) => tour.mode === "THESIS" && tour.estimatedMinutes === 13)).toBe(true);
+    const jury = TOUR_REGISTRY.find((tour) => tour.id === "thesis-jury-methodology");
+    expect(jury?.estimatedMinutes).toBe(13);
+    expect(jury?.steps.every((step) => Boolean(step.responsibility?.trim()))).toBe(true);
+    expect(jury?.steps.find((step) => step.id.endsWith(":economics"))?.target).toBe(
+      '[data-tour="economics-inputs"]'
+    );
+
+    const evidenceNatures = TOUR_REGISTRY.find((tour) => tour.id === "thesis-evidence-natures");
+    expect(evidenceNatures?.steps.map((step) => step.target)).toEqual([
+      '[data-tour="indicator-nature"]',
+      '[data-tour="indicator-current-value"]',
+      '[data-tour="risk-exposure"]',
+      '[data-tour="assumptions-register"]',
+    ]);
+    expect(evidenceNatures?.steps.at(-1)?.route).toBe("/decisions/:id?tab=risks");
+
+    const dataOwner = TOUR_REGISTRY.find((tour) => tour.id === "role-data-owner");
+    expect(dataOwner?.steps.find((step) => step.id.endsWith(":confirm-quality"))?.target).toBe(
+      '[data-tour="decision-indicator-quality-control"]'
+    );
   });
 });
-

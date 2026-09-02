@@ -1,5 +1,5 @@
 // Семантический data lineage: система-источник → интеграционный слой / DWH →
-// определение расчёта → доказательство → решения → уполномоченные органы.
+// определение расчёта → доказательство → решение → орган → бизнес-вывод.
 // Узлы показывают статус, владельца, актуальность и ограничения без ложных связей.
 import Link from "next/link";
 import {
@@ -8,6 +8,7 @@ import {
   Calculator,
   CircleAlert,
   Database,
+  FileCheck2,
   GitBranch,
   Landmark,
   ShieldCheck,
@@ -21,7 +22,8 @@ export type LineageNodeKind =
   | "calculation"
   | "evidence"
   | "decision"
-  | "authority";
+  | "authority"
+  | "conclusion";
 
 export type LineageNodeStatus = "verified" | "attention" | "demo" | "neutral" | "unavailable";
 
@@ -41,6 +43,7 @@ export interface LineageUse {
   id: string;
   decision: LineageNode;
   authority: LineageNode;
+  conclusion: LineageNode;
 }
 
 const KIND_LABEL: Record<LineageNodeKind, string> = {
@@ -50,6 +53,7 @@ const KIND_LABEL: Record<LineageNodeKind, string> = {
   evidence: "Доказательство",
   decision: "Управленческое решение",
   authority: "Уполномоченный орган",
+  conclusion: "Бизнес-вывод",
 };
 
 const NODE_STYLE: Record<LineageNodeStatus, string> = {
@@ -90,7 +94,7 @@ export function LineageGraph({
               ИСПОЛЬЗОВАНИЕ ДОКАЗАТЕЛЬСТВА
             </p>
             <h3 id="lineage-use-title" className="mt-1 text-lead font-semibold text-text">
-              Решение → уполномоченный орган
+              Решение → уполномоченный орган → бизнес-вывод
             </h3>
           </div>
           <p className="font-technical text-meta text-muted">{uses.length} связей</p>
@@ -101,12 +105,14 @@ export function LineageGraph({
             Показатель пока не включён в доказательную базу управленческих решений.
           </div>
         ) : (
-          <ol className="mt-4 grid gap-3 lg:grid-cols-2">
+          <ol className="mt-4 grid gap-3 2xl:grid-cols-2">
             {uses.map((use) => (
-              <li key={use.id} className="grid min-w-0 gap-0 rounded-panel bg-canvas p-2 sm:grid-cols-[minmax(0,1fr)_36px_minmax(0,0.85fr)] sm:items-stretch">
+              <li key={use.id} className="grid min-w-0 gap-0 rounded-panel bg-canvas p-2 lg:grid-cols-[minmax(0,1fr)_28px_minmax(0,0.8fr)_28px_minmax(0,1fr)] lg:items-stretch">
                 <LineageNodeCard node={use.decision} compact />
                 <LineageConnector compact />
                 <LineageNodeCard node={use.authority} compact />
+                <LineageConnector compact />
+                <LineageNodeCard node={use.conclusion} compact />
               </li>
             ))}
           </ol>
@@ -127,6 +133,7 @@ function LineageNodeCard({ node, compact = false, className }: { node: LineageNo
         compact && "rounded-control p-3",
         className
       )}
+      data-tour={node.kind === "conclusion" ? "indicator-business-conclusion" : undefined}
     >
       <div className="flex items-start justify-between gap-3">
         <p className="flex min-w-0 items-center gap-1.5 text-meta font-semibold tracking-[0.08em] text-muted">
@@ -186,15 +193,15 @@ function LineageConnector({ compact = false }: { compact?: boolean }) {
     <div
       className={cn(
         "relative flex h-9 shrink-0 items-center justify-center text-muted xl:h-auto xl:w-9",
-        compact && "sm:h-auto sm:w-9"
+        compact && "lg:h-auto lg:w-7"
       )}
       aria-hidden="true"
     >
-      <span className={cn("h-full w-px bg-line xl:h-px xl:w-full", compact && "sm:h-px sm:w-full")} />
+      <span className={cn("h-full w-px bg-line xl:h-px xl:w-full", compact && "lg:h-px lg:w-full")} />
       <ArrowRight
         className={cn(
           "absolute h-4 w-4 rotate-90 bg-surface xl:rotate-0",
-          compact && "bg-canvas sm:rotate-0"
+          compact && "bg-canvas lg:rotate-0"
         )}
       />
     </div>
@@ -216,5 +223,7 @@ function iconForKind(kind: LineageNodeKind) {
       return <Landmark className={className} aria-hidden="true" />;
     case "authority":
       return <Building2 className={className} aria-hidden="true" />;
+    case "conclusion":
+      return <FileCheck2 className={className} aria-hidden="true" />;
   }
 }
