@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { T, axisTick, gridStroke, tooltipStyle } from "@/components/chart-tokens";
 
 export function ValueHistoryChart({
   data,
@@ -20,15 +21,24 @@ export function ValueHistoryChart({
   return (
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: -18 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#EAF1F9" />
-          <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#94A3B8" }} />
-          <YAxis tick={{ fontSize: 10, fill: "#94A3B8" }} domain={["auto", "auto"]} />
+        <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: -16 }}>
+          <CartesianGrid strokeDasharray="2 3" stroke={gridStroke} />
+          <XAxis dataKey="date" tick={axisTick} />
+          <YAxis tick={axisTick} domain={["auto", "auto"]} />
           <Tooltip
-            contentStyle={{ fontSize: 12, borderRadius: 4, borderColor: "#CBD5E1" }}
+            contentStyle={tooltipStyle}
+            cursor={{ stroke: T.ruleStrong }}
             formatter={(v: number) => [`${v.toLocaleString("ru-RU")} ${unit}`, "Значение"]}
           />
-          <Line type="monotone" dataKey="value" stroke="#2E6DB4" strokeWidth={2} dot={{ r: 3, fill: "#12305B" }} />
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke={T.graphite}
+            strokeWidth={1.5}
+            isAnimationActive={false}
+            dot={{ r: 2.5, fill: T.sheet, stroke: T.graphite, strokeWidth: 1.5 }}
+            activeDot={{ r: 4, fill: T.graphite }}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

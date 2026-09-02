@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { CircleAlert, DatabaseZap, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { loadIndicatorFromSource } from "@/app/actions/indicators";
 
@@ -20,9 +20,9 @@ export function IndicatorLoadButton({
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <div>
+    <div className="max-w-sm">
       <Button
-        size="sm"
+        size="default"
         variant="secondary"
         disabled={busy || disabled}
         onClick={async () => {
@@ -37,11 +37,20 @@ export function IndicatorLoadButton({
           router.refresh();
         }}
       >
-        <RefreshCw className="h-3.5 w-3.5" />
-        {busy ? "Загрузка…" : "Загрузить из источника"}
+        {busy ? (
+          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <DatabaseZap className="h-4 w-4" aria-hidden="true" />
+        )}
+        {busy ? "Проверка источника…" : "Получить новое значение"}
       </Button>
-      <p className="mt-1 text-[11px] text-slate-500">{hint}</p>
-      {error && <p className="mt-1 text-xs text-red-700">{error}</p>}
+      <p className="mt-1.5 text-meta leading-4 text-muted">{hint}</p>
+      {error && (
+        <p className="mt-2 flex items-start gap-1.5 text-meta leading-4 text-action" role="alert">
+          <CircleAlert className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {error}
+        </p>
+      )}
     </div>
   );
 }
