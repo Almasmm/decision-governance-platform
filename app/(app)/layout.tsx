@@ -1,67 +1,122 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import { ru } from "@/lib/i18n/ru";
-import { Badge } from "@/components/ui/badge";
 import { LogoutButton } from "@/components/logout-button";
 import { NavLink } from "@/components/nav-link";
+import { ContextBar } from "@/components/app-shell/context-bar";
 import type { Role } from "@/lib/domain";
 
-const NAV: Array<{ href: string; key: keyof typeof ru.nav; roles?: Role[] }> = [
-  { href: "/dashboard", key: "dashboard" },
-  { href: "/decisions", key: "decisions" },
-  { href: "/indicators", key: "indicators" },
-  { href: "/kpi", key: "kpi" },
-  { href: "/models", key: "models" },
-  { href: "/lessons", key: "lessons" },
-  { href: "/boards", key: "boards" },
-  { href: "/roadmap", key: "roadmap" },
-  { href: "/audit", key: "audit" },
-  { href: "/admin", key: "admin", roles: ["ADMIN"] },
+const NAV: Array<{
+  title: string;
+  items: Array<{ href: string; key: keyof typeof ru.nav; roles?: Role[] }>;
+}> = [
+  {
+    title: "Контур решений",
+    items: [
+      { href: "/dashboard", key: "dashboard" },
+      { href: "/decisions", key: "decisions" },
+    ],
+  },
+  {
+    title: "Доказательная база",
+    items: [{ href: "/indicators", key: "indicators" }],
+  },
+  {
+    title: "Аналитика и интеллект",
+    items: [
+      { href: "/kpi", key: "kpi" },
+      { href: "/models", key: "models" },
+    ],
+  },
+  {
+    title: "Контроль и обучение",
+    items: [
+      { href: "/lessons", key: "lessons" },
+      { href: "/boards", key: "boards" },
+      { href: "/roadmap", key: "roadmap" },
+      { href: "/audit", key: "audit" },
+    ],
+  },
+  {
+    title: "Система",
+    items: [{ href: "/admin", key: "admin", roles: ["ADMIN"] }],
+  },
 ];
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
-        <div className="border-b border-slate-100 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded bg-brand text-sm font-bold text-white">DP</div>
-            <div>
-              <div className="text-sm font-bold leading-4 text-brand">{ru.appName}</div>
-              <div className="text-[10px] text-slate-500">{ru.org}</div>
-            </div>
+    <div className="flex min-h-screen bg-paper">
+      <aside className="sticky top-0 z-40 flex h-screen w-[72px] shrink-0 flex-col border-r border-graphite-line bg-graphite xl:w-20">
+        <div className="flex h-16 shrink-0 items-center justify-center border-b border-graphite-line">
+          <div
+            className="group relative flex h-11 w-11 items-center justify-center rounded border border-graphite-line font-technical text-base font-bold tracking-tight text-paper"
+            aria-label={ru.appName}
+            tabIndex={0}
+          >
+            DP
+            <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-50 w-max -translate-y-1/2 rounded bg-ink px-2.5 py-1.5 text-meta font-normal text-sheet opacity-0 shadow-overlay transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100">
+              {ru.appName}
+            </span>
           </div>
         </div>
-        <nav className="flex-1 space-y-0.5 p-2">
-          {NAV.filter((n) => !n.roles || n.roles.includes(user.role)).map((n) => (
-            <NavLink key={n.href} href={n.href}>
-              {ru.nav[n.key]}
-            </NavLink>
-          ))}
+
+        <nav className="flex flex-1 flex-col px-2 py-2" aria-label="Основная навигация">
+          {NAV.map((group, index) => {
+            const items = group.items.filter((item) => !item.roles || item.roles.includes(user.role));
+            if (items.length === 0) return null;
+            return (
+              <section
+                key={group.title}
+                aria-label={group.title}
+                className={index === 0 ? "pb-1.5" : "border-t border-graphite-line py-1.5"}
+              >
+                <div className="space-y-0.5">
+                  {items.map((item) => (
+                    <NavLink key={item.href} href={item.href} context={group.title}>
+                      {ru.nav[item.key]}
+                    </NavLink>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
         </nav>
-        <div className="border-t border-slate-100 p-3">
-          <Badge variant="warn">{ru.demoBadge}</Badge>
-          <p className="mt-1 text-[10px] leading-3 text-slate-400">
-            Цифры внутри решений синтетические; публичные показатели — из годового отчёта 2025.
-          </p>
+
+        <div className="shrink-0 border-t border-graphite-line px-2 py-2">
+          <div
+            className="group relative mx-auto flex h-11 w-11 items-center justify-center rounded border border-graphite-line bg-graphite-soft font-semibold text-paper"
+            tabIndex={0}
+            aria-label={`${user.name}, ${ru.roles[user.role]}`}
+          >
+            {initials(user.name)}
+            <div className="pointer-events-none absolute bottom-0 left-[calc(100%+12px)] z-50 w-64 rounded border border-rule bg-sheet p-3 text-left text-ink opacity-0 shadow-overlay transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100">
+              <p className="text-base font-semibold">{user.name}</p>
+              <p className="mt-0.5 text-meta text-ink-muted">Полномочие: {ru.roles[user.role]}</p>
+              <p className="mt-2 text-meta text-ink-muted">{ru.org}</p>
+            </div>
+          </div>
+          <LogoutButton compact className="mx-auto mt-1" />
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between bg-brand px-5 py-2 text-white">
-          <div className="text-sm font-medium">{ru.appSubtitle}</div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="text-sm font-medium leading-4">{user.name}</div>
-              <div className="text-[11px] text-slate-300">{ru.roles[user.role]}</div>
-            </div>
-            <LogoutButton />
-          </div>
-        </header>
-        <main className="min-w-0 flex-1 bg-slate-50 p-5">{children}</main>
+      <div className="min-w-0 flex-1">
+        <ContextBar userName={user.name} roleLabel={ru.roles[user.role]} />
+        <main className="mx-auto min-w-0 w-full max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8">
+          {children}
+        </main>
       </div>
     </div>
   );

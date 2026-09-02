@@ -3,21 +3,21 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control font-ui font-semibold transition-colors duration-150 disabled:pointer-events-none disabled:opacity-45",
   {
     variants: {
       variant: {
-        default: "bg-brand text-white hover:bg-brand-accent",
-        secondary: "bg-brand-card text-brand hover:bg-blue-100 border border-blue-200",
-        outline: "border border-slate-300 bg-white text-slate-800 hover:bg-slate-50",
-        ghost: "text-slate-700 hover:bg-slate-100",
-        destructive: "bg-red-700 text-white hover:bg-red-800",
-        warn: "bg-brand-warn text-white hover:bg-amber-700",
+        default: "bg-accent text-surface hover:bg-obsidian",
+        secondary: "border border-line bg-surface text-text hover:border-accent hover:bg-accent-soft",
+        outline: "border border-line-strong bg-transparent text-text hover:border-accent hover:text-accent",
+        ghost: "text-muted hover:bg-surface-raised hover:text-text",
+        signal: "bg-action text-surface hover:bg-obsidian",
+        signalOutline: "border border-action bg-transparent text-action hover:bg-action-soft",
       },
       size: {
-        default: "h-9 px-3.5",
-        sm: "h-7 px-2.5 text-xs",
-        lg: "h-10 px-6",
+        default: "h-9 px-4 text-base",
+        sm: "h-8 px-3 text-table",
+        lg: "h-11 px-5 text-lead",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

@@ -2,16 +2,181 @@
 @tailwind components;
 @tailwind utilities;
 
+/* DecisionPassport 3.0 — controlled mineral visual system. */
+
 :root {
   color-scheme: light;
+
+  --obsidian: #10191c;
+  --obsidian-soft: #243034;
+  --obsidian-line: #344247;
+  --canvas: #f2f5f4;
+  --surface: #ffffff;
+  --surface-raised: #e7ecea;
+  --text: #172023;
+  --text-muted: #637074;
+  --line: #d5ddda;
+  --line-strong: #aebbb7;
+  --accent: #356f62;
+  --accent-soft: #ddebe6;
+  --action: #b45d2d;
+  --action-soft: #f6e6dc;
+  --success: #2f7559;
+  --danger: #aa3f46;
+  --action-step-1: #f8eee8;
+  --action-step-2: #e9c9b7;
+  --action-step-3: #cf8e69;
+
+  /* Compatibility aliases while feature screens migrate to 3.0 names. */
+  --paper: var(--canvas);
+  --sheet: var(--surface);
+  --ink: var(--text);
+  --ink-muted: var(--text-muted);
+  --graphite: var(--obsidian);
+  --graphite-soft: var(--obsidian-soft);
+  --graphite-line: var(--obsidian-line);
+  --signal: var(--action);
+  --signal-tint: var(--action-soft);
+  --rule: var(--line);
+  --rule-strong: var(--line-strong);
+  --signal-step-1: var(--action-step-1);
+  --signal-step-2: var(--action-step-2);
+  --signal-step-3: var(--action-step-3);
+
+  --font-ui: "Segoe UI Variable", "Inter", "Geist", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --font-technical: "Cascadia Mono", "IBM Plex Mono", "JetBrains Mono", Consolas, monospace;
+  --font-document: var(--font-ui);
+
+  --radius-sm: 6px;
+  --radius-control: 8px;
+  --radius-panel: 12px;
+  --shadow-panel: 0 1px 2px rgb(16 25 28 / 0.06), 0 8px 24px -20px rgb(16 25 28 / 0.32);
+  --shadow-overlay: 0 18px 48px -16px rgb(16 25 28 / 0.32);
 }
 
-body {
-  @apply bg-white text-slate-900 antialiased;
-  font-feature-settings: "tnum";
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    background: var(--canvas);
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    /* Финансовый и производственный инструмент: цифры выравниваются по разрядам */
+    font-variant-numeric: tabular-nums;
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  /* Фокус клавиатуры виден всегда и нигде не снимается */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--surface);
+  }
+
+  /* Скрытая стрелка у <details>, раскрытие делаем сами */
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary {
+    list-style: none;
+  }
 }
 
-::selection {
-  background: #2e6db4;
-  color: #fff;
+@layer components {
+  .workspace {
+    width: 100%;
+    max-width: 1680px;
+    margin-inline: auto;
+  }
+
+  .eyebrow {
+    color: var(--text-muted);
+    font-family: var(--font-technical);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 16px;
+    text-transform: uppercase;
+  }
+
+  .surface-band {
+    background: var(--surface);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .technical-detail {
+    background: var(--obsidian);
+    border-radius: var(--radius-control);
+    color: var(--surface-raised);
+    font-family: var(--font-technical);
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+
+  /* Диагональная штриховка: форма-носитель смысла «допущение».
+     Смысл не должен зависеть только от цвета. */
+  .hatch-assumption {
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent 0 3px,
+      color-mix(in srgb, var(--action) 15%, transparent) 3px 4px
+    );
+  }
+
+  /* Штриховка «данные отсутствуют» — нейтральная, без сигнала */
+  .hatch-empty {
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent 0 4px,
+      var(--line) 4px 5px
+    );
+  }
+
+  /* Раскрытие детали — единственное разрешённое движение */
+  .reveal {
+    animation: reveal 160ms ease-out;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Движение — только как ответ на действие; при запросе покоя отключается */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
