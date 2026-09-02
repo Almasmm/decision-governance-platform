@@ -1,20 +1,26 @@
-// Реестр решений: фильтры по типу, критичности, стадии, статусу, органу, сроку + поиск.
 import Link from "next/link";
 import { format, isBefore } from "date-fns";
 import { ru as ruLocale } from "date-fns/locale";
-import { Plus, RotateCcw } from "lucide-react";
+import { Filter, Plus, RotateCcw, Search } from "lucide-react";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/authz";
+import { buildGateContext } from "@/lib/gate-service";
+import { decisionInclude } from "@/lib/snapshot";
 import { ru } from "@/lib/i18n/ru";
 import {
-  DECISION_TYPES, CRITICALITIES, STAGES, STATUSES,
-  type Criticality, type DecisionStatus, type DecisionType, type Stage,
+  CRITICALITIES,
+  DECISION_TYPES,
+  STAGES,
+  STATUSES,
+  type Criticality,
+  type DecisionStatus,
+  type DecisionType,
+  type Stage,
 } from "@/lib/domain";
 import { Badge, CriticalityBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
 
 export const dynamic = "force-dynamic";
@@ -29,11 +35,17 @@ interface Filters {
   overdue?: string;
 }
 
-export default async function DecisionsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Filters>;
-}) {
+const STAGE_OWNER: Record<Stage, string> = {
+  PROBLEM: "Инициатор",
+  DATA: "Владелец данных",
+  ALTERNATIVES: "Инициатор / Аналитик",
+  RISKS: "Риск-офицер",
+  DECISION: "Орган принятия решения",
+  EXECUTION: "Исполнитель",
+  FEEDBACK: "Инициатор / Аналитик",
+};
+
+export default async function DecisionsPage({ searchParams }: { searchParams: Promise<Filters> }) {
   const user = await requireUser();
   const f = await searchParams;
 
@@ -44,165 +56,199 @@ export default async function DecisionsPage({
   if (f.status && STATUSES.includes(f.status as DecisionStatus)) where.status = f.status;
   if (f.body) where.decisionBodyId = f.body;
   if (f.q) where.OR = [{ title: { contains: f.q } }, { code: { contains: f.q } }, { goal: { contains: f.q } }];
-  if (f.overdue === "1")
+  if (f.overdue === "1") {
     where.AND = [{ deadline: { lt: new Date() } }, { status: { notIn: ["CLOSED", "REJECTED"] } }];
+  }
 
   const [decisions, bodies] = await Promise.all([
-    prisma.decision.findMany({
-      where,
-      include: {
-        decisionBody: true,
-        initiator: true,
-        _count: { select: { alternatives: true, risks: true, assignments: true } },
-      },
-      orderBy: { registeredAt: "desc" },
-    }),
+    prisma.decision.findMany({ where, include: decisionInclude, orderBy: { registeredAt: "desc" } }),
     prisma.decisionBody.findMany({ orderBy: { name: "asc" } }),
   ]);
-
-  const canCreate = can(user.role, "decision.create");
+  const contexts = await Promise.all(decisions.map((decision) => buildGateContext(decision)));
+  const blockedCount = contexts.filter((context) => context.evaluation && !context.evaluation.allowed).length;
+  const levelACount = decisions.filter((decision) => decision.criticality === "A").length;
+  const overdueCount = decisions.filter(
+    (decision) =>
+      decision.deadline &&
+      isBefore(decision.deadline, new Date()) &&
+      !["CLOSED", "REJECTED"].includes(decision.status)
+  ).length;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="workspace space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h1 className="text-lg font-bold text-brand">{ru.nav.decisions}</h1>
-          <p className="text-xs text-slate-500">
-            Найдено паспортов: {decisions.length}. Единица управления — управленческий вопрос, а не документ.
+          <p className="eyebrow">Portfolio control</p>
+          <h1 className="mt-2 text-page font-semibold tracking-[-0.035em] text-text">Реестр решений</h1>
+          <p className="mt-2 max-w-3xl text-lead text-muted">
+            Операционный вид полного жизненного цикла: стадия, контрольные ворота и текущая ответственность.
           </p>
         </div>
-        {canCreate && (
+        {can(user.role, "decision.create") && (
           <Link href="/decisions/new">
-            <Button>
+            <Button size="lg">
               <Plus className="h-4 w-4" />
-              Создать паспорт решения
+              Создать паспорт
             </Button>
           </Link>
         )}
-      </div>
+      </header>
 
-      <Card>
-        <CardContent className="py-3">
-          <form method="get" className="grid gap-2 md:grid-cols-3 lg:grid-cols-7">
+      <section className="grid overflow-hidden rounded-panel bg-obsidian text-surface shadow-panel sm:grid-cols-3">
+        <div className="px-5 py-4">
+          <div className="text-hero font-semibold tracking-[-0.04em]">{decisions.length}</div>
+          <div className="text-table text-line-strong">решений в текущей выборке</div>
+        </div>
+        <div className="border-t border-obsidian-line px-5 py-4 sm:border-l sm:border-t-0">
+          <div className="text-hero font-semibold tracking-[-0.04em] text-action-step-3">{blockedCount}</div>
+          <div className="text-table text-line-strong">заблокированы gate</div>
+        </div>
+        <div className="border-t border-obsidian-line px-5 py-4 sm:border-l sm:border-t-0">
+          <div className="flex items-baseline gap-4">
+            <span className="text-hero font-semibold tracking-[-0.04em]">{levelACount}</span>
+            {overdueCount > 0 && <span className="text-table text-action-step-3">{overdueCount} просрочено</span>}
+          </div>
+          <div className="text-table text-line-strong">решений уровня A</div>
+        </div>
+      </section>
+
+      <section className="surface-band p-4" aria-label="Фильтры реестра">
+        <form method="get" className="grid gap-3 md:grid-cols-[minmax(260px,2fr)_repeat(3,minmax(140px,1fr))_auto]">
+          <label className="relative">
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted" aria-hidden="true" />
             <input
               name="q"
               defaultValue={f.q ?? ""}
-              placeholder="Поиск по коду, названию, цели"
-              className="h-8 rounded border border-slate-300 px-2 text-xs lg:col-span-2"
+              placeholder="Код, название или управленческая цель"
+              className="h-9 w-full rounded-control border border-line bg-surface pl-9 pr-3 text-base text-text placeholder:text-muted focus:border-accent focus:outline-none"
             />
-            <select name="type" defaultValue={f.type ?? ""} className="h-8 rounded border border-slate-300 px-1.5 text-xs">
-              <option value="">Все типы</option>
-              {DECISION_TYPES.map((t) => (
-                <option key={t} value={t}>{ru.decisionTypes[t]}</option>
-              ))}
-            </select>
-            <select name="criticality" defaultValue={f.criticality ?? ""} className="h-8 rounded border border-slate-300 px-1.5 text-xs">
-              <option value="">Все уровни</option>
-              {CRITICALITIES.map((c) => (
-                <option key={c} value={c}>{ru.criticality[c]}</option>
-              ))}
-            </select>
-            <select name="stage" defaultValue={f.stage ?? ""} className="h-8 rounded border border-slate-300 px-1.5 text-xs">
-              <option value="">Все стадии</option>
-              {STAGES.map((s) => (
-                <option key={s} value={s}>{ru.stages[s]}</option>
-              ))}
-            </select>
-            <select name="status" defaultValue={f.status ?? ""} className="h-8 rounded border border-slate-300 px-1.5 text-xs">
-              <option value="">Все статусы</option>
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>{ru.statuses[s]}</option>
-              ))}
-            </select>
-            <select name="body" defaultValue={f.body ?? ""} className="h-8 rounded border border-slate-300 px-1.5 text-xs">
-              <option value="">Все органы</option>
-              {bodies.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-            <label className="flex items-center gap-1.5 text-xs text-slate-600">
-              <input type="checkbox" name="overdue" value="1" defaultChecked={f.overdue === "1"} />
-              Только просроченные
-            </label>
-            <div className="flex gap-2">
-              <Button type="submit" size="sm">Применить</Button>
+          </label>
+          <select name="criticality" defaultValue={f.criticality ?? ""} className="h-9 rounded-control border border-line bg-surface px-3 text-table">
+            <option value="">Все уровни</option>
+            {CRITICALITIES.map((level) => <option key={level} value={level}>{ru.criticality[level]}</option>)}
+          </select>
+          <select name="stage" defaultValue={f.stage ?? ""} className="h-9 rounded-control border border-line bg-surface px-3 text-table">
+            <option value="">Все стадии</option>
+            {STAGES.map((stage) => <option key={stage} value={stage}>{ru.stages[stage]}</option>)}
+          </select>
+          <select name="status" defaultValue={f.status ?? ""} className="h-9 rounded-control border border-line bg-surface px-3 text-table">
+            <option value="">Все статусы</option>
+            {STATUSES.map((status) => <option key={status} value={status}>{ru.statuses[status]}</option>)}
+          </select>
+          <Button type="submit">
+            <Filter className="h-4 w-4" />
+            Применить
+          </Button>
+
+          <details className="md:col-span-full">
+            <summary className="cursor-pointer text-table font-medium text-accent">Дополнительные фильтры</summary>
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">
+              <select name="type" defaultValue={f.type ?? ""} className="h-9 rounded-control border border-line bg-surface px-3 text-table">
+                <option value="">Все типы решений</option>
+                {DECISION_TYPES.map((type) => <option key={type} value={type}>{ru.decisionTypes[type]}</option>)}
+              </select>
+              <select name="body" defaultValue={f.body ?? ""} className="h-9 min-w-56 rounded-control border border-line bg-surface px-3 text-table">
+                <option value="">Все органы принятия</option>
+                {bodies.map((body) => <option key={body.id} value={body.id}>{body.name}</option>)}
+              </select>
+              <label className="flex h-9 items-center gap-2 rounded-control border border-line px-3 text-table text-muted">
+                <input type="checkbox" name="overdue" value="1" defaultChecked={f.overdue === "1"} />
+                Только просроченные
+              </label>
               <Link href="/decisions">
-                <Button type="button" size="sm" variant="ghost">Сбросить</Button>
+                <Button type="button" variant="ghost" size="sm">Сбросить</Button>
               </Link>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </details>
+        </form>
+      </section>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <THead>
+      <section className="overflow-x-auto rounded-panel bg-surface shadow-panel" aria-label="Решения">
+        <Table>
+          <THead>
+            <TR>
+              <TH>Code / title</TH>
+              <TH>Criticality</TH>
+              <TH>Stage</TH>
+              <TH>Gate</TH>
+              <TH>Owner</TH>
+              <TH>Body</TH>
+              <TH>Deadline</TH>
+              <TH>Status</TH>
+            </TR>
+          </THead>
+          <TBody>
+            {decisions.length === 0 && (
               <TR>
-                <TH>Код</TH>
-                <TH>Название</TH>
-                <TH>Тип</TH>
-                <TH>Ур.</TH>
-                <TH>Стадия</TH>
-                <TH>Статус</TH>
-                <TH>Орган принятия</TH>
-                <TH>Срок</TH>
-                <TH>Доказательная база</TH>
+                <TD colSpan={8} className="py-12 text-center text-base text-muted">По заданным фильтрам решений не найдено.</TD>
               </TR>
-            </THead>
-            <TBody>
-              {decisions.length === 0 && (
-                <TR>
-                  <TD colSpan={9} className="py-6 text-center text-sm text-slate-500">
-                    По заданным фильтрам решений не найдено.
+            )}
+            {decisions.map((decision, index) => {
+              const context = contexts[index]!;
+              const failed = context.evaluation?.results.filter((result) => !result.passed) ?? [];
+              const needsHumanVerdict =
+                decision.stage === "DECISION" && decision.status !== "APPROVED" && context.evaluation?.allowed;
+              const overdue =
+                decision.deadline &&
+                isBefore(decision.deadline, new Date()) &&
+                !["CLOSED", "REJECTED"].includes(decision.status);
+              const owner = needsHumanVerdict
+                ? decision.decisionBody.name
+                : failed[0]?.responsible ?? STAGE_OWNER[decision.stage as Stage];
+              const stageIndex = STAGES.indexOf(decision.stage as Stage) + 1;
+
+              return (
+                <TR key={decision.id} className={failed.length > 0 || needsHumanVerdict ? "bg-action-soft" : undefined}>
+                  <TD className="min-w-72 max-w-[420px]">
+                    <Link href={`/decisions/${decision.id}`} className="font-technical text-meta font-semibold text-accent hover:underline">
+                      {decision.code}
+                    </Link>
+                    <Link href={`/decisions/${decision.id}`} className="mt-1 block text-base font-semibold leading-5 text-text hover:text-accent">
+                      {decision.title}
+                    </Link>
+                    {decision.returnCount > 0 && (
+                      <span className="mt-1 inline-flex items-center gap-1 text-meta text-action">
+                        <RotateCcw className="h-3 w-3" /> {decision.returnCount} возврат(а)
+                      </span>
+                    )}
                   </TD>
+                  <TD><CriticalityBadge level={decision.criticality} /></TD>
+                  <TD className="min-w-32">
+                    <div className="font-medium text-text">{ru.stages[decision.stage as Stage]}</div>
+                    <div className="mt-1 flex items-center gap-2 text-meta text-muted">
+                      <span>{String(stageIndex).padStart(2, "0")} / 07</span>
+                      <span className="h-1 w-14 overflow-hidden rounded-full bg-surface-raised">
+                        <span className="block h-full bg-accent" style={{ width: `${(stageIndex / STAGES.length) * 100}%` }} />
+                      </span>
+                    </div>
+                  </TD>
+                  <TD className="min-w-36">
+                    {!context.targetStage ? (
+                      <Badge variant="resolvedSoft">Цикл завершён</Badge>
+                    ) : needsHumanVerdict ? (
+                      <Badge variant="action">Вердикт человека</Badge>
+                    ) : failed.length > 0 ? (
+                      <div>
+                        <Badge variant="action">Закрыт · {failed.length}</Badge>
+                        <div className="mt-1 max-w-44 text-meta text-action">{failed[0]?.explanation}</div>
+                      </div>
+                    ) : (
+                      <Badge variant="resolvedSoft">Готов к переходу</Badge>
+                    )}
+                  </TD>
+                  <TD className="min-w-36 font-medium text-text">{owner}</TD>
+                  <TD className="min-w-40 text-muted">{decision.decisionBody.name}</TD>
+                  <TD className={overdue ? "whitespace-nowrap font-semibold text-action" : "whitespace-nowrap text-muted"}>
+                    {decision.deadline ? format(decision.deadline, "d MMM yyyy", { locale: ruLocale }) : "—"}
+                    {overdue && <span className="block text-meta">срок истёк</span>}
+                  </TD>
+                  <TD className="min-w-32 text-muted">{ru.statuses[decision.status as DecisionStatus]}</TD>
                 </TR>
-              )}
-              {decisions.map((d) => {
-                const overdue =
-                  d.deadline && isBefore(d.deadline, new Date()) && !["CLOSED", "REJECTED"].includes(d.status);
-                return (
-                  <TR key={d.id}>
-                    <TD className="whitespace-nowrap">
-                      <Link href={`/decisions/${d.id}`} className="font-mono text-xs text-brand-accent hover:underline">
-                        {d.code}
-                      </Link>
-                    </TD>
-                    <TD className="max-w-96">
-                      <Link href={`/decisions/${d.id}`} className="text-sm text-slate-900 hover:text-brand-accent">
-                        {d.title}
-                      </Link>
-                      {d.returnCount > 0 && (
-                        <Badge variant="warn" className="ml-1">
-                          <RotateCcw className="h-3 w-3" />
-                          {d.returnCount}
-                        </Badge>
-                      )}
-                    </TD>
-                    <TD className="text-xs">{ru.decisionTypes[d.type as DecisionType]}</TD>
-                    <TD><CriticalityBadge level={d.criticality} /></TD>
-                    <TD className="text-xs">{ru.stages[d.stage as Stage]}</TD>
-                    <TD className="text-xs">{ru.statuses[d.status as DecisionStatus]}</TD>
-                    <TD className="text-xs">{d.decisionBody.name}</TD>
-                    <TD className="whitespace-nowrap text-xs">
-                      {d.deadline ? (
-                        <span className={overdue ? "text-brand-warn" : ""}>
-                          {format(d.deadline, "d MMM yyyy", { locale: ruLocale })}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </TD>
-                    <TD className="whitespace-nowrap text-[11px] text-slate-500">
-                      альт. {d._count.alternatives} · риски {d._count.risks} · пор. {d._count.assignments}
-                    </TD>
-                  </TR>
-                );
-              })}
-            </TBody>
-          </Table>
-        </CardContent>
-      </Card>
+              );
+            })}
+          </TBody>
+        </Table>
+      </section>
     </div>
   );
 }
