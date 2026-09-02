@@ -31,7 +31,7 @@ export default async function AdminPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="admin-governance">
       <header className="border-b border-line pb-5">
         <p className="eyebrow">System governance</p>
         <div className="mt-1 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
@@ -49,7 +49,11 @@ export default async function AdminPage() {
         </div>
       </header>
 
-      <section className="overflow-hidden rounded-panel bg-obsidian text-surface shadow-panel" aria-label="Область и последствия изменений">
+      <section
+        className="overflow-hidden rounded-panel bg-obsidian text-surface shadow-panel"
+        aria-label="Область и последствия изменений"
+        data-tour="admin-governance-impact"
+      >
         <div className="grid lg:grid-cols-[minmax(250px,0.8fr)_minmax(0,1.2fr)]">
           <div className="border-b border-white/15 p-5 lg:border-b-0 lg:border-r lg:p-6">
             <div className="flex items-center gap-2 text-action-soft">
@@ -84,7 +88,11 @@ export default async function AdminPage() {
         </div>
       </section>
 
-      <nav className="grid border-y border-line bg-surface md:grid-cols-3" aria-label="Разделы администрирования">
+      <nav
+        className="grid border-y border-line bg-surface md:grid-cols-3"
+        aria-label="Разделы администрирования"
+        data-tour="admin-sections"
+      >
         <a
           href="#admin-users"
           className="group flex min-h-16 items-center justify-between gap-3 border-b border-line px-4 transition-colors hover:bg-accent-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent md:border-b-0 md:border-r"

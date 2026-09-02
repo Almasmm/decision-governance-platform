@@ -61,7 +61,7 @@ export function AssumptionsPanel({
   ).length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-tour="assumptions-workspace">
       <header className="flex flex-col justify-between gap-4 border-b border-line pb-4 lg:flex-row lg:items-end">
         <div className="max-w-3xl">
           <p className="eyebrow">Assumption register</p>
@@ -91,7 +91,11 @@ export function AssumptionsPanel({
         </div>
       )}
 
-      <section className="overflow-hidden border-y border-line bg-surface" aria-label="Реестр допущений">
+      <section
+        className="overflow-hidden border-y border-line bg-surface"
+        aria-label="Реестр допущений"
+        data-tour="assumptions-register"
+      >
         <Table className="min-w-[860px]">
           <THead>
             <TR>

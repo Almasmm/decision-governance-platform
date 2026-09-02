@@ -75,7 +75,7 @@ export function PostEvaluationPanel({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-tour="post-evaluation-workspace">
       <header className="flex flex-col justify-between gap-4 border-b border-line pb-4 lg:flex-row lg:items-end">
         <div className="max-w-3xl">
           <p className="eyebrow">Learning close-out</p>
@@ -101,7 +101,7 @@ export function PostEvaluationPanel({
         </div>
       </header>
 
-      <section aria-labelledby="recorded-lessons-heading">
+      <section aria-labelledby="recorded-lessons-heading" data-tour="post-evaluation-loop">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="eyebrow">Knowledge evidence</p>
@@ -127,7 +127,11 @@ export function PostEvaluationPanel({
         ) : (
           <div className="divide-y divide-line border-y border-line">
             {lessons.map((lesson, index) => (
-              <article key={lesson.id} className="bg-surface px-4 py-5 sm:px-5">
+              <article
+                key={lesson.id}
+                className="bg-surface px-4 py-5 sm:px-5"
+                data-tour={index === 0 ? "post-evaluation-plan-fact-lesson" : undefined}
+              >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <p className="font-technical text-meta font-semibold text-muted">
                     LESSON {String(index + 1).padStart(2, "0")}
@@ -137,7 +141,10 @@ export function PostEvaluationPanel({
                   </Badge>
                 </div>
                 <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_32px_minmax(0,1fr)_32px_minmax(0,1.1fr)] lg:items-stretch">
-                  <section className="rounded-control border border-dotted border-action bg-action-soft p-4">
+                  <section
+                    className="rounded-control border border-dotted border-action bg-action-soft p-4"
+                    data-tour={index === 0 ? "post-evaluation-plan" : undefined}
+                  >
                     <p className="eyebrow !text-action">01 · Plan</p>
                     <p className="mt-3 whitespace-pre-line text-base text-text">{lesson.whatPlanned}</p>
                   </section>
@@ -145,7 +152,10 @@ export function PostEvaluationPanel({
                     <ArrowRight className="h-5 w-5 text-muted" aria-hidden="true" />
                   </div>
                   <ArrowRight className="mx-auto h-5 w-5 rotate-90 text-muted lg:hidden" aria-hidden="true" />
-                  <section className="rounded-control border border-text bg-surface p-4">
+                  <section
+                    className="rounded-control border border-text bg-surface p-4"
+                    data-tour={index === 0 ? "post-evaluation-fact" : undefined}
+                  >
                     <p className="eyebrow">02 · Fact</p>
                     <p className="mt-3 whitespace-pre-line text-base text-text">{lesson.whatHappened}</p>
                   </section>
@@ -153,7 +163,10 @@ export function PostEvaluationPanel({
                     <ArrowRight className="h-5 w-5 text-muted" aria-hidden="true" />
                   </div>
                   <ArrowRight className="mx-auto h-5 w-5 rotate-90 text-muted lg:hidden" aria-hidden="true" />
-                  <section className="rounded-control bg-obsidian p-4 text-surface">
+                  <section
+                    className="rounded-control bg-obsidian p-4 text-surface"
+                    data-tour={index === 0 ? "post-evaluation-lesson" : undefined}
+                  >
                     <p className="font-technical text-meta uppercase tracking-[0.14em] text-accent-soft">
                       03 · Lesson
                     </p>
@@ -169,7 +182,11 @@ export function PostEvaluationPanel({
       </section>
 
       {canEdit && !isClosed && (
-        <section className="surface-band p-5" aria-labelledby="new-lesson-heading">
+        <section
+          className="surface-band p-5"
+          aria-labelledby="new-lesson-heading"
+          data-tour="post-evaluation-add-lesson"
+        >
           <div className="border-b border-line pb-4">
             <p className="eyebrow">Close the loop</p>
             <h3 id="new-lesson-heading" className="mt-1 text-section font-semibold text-text">
@@ -239,7 +256,11 @@ export function PostEvaluationPanel({
       )}
 
       {canClose && stageIsFeedback && !isClosed && (
-        <section className="rounded-panel bg-obsidian p-5 text-surface shadow-panel" aria-labelledby="close-decision-heading">
+        <section
+          className="rounded-panel bg-obsidian p-5 text-surface shadow-panel"
+          aria-labelledby="close-decision-heading"
+          data-tour="post-evaluation-close-cycle"
+        >
           <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
             <div className="flex max-w-3xl items-start gap-3">
               <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-accent-soft" aria-hidden="true" />

@@ -69,7 +69,7 @@ export default async function LessonsPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="lessons">
       <header className="border-b border-line pb-5">
         <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
           <div className="max-w-3xl">
@@ -106,7 +106,11 @@ export default async function LessonsPage({
         </div>
       </header>
 
-      <section className="surface-band overflow-hidden" aria-labelledby="learning-loop-heading">
+      <section
+        className="surface-band overflow-hidden"
+        aria-labelledby="learning-loop-heading"
+        data-tour="lessons-loop"
+      >
         <div className="grid lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)]">
           <div className="bg-obsidian p-5 text-surface sm:p-6">
             <p className="font-technical text-meta uppercase tracking-[0.16em] text-accent-soft">
@@ -138,7 +142,7 @@ export default async function LessonsPage({
             </ol>
           </div>
 
-          <div className="p-5 sm:p-6">
+          <div className="p-5 sm:p-6" data-tour="lessons-cause-patterns">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
               <div>
                 <p className="eyebrow">Cause pattern · текущая выборка</p>
@@ -182,7 +186,11 @@ export default async function LessonsPage({
         </div>
       </section>
 
-      <section className="border-y border-line bg-surface py-4" aria-label="Поиск и фильтры уроков">
+      <section
+        className="border-y border-line bg-surface py-4"
+        aria-label="Поиск и фильтры уроков"
+        data-tour="lessons-similarity"
+      >
         <form method="get" className="grid gap-3 px-1 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_220px_220px_auto] xl:items-end">
           <div>
             <label htmlFor="lesson-query" className="mb-1.5 block text-table font-medium text-text">
@@ -241,7 +249,7 @@ export default async function LessonsPage({
         </form>
       </section>
 
-      <section aria-labelledby="lesson-register-heading">
+      <section aria-labelledby="lesson-register-heading" data-tour="lessons-registry">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
           <div>
             <p className="eyebrow">Knowledge register</p>
@@ -267,7 +275,11 @@ export default async function LessonsPage({
               const planFact = parseJson<{ planFact?: string }>(postEvaluation?.payload, {}).planFact;
 
               return (
-                <article key={lesson.id} className="bg-surface px-4 py-5 sm:px-5">
+                <article
+                  key={lesson.id}
+                  className="bg-surface px-4 py-5 sm:px-5"
+                  data-tour={index === 0 ? "lessons-example" : undefined}
+                >
                   <header className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
                     <div className="flex min-w-0 gap-3">
                       <span className="font-technical text-meta font-semibold text-muted">

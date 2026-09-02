@@ -21,7 +21,11 @@ export function EvidenceIndex({
   const confirmed = required.filter((block) => block.completeness === 100).length;
 
   return (
-    <aside className="min-w-0 self-start overflow-hidden rounded-panel bg-surface shadow-panel xl:sticky xl:top-20" aria-labelledby="evidence-index-title">
+    <aside
+      className="min-w-0 self-start overflow-hidden rounded-panel bg-surface shadow-panel xl:sticky xl:top-20"
+      aria-labelledby="evidence-index-title"
+      data-tour="evidence-index"
+    >
       <div className="border-b border-line px-4 py-4">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -84,6 +88,7 @@ function EvidenceIndexItem({
       <Link
         href={`/decisions/${decisionId}?tab=passport&block=${block.kind}`}
         aria-current={selected ? "page" : undefined}
+        data-tour={`evidence-block-${block.kind.toLowerCase().replaceAll("_", "-")}`}
         className={cn(
           "group grid min-h-14 grid-cols-[28px_minmax(0,1fr)_18px] items-center gap-2 rounded-control border-l-2 px-2.5 py-2 transition-colors",
           selected && "border-obsidian bg-surface-raised",

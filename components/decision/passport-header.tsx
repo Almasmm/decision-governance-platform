@@ -54,7 +54,11 @@ export function PassportHeader({
   const hasNextGate = gateAllowed !== null;
 
   return (
-    <section className="overflow-hidden rounded-panel bg-surface shadow-panel" aria-labelledby="decision-title">
+    <section
+      className="overflow-hidden rounded-panel bg-surface shadow-panel"
+      aria-labelledby="decision-title"
+      data-tour="decision-header"
+    >
       <div className="grid xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="bg-obsidian px-5 py-5 text-white sm:px-6 sm:py-6">
           <div className="flex flex-wrap items-center gap-2">
@@ -66,6 +70,7 @@ export function PassportHeader({
                 "inline-flex min-h-7 items-center rounded border px-2.5 font-technical text-meta font-bold tracking-[0.1em]",
                 CRITICALITY_STYLE[criticality]
               )}
+              data-tour="decision-criticality"
             >
               УРОВЕНЬ {criticality}
             </span>
@@ -122,7 +127,11 @@ export function PassportHeader({
           </dl>
         </div>
 
-        <aside className="flex flex-col justify-between border-t border-line bg-surface px-5 py-5 xl:border-l xl:border-t-0" aria-label="Готовность решения">
+        <aside
+          className="flex flex-col justify-between border-t border-line bg-surface px-5 py-5 xl:border-l xl:border-t-0"
+          aria-label="Готовность решения"
+          data-tour="decision-readiness"
+        >
           <div>
             <div className="flex items-start justify-between gap-4">
               <div>

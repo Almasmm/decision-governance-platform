@@ -75,7 +75,7 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
   ).length;
 
   return (
-    <div className="workspace space-y-6">
+    <div className="workspace space-y-6" data-tour="decisions-registry">
       <header className="flex flex-wrap items-end justify-between gap-5">
         <div>
           <p className="eyebrow">Portfolio control</p>
@@ -88,6 +88,7 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
           <Link
             href="/decisions/new"
             className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-control bg-accent px-5 font-ui text-lead font-semibold text-surface transition-colors duration-150 hover:bg-obsidian"
+            data-tour="decision-create"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Создать паспорт
@@ -95,7 +96,10 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
         )}
       </header>
 
-      <section className="grid overflow-hidden rounded-panel bg-obsidian text-surface shadow-panel sm:grid-cols-3">
+      <section
+        className="grid overflow-hidden rounded-panel bg-obsidian text-surface shadow-panel sm:grid-cols-3"
+        data-tour="decision-registry-signals"
+      >
         <div className="px-5 py-4">
           <div className="text-hero font-semibold tracking-[-0.04em]">{decisions.length}</div>
           <div className="text-table text-line-strong">решений в текущей выборке</div>
@@ -113,7 +117,7 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
         </div>
       </section>
 
-      <section className="surface-band p-4" aria-label="Фильтры реестра">
+      <section className="surface-band p-4" aria-label="Фильтры реестра" data-tour="decisions-filters">
         <form method="get" className="grid gap-3 lg:grid-cols-[minmax(260px,2fr)_repeat(3,minmax(140px,1fr))_auto]">
           <label className="relative">
             <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted" aria-hidden="true" />
@@ -169,19 +173,23 @@ export default async function DecisionsPage({ searchParams }: { searchParams: Pr
         </form>
       </section>
 
-      <section className="overflow-hidden rounded-panel bg-surface shadow-panel" aria-label="Решения">
+      <section
+        className="overflow-hidden rounded-panel bg-surface shadow-panel"
+        aria-label="Решения"
+        data-tour="decision-registry-table"
+      >
         <Table tabIndex={0}>
           <caption className="sr-only">Реестр управленческих решений с текущей стадией, состоянием контрольных ворот и ответственностью</caption>
           <THead>
             <TR>
-              <TH scope="col">Код / предмет решения</TH>
-              <TH scope="col">Уровень</TH>
-              <TH scope="col">Стадия</TH>
-              <TH scope="col">Контрольные ворота</TH>
-              <TH scope="col">Текущая ответственность</TH>
-              <TH scope="col">Орган принятия</TH>
-              <TH scope="col">Срок</TH>
-              <TH scope="col">Статус</TH>
+              <TH scope="col" data-tour="decision-registry-code">Код / предмет решения</TH>
+              <TH scope="col" data-tour="decision-registry-criticality">Уровень</TH>
+              <TH scope="col" data-tour="decision-registry-stage">Стадия</TH>
+              <TH scope="col" data-tour="decisions-gate">Контрольные ворота</TH>
+              <TH scope="col" data-tour="decisions-responsibility">Текущая ответственность</TH>
+              <TH scope="col" data-tour="decision-registry-authority">Орган принятия</TH>
+              <TH scope="col" data-tour="decision-registry-deadline">Срок</TH>
+              <TH scope="col" data-tour="decision-registry-status">Статус</TH>
             </TR>
           </THead>
           <TBody>

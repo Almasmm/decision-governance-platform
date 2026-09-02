@@ -202,7 +202,7 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="indicator-detail">
       <Link
         href="/indicators"
         className="inline-flex items-center gap-1.5 text-table font-medium text-muted hover:text-accent hover:underline"
@@ -211,7 +211,10 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
         Каталог показателей
       </Link>
 
-      <section className="grid overflow-hidden rounded-panel bg-surface shadow-panel lg:grid-cols-[minmax(0,1fr)_340px]">
+      <section
+        className="grid overflow-hidden rounded-panel bg-surface shadow-panel lg:grid-cols-[minmax(0,1fr)_340px]"
+        data-tour="indicator-detail-overview"
+      >
         <div className="bg-obsidian px-5 py-6 text-white sm:px-7 sm:py-7">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-technical text-table font-semibold tracking-[0.08em] text-white/65">
@@ -245,7 +248,11 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
           </dl>
         </div>
 
-        <aside className="flex flex-col justify-between border-t border-line px-5 py-5 lg:border-l lg:border-t-0" aria-label="Текущее значение показателя">
+        <aside
+          className="flex flex-col justify-between border-t border-line px-5 py-5 lg:border-l lg:border-t-0"
+          aria-label="Текущее значение показателя"
+          data-tour="indicator-provenance"
+        >
           <div>
             <div className="flex items-center justify-between gap-3">
               <p className="text-meta font-semibold tracking-[0.1em] text-muted">ТЕКУЩЕЕ ДОКАЗАТЕЛЬСТВО</p>
@@ -271,7 +278,7 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
                 : "Нет датированного наблюдения"}
             </p>
           </div>
-          <div className="mt-6 border-t border-line pt-4">
+          <div className="mt-6 border-t border-line pt-4" data-tour="indicator-freshness">
             <div className="flex items-center gap-2">
               {!latest || stale ? (
                 <CircleAlert className="h-4 w-4 text-action" aria-hidden="true" />
@@ -289,7 +296,11 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
         </aside>
       </section>
 
-      <section className="grid overflow-hidden rounded-panel bg-surface shadow-panel lg:grid-cols-[minmax(0,1fr)_340px]" aria-labelledby="data-contract-title">
+      <section
+        className="grid overflow-hidden rounded-panel bg-surface shadow-panel lg:grid-cols-[minmax(0,1fr)_340px]"
+        aria-labelledby="data-contract-title"
+        data-tour="indicator-definition"
+      >
         <div className="px-5 py-5 sm:px-6">
           <p className="text-meta font-semibold tracking-[0.1em] text-muted">DATA CONTRACT</p>
           <h2 id="data-contract-title" className="mt-1 text-section font-semibold text-text">Утверждённое определение</h2>
@@ -357,7 +368,7 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
         </aside>
       </section>
 
-      <Card>
+      <Card data-tour="indicator-lineage-workspace">
         <CardHeader>
           <div>
             <p className="flex items-center gap-2 text-meta font-semibold tracking-[0.1em] text-muted">
@@ -378,7 +389,7 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
       </Card>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <Card>
+        <Card data-tour="indicator-history">
           <CardHeader className="items-start">
             <div>
               <p className="flex items-center gap-2 text-meta font-semibold tracking-[0.1em] text-muted">
@@ -415,7 +426,7 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="indicator-version-history">
           <CardHeader>
             <div>
               <p className="flex items-center gap-2 text-meta font-semibold tracking-[0.1em] text-muted">
@@ -469,7 +480,7 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
         </Card>
       </div>
 
-      <Card>
+      <Card data-tour="indicator-decision-usage">
         <CardHeader>
           <div>
             <p className="text-meta font-semibold tracking-[0.1em] text-muted">EVIDENCE USAGE</p>

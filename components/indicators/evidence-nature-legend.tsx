@@ -18,7 +18,11 @@ const NATURES = [
 
 export function EvidenceNatureLegend({ compact = false, className }: { compact?: boolean; className?: string }) {
   return (
-    <section className={cn("min-w-0", className)} aria-labelledby="evidence-nature-title">
+    <section
+      className={cn("min-w-0", className)}
+      aria-labelledby="evidence-nature-title"
+      data-tour="indicator-nature"
+    >
       <p id="evidence-nature-title" className="text-meta font-semibold tracking-[0.1em] text-muted">
         ПРИРОДА ЧИСЛА
       </p>

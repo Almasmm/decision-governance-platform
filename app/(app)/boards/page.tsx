@@ -168,7 +168,11 @@ export default async function BoardsPage({
         </div>
       </header>
 
-      <nav aria-label="Выбор управленческой панели" className="grid border-y border-line sm:grid-cols-2 xl:grid-cols-4">
+      <nav
+        aria-label="Выбор управленческой панели"
+        className="grid border-y border-line sm:grid-cols-2 xl:grid-cols-4"
+        data-tour="boards-perspective"
+      >
         {PANELS.map((item) => {
           const Icon = item.icon;
           const selected = item.key === activeKey;
@@ -212,7 +216,7 @@ export default async function BoardsPage({
         </div>
       </section>
 
-      <section aria-labelledby="signals-heading">
+      <section aria-labelledby="signals-heading" data-tour="boards-evidence">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="eyebrow">Информационный контур</p>

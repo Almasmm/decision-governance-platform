@@ -133,7 +133,7 @@ export default async function AuditPage({
   }
 
   return (
-    <div className="workspace space-y-7">
+    <div className="workspace space-y-7" data-tour="audit">
       <header className="grid gap-5 border-b border-line pb-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
         <div>
           <p className="eyebrow">Контрольный контур</p>
@@ -155,7 +155,11 @@ export default async function AuditPage({
         </div>
       </header>
 
-      <section aria-label="Фильтры журнала" className="surface-band px-4 py-4 sm:px-5">
+      <section
+        aria-label="Фильтры журнала"
+        className="surface-band px-4 py-4 sm:px-5"
+        data-tour="audit-filters"
+      >
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-table font-semibold text-text">
             <Filter className="h-4 w-4 text-accent" aria-hidden="true" />
@@ -217,7 +221,7 @@ export default async function AuditPage({
         </form>
       </section>
 
-      <section aria-labelledby="timeline-heading">
+      <section aria-labelledby="timeline-heading" data-tour="audit-timeline">
         <div className="mb-5 flex items-end justify-between gap-3">
           <div>
             <p className="eyebrow">Audit timeline</p>
@@ -262,6 +266,7 @@ export default async function AuditPage({
                     <article
                       key={event.id}
                       className="group grid grid-cols-[56px_18px_minmax(0,1fr)] gap-x-3 sm:grid-cols-[76px_22px_minmax(0,1fr)] sm:gap-x-4"
+                      data-tour={event.id === events[0]?.id ? "audit-event" : undefined}
                     >
                       <time className="pt-5 text-right font-mono text-meta tabular-nums text-muted" dateTime={event.createdAt.toISOString()}>
                         {format(event.createdAt, "HH:mm")}
@@ -295,7 +300,10 @@ export default async function AuditPage({
                           <span className="rounded-control bg-surface-raised px-2 py-1 text-meta font-medium text-muted">
                             {view.entityLabel}
                           </span>
-                          <details className="technical-detail group/details">
+                          <details
+                            className="technical-detail group/details"
+                            data-tour={event.id === events[0]?.id ? "audit-technical" : undefined}
+                          >
                             <summary className="cursor-pointer list-none text-meta font-medium text-muted underline-offset-4 hover:text-text hover:underline">
                               Показать техническую запись
                             </summary>

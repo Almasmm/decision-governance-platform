@@ -255,7 +255,7 @@ export function AiPanel({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-tour="ai-workspace">
       <header className="border-b border-line pb-4">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div className="max-w-3xl">
@@ -285,7 +285,11 @@ export function AiPanel({
         </div>
       </header>
 
-      <section className="surface-band overflow-hidden" aria-labelledby="capabilities-heading">
+      <section
+        className="surface-band overflow-hidden"
+        aria-labelledby="capabilities-heading"
+        data-tour="ai-governance"
+      >
         <div className="flex flex-col justify-between gap-2 border-b border-line px-4 py-3 sm:flex-row sm:items-center">
           <div>
             <p className="eyebrow">Governance gates</p>
@@ -367,15 +371,44 @@ export function AiPanel({
         </div>
 
         {suggestions.length === 0 ? (
-          <div className="surface-band flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center">
-            <FileSearch className="h-8 w-8 shrink-0 text-muted" aria-hidden="true" />
-            <div>
-              <h4 className="text-base font-semibold text-text">Аналитические записи ещё не созданы</h4>
-              <p className="mt-1 text-base text-muted">
-                Запустите разрешённый governance gate выше. Результат появится здесь вместе с
-                источниками и зоной человеческого вердикта.
+          <div className="surface-band p-5">
+            <div className="flex items-start gap-3">
+              <FileSearch className="h-8 w-8 shrink-0 text-muted" aria-hidden="true" />
+              <div>
+                <h4 className="text-base font-semibold text-text">Аналитические записи ещё не созданы</h4>
+                <p className="mt-1 text-base text-muted">
+                  Запустите разрешённый governance gate выше. Результат появится здесь вместе с
+                  источниками и зоной человеческого вердикта.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 lg:grid-cols-3">
+              <section className="border-l-2 border-line-strong pl-3" data-tour="ai-sources">
+                <p className="text-table font-semibold text-text">Источники анализа</p>
+                <p className="mt-1 text-meta text-muted">Будут раскрыты вместе с доказательным следом.</p>
+              </section>
+              <section className="border-l-2 border-accent pl-3" data-tour="ai-recommendation">
+                <p className="text-table font-semibold text-text">Рекомендация</p>
+                <p className="mt-1 text-meta text-muted">Появится только после разрешённого запуска модели.</p>
+              </section>
+              <section className="border-l-2 border-action pl-3" data-tour="ai-limitations">
+                <p className="text-table font-semibold text-text">Ограничения</p>
+                <p className="mt-1 text-meta text-muted">Границы применимости фиксируются рядом с выводом.</p>
+              </section>
+            </div>
+
+            <div className="mt-4 border-y border-line py-3" data-tour="ai-not-applied">
+              <p className="text-table font-semibold text-text">Рекомендация не применена</p>
+              <p className="mt-1 text-meta text-muted">
+                Пока аналитической записи нет, выбранная альтернатива и исполнение не меняются.
               </p>
             </div>
+
+            <section className="mt-4 bg-obsidian px-4 py-3 text-white" data-tour="ai-human-verdict">
+              <p className="font-technical text-meta uppercase tracking-[0.12em] text-white/60">Human verdict</p>
+              <p className="mt-1 text-base font-semibold">Финальный выбор остаётся за уполномоченным человеком.</p>
+            </section>
           </div>
         ) : (
           <div className="space-y-5">
@@ -404,7 +437,10 @@ export function AiPanel({
                       </div>
                     </div>
 
-                    <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-table sm:grid-cols-3 xl:grid-cols-6">
+                    <dl
+                      className="grid grid-cols-2 gap-x-6 gap-y-3 text-table sm:grid-cols-3 xl:grid-cols-6"
+                      data-tour={index === 0 ? "ai-model-governance" : undefined}
+                    >
                       <div>
                         <dt className="text-meta uppercase tracking-[0.08em] text-muted">Провайдер</dt>
                         <dd className="mt-1 font-semibold text-text">{providerName}</dd>
@@ -443,7 +479,7 @@ export function AiPanel({
                         <dt className="text-meta uppercase tracking-[0.08em] text-muted">Источники</dt>
                         <dd className="mt-1 font-semibold text-text">{sourceCount}</dd>
                       </div>
-                      <div>
+                      <div data-tour={index === 0 ? "ai-not-applied" : undefined}>
                         <dt className="text-meta uppercase tracking-[0.08em] text-muted">Вердикт</dt>
                         <dd className="mt-1 font-semibold text-text">{verdictLabel(suggestion.humanVerdict)}</dd>
                       </div>
@@ -452,7 +488,10 @@ export function AiPanel({
 
                   <div className="p-4 sm:p-5">
                     <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
-                      <section aria-labelledby={`recommendation-${suggestion.id}`}>
+                      <section
+                        aria-labelledby={`recommendation-${suggestion.id}`}
+                        data-tour={index === 0 ? "ai-recommendation" : undefined}
+                      >
                         <div className="flex items-center gap-2 text-accent">
                           <Scale className="h-4 w-4" aria-hidden="true" />
                           <p className="eyebrow text-accent">Model recommendation</p>
@@ -481,7 +520,10 @@ export function AiPanel({
                           </p>
                         </section>
 
-                        <section className="border-t border-line pt-4">
+                        <section
+                          className="border-t border-line pt-4"
+                          data-tour={index === 0 ? "ai-limitations" : undefined}
+                        >
                           <div className="flex items-center gap-2">
                             <TriangleAlert className="h-4 w-4 text-action" aria-hidden="true" />
                             <h5 className="text-table font-semibold uppercase tracking-[0.08em] text-muted">
@@ -512,7 +554,11 @@ export function AiPanel({
                       </aside>
                     </div>
 
-                    <section className="mt-5 border-y border-line py-4" aria-label="Источники анализа">
+                    <section
+                      className="mt-5 border-y border-line py-4"
+                      aria-label="Источники анализа"
+                      data-tour={index === 0 ? "ai-sources" : undefined}
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <Database className="h-4 w-4 text-accent" aria-hidden="true" />
@@ -545,7 +591,7 @@ export function AiPanel({
                       )}
                     </section>
 
-                    <div className="mt-5">
+                    <div className="mt-5" data-tour={index === 0 ? "ai-human-verdict" : undefined}>
                       {suggestion.humanVerdict === "PENDING" ? (
                         <VerdictForm
                           suggestionId={suggestion.id}

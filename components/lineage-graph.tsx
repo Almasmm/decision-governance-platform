@@ -68,7 +68,11 @@ export function LineageGraph({
   uses: LineageUse[];
 }) {
   return (
-    <div className="min-w-0" aria-label="Цепочка происхождения и использования показателя">
+    <div
+      className="min-w-0"
+      aria-label="Цепочка происхождения и использования показателя"
+      data-tour="indicator-lineage"
+    >
       <ol className="flex flex-col xl:flex-row xl:items-stretch" aria-label="Путь формирования доказательства">
         {backbone.map((node, index) => (
           <li key={node.id} className="contents">

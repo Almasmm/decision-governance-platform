@@ -92,7 +92,7 @@ export function IndicatorPanel({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-tour="decision-indicators">
       <header className="flex flex-col justify-between gap-4 border-b border-line pb-4 xl:flex-row xl:items-end">
         <div className="max-w-3xl">
           <p className="eyebrow">Evidence index · data</p>
@@ -123,7 +123,10 @@ export function IndicatorPanel({
       </header>
 
       {evidenceGaps > 0 && (
-        <div className="flex items-start gap-3 border-l-2 border-action bg-action-soft px-4 py-3 text-table text-action">
+        <div
+          className="flex items-start gap-3 border-l-2 border-action bg-action-soft px-4 py-3 text-table text-action"
+          data-tour="decision-indicators-gate-blocker"
+        >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <p>
             <span className="font-semibold">Evidence gaps: {evidenceGaps}.</span> Для критических
@@ -132,7 +135,11 @@ export function IndicatorPanel({
         </div>
       )}
 
-      <section className="overflow-hidden border-y border-line bg-surface" aria-label="Индекс показателей решения">
+      <section
+        className="overflow-hidden border-y border-line bg-surface"
+        aria-label="Индекс показателей решения"
+        data-tour="decision-indicator-register"
+      >
         <Table className="min-w-[980px]">
           <THead>
             <TR>
@@ -259,7 +266,11 @@ export function IndicatorPanel({
       )}
 
       {canLink && available.length > 0 && (
-        <section className="surface-band p-5" aria-labelledby="link-indicator-heading">
+        <section
+          className="surface-band p-5"
+          aria-labelledby="link-indicator-heading"
+          data-tour="decision-indicator-link"
+        >
           <div className="flex items-start gap-3 border-b border-line pb-4">
             <Link2 className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
             <div>

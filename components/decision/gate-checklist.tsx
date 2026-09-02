@@ -33,7 +33,11 @@ export function DecisionGatePanel({
   const progress = results.length === 0 ? 100 : Math.round((confirmed.length / results.length) * 100);
 
   return (
-    <section className={cn("overflow-hidden rounded-panel bg-surface shadow-panel", className)} aria-labelledby="decision-gate-title">
+    <section
+      className={cn("overflow-hidden rounded-panel bg-surface shadow-panel", className)}
+      aria-labelledby="decision-gate-title"
+      data-tour="decision-gate"
+    >
       <header className="bg-obsidian px-5 py-5 text-white sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -111,7 +115,11 @@ export function DecisionGatePanel({
             )}
           </section>
 
-          <section className={cn("px-5 py-5 sm:px-6", actions.length > 0 && "bg-action-soft")} aria-labelledby="gate-actions-title">
+          <section
+            className={cn("px-5 py-5 sm:px-6", actions.length > 0 && "bg-action-soft")}
+            aria-labelledby="gate-actions-title"
+            data-tour="gate-missing-evidence"
+          >
             <h3 id="gate-actions-title" className={cn("text-meta font-semibold tracking-[0.1em]", actions.length > 0 ? "text-action" : "text-muted")}>
               ТРЕБУЕТ ДЕЙСТВИЯ
             </h3>
@@ -137,7 +145,11 @@ export function DecisionGatePanel({
                             <CircleAlert className="h-3.5 w-3.5 text-action" aria-hidden="true" />
                             Ответственный: <span className="font-semibold text-text">{result.responsible}</span>
                           </p>
-                          <Link href={destination.href} className="inline-flex min-h-8 items-center gap-1 text-table font-semibold text-action hover:underline">
+                          <Link
+                            href={destination.href}
+                            className="inline-flex min-h-8 items-center gap-1 text-table font-semibold text-action hover:underline"
+                            data-tour={index === 0 ? "gate-deep-link" : undefined}
+                          >
                             {destination.label}
                             <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                           </Link>
@@ -157,6 +169,7 @@ export function DecisionGatePanel({
           "flex flex-col gap-4 border-t px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between",
           allowed ? "border-accent bg-accent-soft" : "border-action bg-action-soft"
         )}
+        data-tour="decision-gate-transition"
       >
         <div className="flex items-start gap-2.5">
           {allowed ? (

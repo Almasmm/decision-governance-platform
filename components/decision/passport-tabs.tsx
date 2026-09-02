@@ -15,7 +15,11 @@ export type PassportTabKey = (typeof PASSPORT_TABS)[number]["key"];
 
 export function PassportTabs({ decisionId, active }: { decisionId: string; active: string }) {
   return (
-    <nav className="overflow-x-auto border-b border-line" aria-label="Разделы досье решения">
+    <nav
+      className="overflow-x-auto border-b border-line"
+      aria-label="Разделы досье решения"
+      data-tour="passport-tabs"
+    >
       <div className="flex min-w-max items-center gap-6 px-1">
         {PASSPORT_TABS.map((tab) => {
           const selected = active === tab.key;
@@ -24,6 +28,7 @@ export function PassportTabs({ decisionId, active }: { decisionId: string; activ
               key={tab.key}
               href={`/decisions/${decisionId}?tab=${tab.key}`}
               aria-current={selected ? "page" : undefined}
+              data-tour={`passport-tab-${tab.key}`}
               className={cn(
                 "relative flex min-h-11 items-center whitespace-nowrap border-b-2 px-0.5 text-table font-medium transition-colors",
                 selected

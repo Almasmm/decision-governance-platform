@@ -251,7 +251,7 @@ export function EconomicsPanel({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-tour="economics-inputs">
       <header className="flex flex-col justify-between gap-4 border-b border-line pb-4 lg:flex-row lg:items-end">
         <div className="max-w-3xl">
           <p className="eyebrow">Economic evidence</p>
@@ -263,7 +263,10 @@ export function EconomicsPanel({
             независимая проверка сохраняются вместе с результатом.
           </p>
         </div>
-        <dl className="grid grid-cols-2 divide-x divide-line border-y border-line py-2 text-center">
+        <dl
+          className="grid grid-cols-2 divide-x divide-line border-y border-line py-2 text-center"
+          data-tour="economics-review"
+        >
           <div className="px-5">
             <dt className="text-meta text-muted">Расчётов</dt>
             <dd className="font-technical text-lead font-semibold text-text">{calculations.length}</dd>
@@ -285,7 +288,7 @@ export function EconomicsPanel({
         </div>
       )}
 
-      <section aria-labelledby="calculation-register-heading">
+      <section aria-labelledby="calculation-register-heading" data-tour="economics-result">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="eyebrow">Evidence register</p>
@@ -295,6 +298,14 @@ export function EconomicsPanel({
           </div>
           <p className="hidden text-table text-muted sm:block">Автор → формула → результат → review</p>
         </div>
+
+        <p
+          className="mb-3 border-l-2 border-line-strong bg-surface px-4 py-3 text-table text-muted"
+          data-tour="economics-attribution"
+        >
+          Доля атрибуции отделяет обоснованно связанный с решением эффект от влияния внешних
+          факторов и сохраняется вместе с исходными параметрами расчёта.
+        </p>
 
         {calculations.length === 0 ? (
           <div className="border-y border-line bg-surface px-5 py-8 text-base text-muted">
@@ -459,7 +470,7 @@ export function EconomicsPanel({
       )}
 
       {canCalculate && (
-        <section aria-labelledby="calculation-workspace-heading">
+        <section aria-labelledby="calculation-workspace-heading" data-tour="economics-missing">
           <div className="mb-3 border-b border-line pb-3">
             <p className="eyebrow">Calculation workspace</p>
             <h3 id="calculation-workspace-heading" className="mt-1 text-section font-semibold text-text">
@@ -468,7 +479,11 @@ export function EconomicsPanel({
           </div>
 
           <div className="grid gap-5 xl:grid-cols-2">
-            <section className="surface-band p-5" aria-labelledby="automation-effect-heading">
+            <section
+              className="surface-band p-5"
+              aria-labelledby="automation-effect-heading"
+              data-tour="economics-labor-effect"
+            >
               <div className="flex items-start gap-3 border-b border-line pb-4">
                 <span className="font-technical text-section font-semibold text-muted">01</span>
                 <div>
@@ -517,7 +532,11 @@ export function EconomicsPanel({
               </div>
             </section>
 
-            <section className="surface-band p-5" aria-labelledby="risk-effect-heading">
+            <section
+              className="surface-band p-5"
+              aria-labelledby="risk-effect-heading"
+              data-tour="economics-attribution-input"
+            >
               <div className="flex items-start gap-3 border-b border-line pb-4">
                 <span className="font-technical text-section font-semibold text-muted">02</span>
                 <div>
@@ -599,7 +618,11 @@ export function EconomicsPanel({
               </div>
             </section>
 
-            <section className="surface-band p-5 xl:col-span-2" aria-labelledby="npv-heading">
+            <section
+              className="surface-band p-5 xl:col-span-2"
+              aria-labelledby="npv-heading"
+              data-tour="economics-npv"
+            >
               <div className="flex flex-col justify-between gap-3 border-b border-line pb-4 lg:flex-row lg:items-start">
                 <div className="flex items-start gap-3">
                   <span className="font-technical text-section font-semibold text-muted">03</span>

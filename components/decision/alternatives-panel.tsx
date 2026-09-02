@@ -126,8 +126,11 @@ export function AlternativesPanel({
   }
 
   return (
-    <div className="space-y-7">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
+    <div className="space-y-7" data-tour="alternatives-workspace">
+      <header
+        className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5"
+        data-tour="alternatives-summary"
+      >
         <div>
           <p className="eyebrow">Comparison workspace</p>
           <h2 className="mt-1 text-section font-semibold text-text">Сравнение вариантов решения</h2>
@@ -145,7 +148,7 @@ export function AlternativesPanel({
             <dt className="text-meta text-muted">Критериев</dt>
             <dd className="text-section font-semibold text-text">{CRITERIA_KEYS.length}</dd>
           </div>
-          <div>
+          <div data-tour="alternatives-status-quo">
             <dt className="text-meta text-muted">Статус-кво</dt>
             <dd className={cn("text-base font-semibold", hasStatusQuo ? "text-success" : "text-action")}>
               {hasStatusQuo ? "присутствует" : "отсутствует"}
@@ -179,7 +182,11 @@ export function AlternativesPanel({
         </section>
       )}
 
-      <section className="surface-band overflow-hidden" aria-labelledby="comparison-matrix-title">
+      <section
+        className="surface-band overflow-hidden"
+        aria-labelledby="comparison-matrix-title"
+        data-tour="alternatives-matrix"
+      >
         <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line px-5 py-4">
           <h3 id="comparison-matrix-title" className="text-section font-semibold text-text">
             Матрица критериев
@@ -328,7 +335,11 @@ export function AlternativesPanel({
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.8fr)_minmax(440px,1.2fr)]">
-        <section className="border-y border-line py-5" aria-labelledby="analytical-orientation-title">
+        <section
+          className="border-y border-line py-5"
+          aria-labelledby="analytical-orientation-title"
+          data-tour="alternatives-score"
+        >
           <p className="eyebrow">Analytical input</p>
           <h3 id="analytical-orientation-title" className="mt-1 text-section font-semibold text-text">
             Аналитический ориентир
@@ -355,7 +366,11 @@ export function AlternativesPanel({
           </Link>
         </section>
 
-        <section className="rounded-panel bg-obsidian px-5 py-5 text-surface shadow-panel" aria-labelledby="human-decision-title">
+        <section
+          className="rounded-panel bg-obsidian px-5 py-5 text-surface shadow-panel"
+          aria-labelledby="human-decision-title"
+          data-tour="alternatives-human-decision"
+        >
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-obsidian-line pb-4">
             <div>
               <p className="eyebrow !text-surface-raised">Final authority</p>
@@ -433,7 +448,11 @@ export function AlternativesPanel({
       </div>
 
       {canEdit && showForm && (
-        <section className="surface-band px-5 py-5" aria-labelledby="add-alternative-title">
+        <section
+          className="surface-band px-5 py-5"
+          aria-labelledby="add-alternative-title"
+          data-tour="alternatives-add-form"
+        >
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line pb-4">
             <div>
               <p className="eyebrow">Evidence input</p>

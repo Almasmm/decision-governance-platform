@@ -47,7 +47,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         <p className="mt-2 text-lead text-muted">Решения, показатели, модели и поручения в одном контексте.</p>
       </header>
 
-      <form role="search" className="surface-band flex items-center gap-3 p-3">
+      <form role="search" className="surface-band flex items-center gap-3 p-3" data-tour="search-input">
         <Search className="ml-2 h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
         <input
           autoFocus
@@ -73,7 +73,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           <p className="mt-2 text-base text-muted">Проверьте код или используйте более короткую формулировку.</p>
         </section>
       ) : (
-        <div className="grid gap-8 xl:grid-cols-2">
+        <div className="grid gap-8 xl:grid-cols-2" data-tour="search-results">
           <ResultSection icon={FileText} title="Решения" count={decisions.length}>
             {decisions.map((decision) => (
               <ResultLink key={decision.id} href={`/decisions/${decision.id}`} code={decision.code} title={decision.title}>

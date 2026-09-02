@@ -94,7 +94,7 @@ export default async function DecisionPassportPage({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-tour="decision-passport">
       <Link href="/decisions" className="inline-flex min-h-8 items-center text-table font-medium text-muted hover:text-text hover:underline">
         ← Реестр решений
       </Link>
@@ -141,7 +141,7 @@ export default async function DecisionPassportPage({
       )}
 
       {tab === "risks" && (
-        <div className="space-y-4">
+        <div className="space-y-4" data-tour="passport-panel-risks">
           <RisksPanel
             decisionId={decision.id}
             risks={decision.risks.map((r) => ({
@@ -814,7 +814,11 @@ async function AuditTab({ decisionId }: { decisionId: string }) {
   }
 
   return (
-    <section className="overflow-hidden rounded-panel bg-surface shadow-panel" aria-labelledby="decision-audit-title">
+    <section
+      className="overflow-hidden rounded-panel bg-surface shadow-panel"
+      aria-labelledby="decision-audit-title"
+      data-tour="decision-audit-timeline"
+    >
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-5 py-5 sm:px-6">
         <div>
           <p className="flex items-center gap-2 text-meta font-semibold tracking-[0.1em] text-muted">
@@ -859,7 +863,10 @@ async function AuditTab({ decisionId }: { decisionId: string }) {
                           <h4 className="mt-1 text-base font-semibold text-text">{narrative.title}</h4>
                           {narrative.detail && <p className="mt-1 text-table leading-5 text-muted">{narrative.detail}</p>}
 
-                          <details className="group mt-3 rounded-control border border-line bg-canvas">
+                          <details
+                            className="group mt-3 rounded-control border border-line bg-canvas"
+                            data-tour={event.id === events[0]?.id ? "audit-technical" : undefined}
+                          >
                             <summary className="flex min-h-9 cursor-pointer items-center justify-between gap-3 px-3 text-meta font-semibold text-muted hover:text-text">
                               Показать техническую запись
                               <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />

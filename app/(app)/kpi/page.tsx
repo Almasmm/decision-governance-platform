@@ -53,7 +53,7 @@ export default async function KpiPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="kpi-effect">
       <header className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-end">
         <div>
           <p className="font-technical text-meta text-muted">Baseline → Pilot</p>
@@ -75,7 +75,11 @@ export default async function KpiPage() {
         </aside>
       </header>
 
-      <section className="border-y border-line bg-surface" aria-labelledby="measurement-frame-title">
+      <section
+        className="border-y border-line bg-surface"
+        aria-labelledby="measurement-frame-title"
+        data-tour="kpi-sample"
+      >
         <header className="border-b border-line px-4 py-3 sm:px-5">
           <h2 id="measurement-frame-title" className="text-section font-semibold text-text">
             Контур сопоставимости
@@ -106,7 +110,11 @@ export default async function KpiPage() {
         </div>
       </section>
 
-      <section className="border-y border-line bg-surface" aria-labelledby="paired-outcomes-title">
+      <section
+        className="border-y border-line bg-surface"
+        aria-labelledby="paired-outcomes-title"
+        data-tour="kpi-comparison"
+      >
         <header className="flex flex-wrap items-end justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
           <div>
             <h2 id="paired-outcomes-title" className="text-section font-semibold text-text">
@@ -121,7 +129,11 @@ export default async function KpiPage() {
         <KpiCompareChart data={featured} />
       </section>
 
-      <section className="border-y border-line bg-surface" aria-labelledby="kpi-register-title">
+      <section
+        className="border-y border-line bg-surface"
+        aria-labelledby="kpi-register-title"
+        data-tour="kpi-register"
+      >
         <header className="border-b border-line px-4 py-3 sm:px-5">
           <h2 id="kpi-register-title" className="text-section font-semibold text-text">
             Реестр доказательств эффекта
@@ -233,7 +245,10 @@ function SampleFrame({
   variant: "baseline" | "pilot";
 }) {
   return (
-    <div className={cn("px-4 py-4 sm:px-5", variant === "pilot" && "bg-accent-soft")}>
+    <div
+      className={cn("px-4 py-4 sm:px-5", variant === "pilot" && "bg-accent-soft")}
+      data-tour={variant === "baseline" ? "kpi-baseline" : "kpi-pilot"}
+    >
       <div className="flex flex-wrap items-center gap-2">
         <span
           className={cn(

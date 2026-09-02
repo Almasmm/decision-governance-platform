@@ -147,7 +147,7 @@ export default async function RoadmapPage() {
   const pilotContext = comparison.find((item) => item.pilot)?.pilot ?? null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="roadmap">
       <header className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-end">
         <div>
           <p className="font-technical text-meta text-muted">0 · 6 · 18 · 30+ месяцев</p>
@@ -168,7 +168,11 @@ export default async function RoadmapPage() {
       <TransformationRail phases={phases} />
 
       {currentBarrier ? (
-        <section className="border border-action bg-action-soft" aria-labelledby="current-barrier-title">
+        <section
+          className="border border-action bg-action-soft"
+          aria-labelledby="current-barrier-title"
+          data-tour="roadmap-gate"
+        >
           <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.65fr)]">
             <div className="px-5 py-5 sm:px-6">
               <p className="font-technical text-meta font-semibold text-action">Текущая граница трансформации</p>
@@ -194,19 +198,23 @@ export default async function RoadmapPage() {
           </div>
         </section>
       ) : (
-        <section className="border-l-4 border-success bg-accent-soft px-5 py-4">
+        <section className="border-l-4 border-success bg-accent-soft px-5 py-4" data-tour="roadmap-gate">
           <h2 className="text-section font-semibold text-text">Все текущие KPI-gates подтверждены</h2>
           <p className="mt-1 text-base text-muted">Переход к следующему уровню может быть вынесен на человеческое решение.</p>
         </section>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-6" data-tour="roadmap-gate-matrix">
         {phases.map((phase, index) => (
           <PhaseGate key={phase.stage.id} phase={phase} index={index} />
         ))}
       </div>
 
-      <section className="border-y border-line bg-surface" aria-labelledby="implementation-risks-title">
+      <section
+        className="border-y border-line bg-surface"
+        aria-labelledby="implementation-risks-title"
+        data-tour="roadmap-implementation-risks"
+      >
         <header className="border-b border-line px-4 py-3 sm:px-5">
           <h2 id="implementation-risks-title" className="text-section font-semibold text-text">
             Контроль рисков внедрения
@@ -254,7 +262,11 @@ export default async function RoadmapPage() {
 
 function TransformationRail({ phases }: { phases: PhaseView[] }) {
   return (
-    <section className="bg-obsidian px-5 pb-5 pt-4 text-surface sm:px-6" aria-label="Фазы трансформации от пилота до масштабирования">
+    <section
+      className="bg-obsidian px-5 pb-5 pt-4 text-surface sm:px-6"
+      aria-label="Фазы трансформации от пилота до масштабирования"
+      data-tour="roadmap-phases"
+    >
       <div className="grid grid-cols-1 gap-5 md:grid-cols-4 md:gap-0">
         {phases.map((phase, index) => {
           const meta = PHASE_META[index] ?? { mark: String(index + 1), name: phase.stage.title };

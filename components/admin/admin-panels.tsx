@@ -101,7 +101,12 @@ export function UsersPanel({
   const [busy, setBusy] = useState(false);
 
   return (
-    <section id="admin-users" className="scroll-mt-24 space-y-4" aria-labelledby="admin-users-heading">
+    <section
+      id="admin-users"
+      className="scroll-mt-24 space-y-4"
+      aria-labelledby="admin-users-heading"
+      data-tour="admin-users"
+    >
       <PanelHeader
         eyebrow="Identity & authority"
         title="Пользователи и роли"
@@ -185,7 +190,12 @@ export function BodiesPanel({
   const [busy, setBusy] = useState(false);
 
   return (
-    <section id="admin-bodies" className="scroll-mt-24 space-y-4" aria-labelledby="admin-bodies-heading">
+    <section
+      id="admin-bodies"
+      className="scroll-mt-24 space-y-4"
+      aria-labelledby="admin-bodies-heading"
+      data-tour="admin-bodies"
+    >
       <PanelHeader
         eyebrow="Decision authority"
         title="Органы принятия решений"
@@ -361,7 +371,12 @@ export function GatesPanel({ gates }: { gates: GateView[] }) {
     .filter((group) => group.rules.length > 0);
 
   return (
-    <section id="admin-gates" className="scroll-mt-24 space-y-4" aria-labelledby="admin-gates-heading">
+    <section
+      id="admin-gates"
+      className="scroll-mt-24 space-y-4"
+      aria-labelledby="admin-gates-heading"
+      data-tour="admin-gates"
+    >
       <PanelHeader
         eyebrow="Lifecycle control"
         title="Матрица контрольных ворот"
@@ -382,7 +397,7 @@ export function GatesPanel({ gates }: { gates: GateView[] }) {
       {transitionGroups.length === 0 ? (
         <div className="surface-band p-6 text-base text-muted">Gate policy пока не содержит правил.</div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" data-tour="admin-gate-matrix">
           {transitionGroups.map((group, groupIndex) => (
             <section key={`${group.fromStage}-${group.toStage}`} className="overflow-hidden border-y border-line bg-surface">
               <header className="flex flex-col justify-between gap-2 border-b border-line bg-surface-raised px-4 py-3 sm:flex-row sm:items-center">
@@ -446,7 +461,11 @@ export function GatesPanel({ gates }: { gates: GateView[] }) {
         </div>
       )}
 
-      <section className="surface-band p-5" aria-labelledby="new-gate-heading">
+      <section
+        className="surface-band p-5"
+        aria-labelledby="new-gate-heading"
+        data-tour="admin-gate-rule-form"
+      >
         <div className="flex flex-col justify-between gap-3 border-b border-line pb-4 lg:flex-row lg:items-end">
           <div>
             <p className="eyebrow">Policy change</p>

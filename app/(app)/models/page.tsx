@@ -71,7 +71,11 @@ export default async function ModelsPage() {
         </div>
       </header>
 
-      <section aria-labelledby="human-loop-title" className="bg-obsidian px-5 py-6 text-white sm:px-7">
+      <section
+        aria-labelledby="human-loop-title"
+        className="bg-obsidian px-5 py-6 text-white sm:px-7"
+        data-tour="model-human-loop"
+      >
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-meta font-semibold uppercase tracking-[0.16em] text-accent-soft">Human-in-the-loop</p>
@@ -107,7 +111,7 @@ export default async function ModelsPage() {
         <Badge variant="technical">Демо-контур · mock без внешних ключей</Badge>
       </section>
 
-      <section aria-labelledby="registry-heading">
+      <section aria-labelledby="registry-heading" data-tour="model-registry">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
             <p className="eyebrow">Model governance</p>
@@ -115,7 +119,7 @@ export default async function ModelsPage() {
           </div>
           <span className="text-meta text-muted">{models.length} записей</span>
         </div>
-        <div className="divide-y divide-line border-y border-line">
+        <div className="divide-y divide-line border-y border-line" data-tour="model-governance">
           {models.map((model) => {
             const metrics = parseJson<Record<string, number>>(model.qualityMetrics, {});
             const levels = parseJson<string[]>(model.allowedForLevels, []);

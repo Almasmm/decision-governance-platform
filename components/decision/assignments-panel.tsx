@@ -89,7 +89,10 @@ export function AssignmentsPanel({
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-col justify-between gap-4 border-b border-line pb-4 lg:flex-row lg:items-end">
+      <header
+        className="flex flex-col justify-between gap-4 border-b border-line pb-4 lg:flex-row lg:items-end"
+        data-tour="assignments-flow"
+      >
         <div className="max-w-3xl">
           <p className="eyebrow">Execution control</p>
           <h2 className="mt-1 text-decision font-semibold tracking-[-0.02em] text-text">
@@ -101,7 +104,7 @@ export function AssignmentsPanel({
           </p>
         </div>
         <dl className="grid grid-cols-3 divide-x divide-line border-y border-line py-2 text-center">
-          <div className="px-4">
+          <div className="px-4" data-tour="assignments-actual">
             <dt className="text-meta text-muted">Всего</dt>
             <dd className="font-technical text-lead font-semibold text-text">{assignments.length}</dd>
           </div>
@@ -117,7 +120,10 @@ export function AssignmentsPanel({
       </header>
 
       {unlinked.length > 0 && (
-        <div className="flex items-start gap-3 border-l-2 border-action bg-action-soft px-4 py-3 text-table text-action">
+        <div
+          className="flex items-start gap-3 border-l-2 border-action bg-action-soft px-4 py-3 text-table text-action"
+          data-tour="assignments-gate-blocker"
+        >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <p>
             <span className="font-semibold">Gate blocker:</span> поручений без KPI — {unlinked.length}.
@@ -126,7 +132,11 @@ export function AssignmentsPanel({
         </div>
       )}
 
-      <section className="overflow-hidden border-y border-line bg-surface" aria-labelledby="assignment-register-heading">
+      <section
+        className="overflow-hidden border-y border-line bg-surface"
+        aria-labelledby="assignment-register-heading"
+        data-tour="assignments-register"
+      >
         <div className="flex flex-col justify-between gap-2 border-b border-line px-4 py-3 sm:flex-row sm:items-center">
           <h3 id="assignment-register-heading" className="text-section font-semibold text-text">
             Контур ответственности
@@ -139,7 +149,7 @@ export function AssignmentsPanel({
               <TH scope="col" className="w-[34%]">Поручение</TH>
               <TH scope="col">Исполнитель</TH>
               <TH scope="col">Контрольный срок</TH>
-              <TH scope="col">KPI результата</TH>
+              <TH scope="col" data-tour="assignments-kpi">KPI результата</TH>
               <TH scope="col">Статус</TH>
               <TH scope="col" aria-label="Действие" />
             </TR>
@@ -229,7 +239,11 @@ export function AssignmentsPanel({
       )}
 
       {canManage && (
-        <section className="surface-band p-5" aria-labelledby="new-assignment-heading">
+        <section
+          className="surface-band p-5"
+          aria-labelledby="new-assignment-heading"
+          data-tour="assignments-add-form"
+        >
           <div className="border-b border-line pb-4">
             <p className="eyebrow">New accountability</p>
             <h3 id="new-assignment-heading" className="mt-1 text-section font-semibold text-text">

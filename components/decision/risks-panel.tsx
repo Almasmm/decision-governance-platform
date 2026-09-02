@@ -186,8 +186,11 @@ export function RisksPanel({
   const incompleteResidual = risks.filter((risk) => exposureAfter(risk) === null).length;
 
   return (
-    <div className="space-y-7">
-      <header className="flex flex-wrap items-end justify-between gap-5 border-b border-line pb-5">
+    <div className="space-y-7" data-tour="risks-workspace">
+      <header
+        className="flex flex-wrap items-end justify-between gap-5 border-b border-line pb-5"
+        data-tour="risk-summary"
+      >
         <div>
           <p className="eyebrow">Risk decision view</p>
           <h2 className="mt-1 text-section font-semibold text-text">Переход риска после мер контроля</h2>
@@ -201,7 +204,7 @@ export function RisksPanel({
             <p className="text-meta text-muted">Рисков в профиле</p>
             <p className="text-section font-semibold text-text">{risks.length}</p>
           </div>
-          <div>
+          <div data-tour="risk-residual-readiness">
             <p className="text-meta text-muted">Остаточный риск</p>
             <p className={cn("text-base font-semibold", incompleteResidual ? "text-action" : "text-success")}>
               {incompleteResidual ? `не оценён: ${incompleteResidual}` : "оценён полностью"}
@@ -216,7 +219,11 @@ export function RisksPanel({
         </div>
       </header>
 
-      <section className="surface-band px-5 py-5" aria-labelledby="risk-exposure-summary">
+      <section
+        className="surface-band px-5 py-5"
+        aria-labelledby="risk-exposure-summary"
+        data-tour="risk-exposure"
+      >
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div>
             <p className="eyebrow">Portfolio exposure</p>
@@ -258,15 +265,37 @@ export function RisksPanel({
         </div>
       </section>
 
-      <section aria-labelledby="risk-transitions-title">
+      <section aria-labelledby="risk-transitions-title" data-tour="risk-initial-control-residual">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h3 id="risk-transitions-title" className="text-section font-semibold text-text">Риски и принятые меры</h3>
           <p className="hidden text-table text-muted sm:block">INITIAL → CONTROL → RESIDUAL</p>
         </div>
 
         {risks.length === 0 ? (
-          <div className="border-y border-line py-10 text-center">
-            <p className="text-base text-muted">Риск-профиль не заполнен.</p>
+          <div className="border-y border-line px-4 py-5 sm:px-5">
+            <p className="text-base font-semibold text-text">Риск-профиль не заполнен.</p>
+            <p className="mt-1 text-table text-muted">
+              После добавления риска здесь появится полный переход от исходной экспозиции к
+              контролю и принятому остаточному риску.
+            </p>
+            <div className="mt-4 grid gap-3 lg:grid-cols-3">
+              <section className="rounded-control border border-line bg-canvas p-4" data-tour="risk-initial">
+                <p className="eyebrow">Initial risk</p>
+                <p className="mt-2 text-table text-muted">Исходные вероятность и воздействие.</p>
+              </section>
+              <section className="rounded-control border border-accent bg-accent-soft p-4" data-tour="risk-mitigation">
+                <p className="eyebrow !text-accent">Control</p>
+                <p className="mt-2 text-table text-muted">Конкретная мера снижения экспозиции.</p>
+              </section>
+              <section className="rounded-control border border-line bg-surface p-4" data-tour="risk-residual">
+                <p className="eyebrow">Residual risk</p>
+                <p className="mt-2 text-table text-muted">Риск, который организация принимает после мер.</p>
+              </section>
+            </div>
+            <div className="mt-4 border-l-2 border-line-strong pl-3" data-tour="risk-owner-trigger">
+              <p className="text-table font-semibold text-text">Владелец и триггер пересмотра</p>
+              <p className="mt-1 text-meta text-muted">Фиксируются для наблюдения за риском после решения.</p>
+            </div>
           </div>
         ) : (
           <div className="divide-y divide-line border-y border-line">
@@ -284,7 +313,10 @@ export function RisksPanel({
                       </span>
                       <div>
                         <h4 className="text-lead font-semibold text-text">{risk.name}</h4>
-                        <dl className="mt-1 flex flex-wrap gap-x-5 gap-y-1 text-table">
+                        <dl
+                          className="mt-1 flex flex-wrap gap-x-5 gap-y-1 text-table"
+                          data-tour={index === 0 ? "risk-owner-trigger" : undefined}
+                        >
                           <div className="flex gap-1.5">
                             <dt className="text-muted">Владелец</dt>
                             <dd className={risk.ownerName ? "font-semibold text-text" : "font-semibold text-action"}>
@@ -306,7 +338,10 @@ export function RisksPanel({
                   </header>
 
                   <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_32px_minmax(220px,1.15fr)_32px_minmax(0,1fr)] lg:items-stretch">
-                    <div className="rounded-control border border-line bg-canvas p-4">
+                    <div
+                      className="rounded-control border border-line bg-canvas p-4"
+                      data-tour={index === 0 ? "risk-initial" : undefined}
+                    >
                       <p className="eyebrow">Initial risk</p>
                       <p className="mt-2 text-section font-semibold tabular-nums text-text">{formatMoney(initial)}</p>
                       <dl className="mt-3 grid grid-cols-2 gap-3 text-table">
@@ -329,7 +364,10 @@ export function RisksPanel({
                     </div>
                     <ArrowDown className="mx-auto h-5 w-5 text-muted lg:hidden" aria-hidden="true" />
 
-                    <div className="rounded-control border border-accent bg-accent-soft p-4">
+                    <div
+                      className="rounded-control border border-accent bg-accent-soft p-4"
+                      data-tour={index === 0 ? "risk-mitigation" : undefined}
+                    >
                       <p className="eyebrow !text-accent">Control</p>
                       <div className="mt-2 flex items-start gap-2">
                         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
@@ -345,7 +383,10 @@ export function RisksPanel({
                     </div>
                     <ArrowDown className="mx-auto h-5 w-5 text-muted lg:hidden" aria-hidden="true" />
 
-                    <div className={cn("rounded-control border p-4", residual === null ? "border-action bg-action-soft" : "border-line bg-surface")}>
+                    <div
+                      className={cn("rounded-control border p-4", residual === null ? "border-action bg-action-soft" : "border-line bg-surface")}
+                      data-tour={index === 0 ? "risk-residual" : undefined}
+                    >
                       <p className={cn("eyebrow", residual === null && "!text-action")}>Residual risk</p>
                       {residual === null ? (
                         <div className="mt-3 flex items-start gap-2 text-action">

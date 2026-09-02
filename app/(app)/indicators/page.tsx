@@ -67,8 +67,11 @@ export default async function IndicatorsPage({
   const stale = all.length - current.length - withoutValues.length;
 
   return (
-    <div className="space-y-6">
-      <section className="grid overflow-hidden rounded-panel bg-surface shadow-panel xl:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="space-y-6" data-tour="indicator-catalog">
+      <section
+        className="grid overflow-hidden rounded-panel bg-surface shadow-panel xl:grid-cols-[minmax(0,1fr)_320px]"
+        data-tour="indicator-catalog-overview"
+      >
         <div className="bg-obsidian px-5 py-6 text-white sm:px-7 sm:py-7">
           <p className="flex items-center gap-2 text-meta font-semibold tracking-[0.12em] text-white/60">
             <Database className="h-4 w-4" aria-hidden="true" />
@@ -84,7 +87,7 @@ export default async function IndicatorsPage({
               <dt className="text-meta text-white/50">Показателей</dt>
               <dd className="mt-1 text-section font-semibold text-white">{all.length}</dd>
             </div>
-            <div>
+            <div data-tour="decision-criticality">
               <dt className="text-meta text-white/50">Критических</dt>
               <dd className="mt-1 text-section font-semibold text-white">{critical.length}</dd>
             </div>
@@ -95,7 +98,11 @@ export default async function IndicatorsPage({
           </dl>
         </div>
 
-        <aside className="flex flex-col justify-between border-t border-line px-5 py-5 xl:border-l xl:border-t-0" aria-label="Готовность критических данных">
+        <aside
+          className="flex flex-col justify-between border-t border-line px-5 py-5 xl:border-l xl:border-t-0"
+          aria-label="Готовность критических данных"
+          data-tour="indicator-governance-readiness"
+        >
           <div>
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -131,7 +138,11 @@ export default async function IndicatorsPage({
         </aside>
       </section>
 
-      <section className="grid overflow-hidden rounded-panel bg-surface shadow-panel xl:grid-cols-[minmax(0,1fr)_410px]" aria-label="Фильтры каталога и легенда">
+      <section
+        className="grid overflow-hidden rounded-panel bg-surface shadow-panel xl:grid-cols-[minmax(0,1fr)_410px]"
+        aria-label="Фильтры каталога и легенда"
+        data-tour="indicator-catalog-filters"
+      >
         <form method="get" className="flex flex-wrap items-end gap-3 px-4 py-4 sm:px-5">
           <div className="min-w-[220px] flex-1 sm:max-w-sm">
             <label htmlFor="indicator-search" className="mb-1 block text-meta font-semibold text-muted">
@@ -174,7 +185,7 @@ export default async function IndicatorsPage({
         <EvidenceNatureLegend compact className="border-t border-line px-5 py-4 xl:border-l xl:border-t-0" />
       </section>
 
-      <section aria-labelledby="evidence-catalog-title">
+      <section aria-labelledby="evidence-catalog-title" data-tour="indicator-evidence-registry">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-meta font-semibold tracking-[0.1em] text-muted">EVIDENCE REGISTRY</p>
@@ -187,12 +198,12 @@ export default async function IndicatorsPage({
           <Table className="min-w-[1180px]">
             <THead>
               <TR>
-                <TH className="w-[310px]">Показатель и определение</TH>
-                <TH className="w-[170px]">Последнее значение</TH>
-                <TH className="w-[155px]">Источник</TH>
-                <TH className="w-[180px]">Владелец</TH>
-                <TH className="w-[150px]">Политика обновления</TH>
-                <TH className="w-[145px]">Качество</TH>
+                <TH className="w-[310px]" data-tour="indicator-definition">Показатель и определение</TH>
+                <TH className="w-[170px]" data-tour="indicator-current-value">Последнее значение</TH>
+                <TH className="w-[155px]" data-tour="indicator-source">Источник</TH>
+                <TH className="w-[180px]" data-tour="indicator-owner">Владелец</TH>
+                <TH className="w-[150px]" data-tour="indicator-freshness">Политика обновления</TH>
+                <TH className="w-[145px]" data-tour="indicator-quality">Качество</TH>
                 <TH className="w-[90px] text-right">Использование</TH>
               </TR>
             </THead>

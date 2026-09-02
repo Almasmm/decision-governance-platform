@@ -25,7 +25,7 @@ export function MaturityCard({
 }) {
   if (!result) {
     return (
-      <section className="border-y border-rule bg-sheet px-4 py-4">
+      <section className="border-y border-rule bg-sheet px-4 py-4" data-tour="maturity-scale">
         <h2 className="font-ui text-section font-semibold text-ink">Зрелость процесса</h2>
         <p className="mt-2 text-base text-signal">
           {ru.common.notEnoughData}: нет измерений KPI пилотной выборки.
@@ -43,7 +43,11 @@ export function MaturityCard({
       : "не указан");
 
   return (
-    <section className="border-y border-rule bg-sheet" aria-labelledby="maturity-title">
+    <section
+      className="border-y border-rule bg-sheet"
+      aria-labelledby="maturity-title"
+      data-tour="maturity-scale"
+    >
       <header className="flex flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-5">
         <div>
           <h2 id="maturity-title" className="font-ui text-section font-semibold text-ink">

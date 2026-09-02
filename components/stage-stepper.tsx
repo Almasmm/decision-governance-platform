@@ -16,7 +16,11 @@ export function StageStepper({
   const currentIdx = STAGES.indexOf(current);
 
   return (
-    <section className="border-t border-line bg-surface px-4 py-4 sm:px-5" aria-labelledby="decision-lifecycle-title">
+    <section
+      className="border-t border-line bg-surface px-4 py-4 sm:px-5"
+      aria-labelledby="decision-lifecycle-title"
+      data-tour="decision-stage-rail"
+    >
       <div className="mb-3 flex flex-wrap items-end justify-between gap-x-5 gap-y-1">
         <div>
           <p className="text-meta font-semibold tracking-[0.12em] text-muted">ЖИЗНЕННЫЙ ЦИКЛ РЕШЕНИЯ</p>

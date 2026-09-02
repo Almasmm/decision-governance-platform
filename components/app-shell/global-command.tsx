@@ -32,7 +32,12 @@ export function GlobalCommand() {
   }
 
   return (
-    <form onSubmit={submit} role="search" className="relative min-w-0 flex-1 md:max-w-xl">
+    <form
+      onSubmit={submit}
+      role="search"
+      className="relative min-w-0 flex-1 md:max-w-xl"
+      data-tour="global-search"
+    >
       <Search
         className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted"
         aria-hidden="true"

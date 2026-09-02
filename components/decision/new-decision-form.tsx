@@ -83,6 +83,7 @@ export function NewDecisionForm({ bodies }: { bodies: Array<{ id: string; name: 
       </ol>
 
       <form
+            data-tour="decision-new-form"
             onSubmit={handleSubmit(async (values) => {
               setError(null);
               const res = await createDecision(values);
@@ -128,7 +129,7 @@ export function NewDecisionForm({ bodies }: { bodies: Array<{ id: string; name: 
               </div>
             </div>
 
-            <div className="border-t border-line pt-5">
+            <div className="border-t border-line pt-5" data-tour="decision-new-body">
               <p className="eyebrow">02 · Authority</p>
               <div className="mt-3">
                 <Label htmlFor="body">Орган принятия решения</Label>
@@ -147,7 +148,7 @@ export function NewDecisionForm({ bodies }: { bodies: Array<{ id: string; name: 
               <p className="max-w-md text-meta leading-5 text-muted">
                 После создания система сформирует пустое досье и проверит первый gate. Переходы не выполняются автоматически.
               </p>
-              <Button type="submit" size="lg" disabled={isSubmitting}>
+              <Button type="submit" size="lg" disabled={isSubmitting} data-tour="decision-new-submit">
                 {isSubmitting ? "Создание…" : "Создать паспорт"}
                 {!isSubmitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
               </Button>
@@ -155,7 +156,11 @@ export function NewDecisionForm({ bodies }: { bodies: Array<{ id: string; name: 
           </div>
         </section>
 
-        <aside className="sticky top-24 overflow-hidden bg-obsidian text-white shadow-panel" aria-labelledby="criticality-heading">
+        <aside
+          className="sticky top-24 overflow-hidden bg-obsidian text-white shadow-panel"
+          aria-labelledby="criticality-heading"
+          data-tour="decision-new-criticality"
+        >
           <div className="border-b border-white/15 px-5 py-5">
             <p className="text-meta font-semibold uppercase tracking-[0.16em] text-accent-soft">03 · Criticality</p>
             <label htmlFor="criticality" className="mt-4 flex items-center justify-between gap-4">
