@@ -1,31 +1,30 @@
 "use client";
 
-// Сравнение альтернатив: матрица «альтернативы × критерии» с обязательным
-// столбцом «Статус-кво», лепестковая диаграмма, выбор варианта с мотивировкой.
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Legend,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
   Radar,
   RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, Plus, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { addAlternative } from "@/app/actions/evidence";
 import { decideDecision } from "@/app/actions/decisions";
 import { CRITERIA_KEYS } from "@/lib/domain";
 import { ru } from "@/lib/i18n/ru";
 import { cn } from "@/lib/utils";
+import { T, SERIES, SERIES_DASH, axisTick } from "@/components/chart-tokens";
 
 export interface AlternativeView {
   id: string;
@@ -35,8 +34,6 @@ export interface AlternativeView {
   selected: boolean;
   scores: Record<string, number>;
 }
-
-const CHART_COLORS = ["#12305B", "#2E6DB4", "#7BA7D7", "#C77700", "#5B7A9B"];
 
 const altSchema = z.object({
   name: z.string().min(3, "Название — не менее 3 символов"),
@@ -77,11 +74,19 @@ export function AlternativesPanel({
 
   const hasStatusQuo = alternatives.some((a) => a.isStatusQuo);
   const substantive = alternatives.filter((a) => !a.isStatusQuo);
+  const selectedAlternative = alternatives.find((a) => a.selected) ?? null;
+  const ranked = alternatives
+    .map((alternative) => ({
+      alternative,
+      total: CRITERIA_KEYS.reduce((sum, key) => sum + (alternative.scores[key] ?? 0), 0),
+    }))
+    .sort((a, b) => b.total - a.total);
+  const analyticalLeader = ranked[0] ?? null;
 
-  const chartData = CRITERIA_KEYS.map((k) => {
-    const row: Record<string, string | number> = { criterion: ru.criteria[k] };
-    alternatives.forEach((a) => {
-      row[a.name] = a.scores[k] ?? 0;
+  const chartData = CRITERIA_KEYS.map((key) => {
+    const row: Record<string, string | number> = { criterion: ru.criteria[key] };
+    alternatives.forEach((alternative) => {
+      row[alternative.name] = alternative.scores[key] ?? 0;
     });
     return row;
   });
@@ -97,8 +102,14 @@ export function AlternativesPanel({
       name: "",
       description: "",
       isStatusQuo: "false",
-      safety: 5, regulatory: 5, economics: 5, timeline: 5,
-      resources: 5, hr: 5, cyber: 5, sustainability: 5,
+      safety: 5,
+      regulatory: 5,
+      economics: 5,
+      timeline: 5,
+      resources: 5,
+      hr: 5,
+      cyber: 5,
+      sustainability: 5,
     },
   });
 
@@ -115,291 +126,378 @@ export function AlternativesPanel({
   }
 
   return (
-    <div className="space-y-4">
-      {!hasStatusQuo && (
-        <div className="flex items-start gap-2 rounded border border-amber-300 bg-amber-50 p-3 text-xs text-brand-warn">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>
-            Отсутствует обязательный вариант «статус-кво». Сравнение альтернатив без базового
-            варианта не считается полным: невозможно оценить, что произойдёт при отказе от действий.
-          </span>
+    <div className="space-y-7">
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
+        <div>
+          <p className="eyebrow">Comparison workspace</p>
+          <h2 className="mt-1 text-section font-semibold text-text">Сравнение вариантов решения</h2>
+          <p className="mt-1 max-w-3xl text-base text-muted">
+            Единый набор критериев делает варианты сопоставимыми. Итоговая сумма помогает анализу,
+            но не выбирает решение за уполномоченное лицо.
+          </p>
         </div>
-      )}
-      {substantive.length < 2 && (
-        <div className="flex items-start gap-2 rounded border border-amber-300 bg-amber-50 p-3 text-xs text-brand-warn">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>
-            Содержательных альтернатив: {substantive.length}. Для уровней A и B требуется не менее
-            двух содержательно различающихся вариантов помимо статус-кво.
-          </span>
-        </div>
+        <dl className="flex flex-wrap gap-x-6 gap-y-2">
+          <div>
+            <dt className="text-meta text-muted">Вариантов</dt>
+            <dd className="text-section font-semibold text-text">{alternatives.length}</dd>
+          </div>
+          <div>
+            <dt className="text-meta text-muted">Критериев</dt>
+            <dd className="text-section font-semibold text-text">{CRITERIA_KEYS.length}</dd>
+          </div>
+          <div>
+            <dt className="text-meta text-muted">Статус-кво</dt>
+            <dd className={cn("text-base font-semibold", hasStatusQuo ? "text-success" : "text-action")}>
+              {hasStatusQuo ? "присутствует" : "отсутствует"}
+            </dd>
+          </div>
+          {canEdit && (
+            <div className="flex items-end">
+              <Button size="sm" variant="secondary" onClick={() => setShowForm((value) => !value)}>
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {showForm ? "Скрыть форму" : "Добавить вариант"}
+              </Button>
+            </div>
+          )}
+        </dl>
+      </header>
+
+      {(!hasStatusQuo || substantive.length < 2) && (
+        <section className="border-l-2 border-action bg-action-soft px-4 py-3" aria-label="Пробелы сравнения">
+          <div className="flex items-center gap-2 text-base font-semibold text-action">
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+            Сравнение требует дополнения
+          </div>
+          <ul className="mt-2 space-y-1 text-base text-text">
+            {!hasStatusQuo && (
+              <li>Добавьте статус-кво: без сценария бездействия невозможно оценить цену отказа от изменений.</li>
+            )}
+            {substantive.length < 2 && (
+              <li>Содержательных вариантов: {substantive.length}. Для уровней A и B требуется не менее двух.</li>
+            )}
+          </ul>
+        </section>
       )}
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Матрица «альтернативы × критерии»</CardTitle>
-          <span className="text-[11px] text-slate-500">Шкала 0–10, единый набор из 8 критериев</span>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead className="bg-brand-card">
-                <tr>
-                  <th className="px-2.5 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-brand">
-                    Критерий
+      <section className="surface-band overflow-hidden" aria-labelledby="comparison-matrix-title">
+        <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line px-5 py-4">
+          <h3 id="comparison-matrix-title" className="text-section font-semibold text-text">
+            Матрица критериев
+          </h3>
+          <p className="text-table text-muted">Оценка 0–10 · одинаковая шкала для всех вариантов</p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-[760px] w-full border-collapse text-table">
+            <thead>
+              <tr className="border-b border-line-strong">
+                <th className="sticky left-0 z-20 w-52 bg-surface px-4 py-3 text-left font-semibold text-muted">
+                  Критерий
+                </th>
+                {alternatives.map((alternative) => (
+                  <th
+                    key={alternative.id}
+                    className={cn(
+                      "min-w-44 px-4 py-3 text-left align-top font-semibold text-text",
+                      alternative.isStatusQuo && !alternative.selected && "bg-canvas",
+                      alternative.selected && "bg-accent-soft"
+                    )}
+                  >
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span>{alternative.name}</span>
+                      {alternative.isStatusQuo && <Badge variant="neutral">статус-кво</Badge>}
+                    </div>
+                    {alternative.selected && (
+                      <span className="mt-1 inline-flex items-center gap-1 text-meta font-semibold text-accent">
+                        <UserCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                        выбор человека
+                      </span>
+                    )}
                   </th>
-                  {alternatives.map((a) => (
-                    <th
-                      key={a.id}
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {CRITERIA_KEYS.map((key) => (
+                <tr key={key} className="border-b border-line last:border-b-0">
+                  <th className="sticky left-0 z-10 bg-surface px-4 py-3 text-left font-medium text-text">
+                    {ru.criteria[key]}
+                  </th>
+                  {alternatives.map((alternative) => {
+                    const value = alternative.scores[key];
+                    return (
+                      <td
+                        key={alternative.id}
+                        className={cn(
+                          "px-4 py-3",
+                          alternative.isStatusQuo && !alternative.selected && "bg-canvas",
+                          alternative.selected && "bg-accent-soft"
+                        )}
+                      >
+                        {typeof value === "number" ? (
+                          <div className="flex items-center gap-3">
+                            <span className="w-5 text-base font-semibold tabular-nums text-text">{value}</span>
+                            <span className="h-1.5 w-16 overflow-hidden rounded bg-surface-raised" aria-hidden="true">
+                              <span className="block h-full bg-accent" style={{ width: `${value * 10}%` }} />
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-action">не оценено</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+              <tr className="border-t-2 border-line-strong">
+                <th className="sticky left-0 z-10 bg-surface px-4 py-3 text-left font-semibold text-text">
+                  Сумма <span className="block text-meta font-normal text-muted">справочный ориентир</span>
+                </th>
+                {ranked
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      alternatives.findIndex((item) => item.id === a.alternative.id) -
+                      alternatives.findIndex((item) => item.id === b.alternative.id)
+                  )
+                  .map(({ alternative, total }) => (
+                    <td
+                      key={alternative.id}
                       className={cn(
-                        "px-2.5 py-2 text-left text-[11px] font-semibold text-brand",
-                        a.isStatusQuo && "bg-slate-200/60"
+                        "px-4 py-3 text-lead font-semibold tabular-nums text-text",
+                        alternative.isStatusQuo && !alternative.selected && "bg-canvas",
+                        alternative.selected && "bg-accent-soft"
                       )}
                     >
-                      <div className="flex items-center gap-1">
-                        {a.name}
-                        {a.isStatusQuo && <Badge variant="neutral">статус-кво</Badge>}
-                        {a.selected && <Badge variant="success">выбрано</Badge>}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {CRITERIA_KEYS.map((k) => (
-                  <tr key={k} className="border-b border-slate-100">
-                    <td className="px-2.5 py-1.5 text-xs text-slate-700">{ru.criteria[k]}</td>
-                    {alternatives.map((a) => {
-                      const v = a.scores[k];
-                      return (
-                        <td
-                          key={a.id}
-                          className={cn(
-                            "px-2.5 py-1.5 tabular-nums",
-                            a.isStatusQuo && "bg-slate-50",
-                            typeof v !== "number" && "text-brand-warn"
-                          )}
-                        >
-                          {typeof v === "number" ? v : "не оценено"}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-                <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
-                  <td className="px-2.5 py-2 text-xs text-brand">Сумма (справочно)</td>
-                  {alternatives.map((a) => (
-                    <td key={a.id} className="px-2.5 py-2 tabular-nums text-brand">
-                      {CRITERIA_KEYS.reduce((s, k) => s + (a.scores[k] ?? 0), 0)} / 80
+                      {total} <span className="text-table font-normal text-muted">/ 80</span>
                     </td>
                   ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          {alternatives.length > 0 && (
-            <p className="border-t border-slate-100 px-3 py-2 text-[11px] text-slate-500">
-              Суммарная оценка — справочный ориентир, а не основание решения: веса критериев не
-              откалиброваны, выбор делает уполномоченное лицо.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      {alternatives.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Профиль альтернатив по критериям</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={chartData} outerRadius="70%">
-                  <PolarGrid stroke="#E2E8F0" />
-                  <PolarAngleAxis dataKey="criterion" tick={{ fontSize: 11, fill: "#475569" }} />
-                  <PolarRadiusAxis domain={[0, 10]} tick={{ fontSize: 10, fill: "#94A3B8" }} />
-                  {alternatives.map((a, i) => (
-                    <Radar
-                      key={a.id}
-                      name={a.name}
-                      dataKey={a.name}
-                      stroke={CHART_COLORS[i % CHART_COLORS.length]}
-                      fill={CHART_COLORS[i % CHART_COLORS.length]}
-                      fillOpacity={0.12}
-                      strokeDasharray={a.isStatusQuo ? "4 3" : undefined}
-                    />
-                  ))}
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        {alternatives.length === 0 && (
+          <p className="px-5 py-8 text-center text-base text-muted">Варианты ещё не добавлены.</p>
+        )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Описание вариантов</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {alternatives.length === 0 && (
-              <p className="text-sm text-slate-500">Альтернативы не добавлены.</p>
-            )}
-            {alternatives.map((a) => (
-              <div key={a.id} className="rounded border border-slate-200 p-2.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-medium text-slate-900">{a.name}</span>
-                  {a.isStatusQuo && <Badge variant="neutral">статус-кво</Badge>}
-                  {a.selected && (
-                    <Badge variant="success">
-                      <CheckCircle2 className="h-3 w-3" /> выбрано
-                    </Badge>
-                  )}
-                </div>
-                <p className="mt-1 text-xs text-slate-600">{a.description}</p>
+        {alternatives.length > 0 && (
+          <details className="border-t border-line">
+            <summary className="cursor-pointer px-5 py-3 text-base font-semibold text-accent">
+              Контекст вариантов и дополнительный профиль
+            </summary>
+            <div className="grid gap-6 border-t border-line px-5 py-5 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.9fr)]">
+              <div className="space-y-4">
+                {alternatives.map((alternative) => (
+                  <article key={alternative.id} className="border-l-2 border-line-strong pl-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="text-base font-semibold text-text">{alternative.name}</h4>
+                      {alternative.isStatusQuo && <Badge variant="neutral">статус-кво</Badge>}
+                      {alternative.selected && <Badge variant="resolvedSoft">выбрано человеком</Badge>}
+                    </div>
+                    <p className="mt-1 text-base text-muted">{alternative.description}</p>
+                  </article>
+                ))}
               </div>
-            ))}
-          </CardContent>
-        </Card>
+              <div className="h-80 min-w-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={chartData} outerRadius="68%">
+                    <PolarGrid stroke={T.rule} />
+                    <PolarAngleAxis dataKey="criterion" tick={axisTick} />
+                    <PolarRadiusAxis domain={[0, 10]} tick={axisTick} />
+                    {alternatives.map((alternative, index) => (
+                      <Radar
+                        key={alternative.id}
+                        name={alternative.name}
+                        dataKey={alternative.name}
+                        stroke={SERIES[index % SERIES.length]}
+                        fill={SERIES[index % SERIES.length]}
+                        fillOpacity={0.08}
+                        strokeDasharray={
+                          alternative.isStatusQuo ? "4 3" : SERIES_DASH[index % SERIES_DASH.length]
+                        }
+                      />
+                    ))}
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </details>
+        )}
+      </section>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Выбор варианта и мотивировка</CardTitle>
-            {stageIsDecision ? (
-              <Badge>стадия «Решение»</Badge>
-            ) : (
-              <Badge variant="neutral">доступно на стадии «Решение»</Badge>
-            )}
-          </CardHeader>
-          <CardContent>
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.8fr)_minmax(440px,1.2fr)]">
+        <section className="border-y border-line py-5" aria-labelledby="analytical-orientation-title">
+          <p className="eyebrow">Analytical input</p>
+          <h3 id="analytical-orientation-title" className="mt-1 text-section font-semibold text-text">
+            Аналитический ориентир
+          </h3>
+          {analyticalLeader ? (
+            <div className="mt-4">
+              <p className="text-meta text-muted">Наибольшая невзвешенная сумма</p>
+              <p className="mt-1 text-lead font-semibold text-text">{analyticalLeader.alternative.name}</p>
+              <p className="text-section font-semibold tabular-nums text-accent">{analyticalLeader.total} / 80</p>
+            </div>
+          ) : (
+            <p className="mt-4 text-base text-muted">Недостаточно вариантов для аналитического ориентира.</p>
+          )}
+          <p className="mt-4 text-base text-muted">
+            Это арифметическая сводка, не рекомендация модели и не автоматический выбор. Веса критериев
+            не откалиброваны.
+          </p>
+          <Link
+            href={`/decisions/${decisionId}?tab=ai`}
+            className="mt-4 inline-flex items-center gap-2 text-base font-semibold text-accent hover:underline"
+          >
+            Открыть отдельную рекомендацию модели
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </section>
+
+        <section className="rounded-panel bg-obsidian px-5 py-5 text-surface shadow-panel" aria-labelledby="human-decision-title">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-obsidian-line pb-4">
+            <div>
+              <p className="eyebrow !text-surface-raised">Final authority</p>
+              <h3 id="human-decision-title" className="mt-1 flex items-center gap-2 text-section font-semibold text-surface">
+                <UserCheck className="h-5 w-5" aria-hidden="true" />
+                Решение человека
+              </h3>
+            </div>
+            <span className="rounded border border-obsidian-line px-2 py-1 text-meta text-surface-raised">
+              {stageIsDecision ? "стадия «Решение»" : "ожидает стадии «Решение»"}
+            </span>
+          </div>
+
+          {selectedAlternative && (
+            <div className="border-b border-obsidian-line py-4">
+              <p className="text-meta text-surface-raised">Зафиксированный выбор</p>
+              <p className="mt-1 text-lead font-semibold text-surface">{selectedAlternative.name}</p>
+              {decidedMotivation && <p className="mt-2 text-base text-surface-raised">{decidedMotivation}</p>}
+            </div>
+          )}
+
+          <div className="pt-4">
             {!canDecide ? (
-              <p className="text-sm text-slate-500">
-                Принятие решения — компетенция члена Совета директоров (роль BOARD_MEMBER).
-                Система не выбирает вариант самостоятельно.
+              <p className="text-base text-surface-raised">
+                Финальный выбор относится к полномочиям члена Совета директоров. Система и модель не
+                могут утвердить вариант самостоятельно.
               </p>
             ) : !stageIsDecision ? (
-              <p className="text-sm text-slate-500">
-                Решение принимается на стадии «Решение». Сейчас паспорт на другой стадии цикла.
+              <p className="text-base text-surface-raised">
+                Вердикт станет доступен на стадии «Решение» после прохождения контрольных ворот.
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="alt-choice">Выбранная альтернатива</Label>
-                  <Select id="alt-choice" value={chosen} onChange={(e) => setChosen(e.target.value)}>
+                  <Label htmlFor="alt-choice" className="text-surface-raised">Выбранная альтернатива</Label>
+                  <Select id="alt-choice" value={chosen} onChange={(event) => setChosen(event.target.value)}>
                     <option value="">— выберите вариант —</option>
-                    {alternatives.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name}
-                        {a.isStatusQuo ? " (статус-кво)" : ""}
+                    {alternatives.map((alternative) => (
+                      <option key={alternative.id} value={alternative.id}>
+                        {alternative.name}{alternative.isStatusQuo ? " (статус-кво)" : ""}
                       </option>
                     ))}
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="motivation">Мотивировка решения (обязательно)</Label>
+                  <Label htmlFor="motivation" className="text-surface-raised">Мотивировка решения — обязательно</Label>
                   <Textarea
                     id="motivation"
                     value={motivation}
-                    onChange={(e) => setMotivation(e.target.value)}
-                    placeholder="Почему выбран именно этот вариант: какие критерии оказались решающими, какие риски приняты"
+                    onChange={(event) => setMotivation(event.target.value)}
+                    placeholder="Какие критерии оказались решающими и какой риск принимает организация"
                   />
                 </div>
-                {error && <p className="text-xs text-red-700">{error}</p>}
-                <div className="flex gap-2">
+                {error && <p className="text-table text-action-soft">{error}</p>}
+                <div className="flex flex-wrap gap-2">
                   <Button onClick={() => decide("APPROVED")} disabled={busy || !chosen || motivation.trim().length < 10}>
                     Утвердить выбранный вариант
                   </Button>
                   <Button
                     variant="outline"
+                    className="border-obsidian-line text-surface hover:border-surface hover:text-surface"
                     onClick={() => decide("REJECTED")}
                     disabled={busy || motivation.trim().length < 10}
                   >
                     Отклонить вопрос
                   </Button>
                 </div>
-                <p className="text-[11px] text-slate-500">
-                  Решение фиксируется от имени уполномоченного лица и попадает в аудит. Без
-                  мотивировки утверждение невозможно.
+                <p className="text-meta text-surface-raised">
+                  Вердикт фиксируется от имени уполномоченного лица и сохраняется в аудите.
                 </p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
 
-      {canEdit && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Добавить альтернативу</CardTitle>
-            <Button size="sm" variant="ghost" onClick={() => setShowForm((v) => !v)}>
-              {showForm ? "Свернуть" : "Развернуть форму"}
+      {canEdit && showForm && (
+        <section className="surface-band px-5 py-5" aria-labelledby="add-alternative-title">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line pb-4">
+            <div>
+              <p className="eyebrow">Evidence input</p>
+              <h3 id="add-alternative-title" className="mt-1 text-section font-semibold text-text">Новый вариант</h3>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>Свернуть</Button>
+          </div>
+          <form
+            onSubmit={handleSubmit(async (values) => {
+              setError(null);
+              const scores: Record<string, number> = {};
+              for (const key of CRITERIA_KEYS) scores[key] = Number(values[key]);
+              const res = await addAlternative(decisionId, {
+                name: values.name,
+                description: values.description,
+                isStatusQuo: values.isStatusQuo === "true",
+                criteriaScores: scores,
+              });
+              if (!res.ok) {
+                setError(res.error);
+                return;
+              }
+              reset();
+              setShowForm(false);
+              router.refresh();
+            })}
+            className="mt-5 space-y-4"
+          >
+            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
+              <div>
+                <Label htmlFor="alt-name">Название варианта</Label>
+                <Input id="alt-name" {...register("name")} placeholder="Например: поэтапное расширение собственными силами" />
+                {errors.name && <p className="mt-1 text-table text-action">{errors.name.message}</p>}
+              </div>
+              <div>
+                <Label htmlFor="alt-sq">Тип варианта</Label>
+                <Select id="alt-sq" {...register("isStatusQuo")}>
+                  <option value="false">Содержательная альтернатива</option>
+                  <option value="true">Статус-кво — бездействие</option>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="alt-desc">Описание</Label>
+              <Textarea id="alt-desc" {...register("description")} placeholder="Суть варианта, объём, сроки и условия реализации" />
+              {errors.description && <p className="mt-1 text-table text-action">{errors.description.message}</p>}
+            </div>
+            <fieldset>
+              <legend className="mb-2 text-table font-semibold text-muted">Оценки по единому набору критериев — 0–10</legend>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {CRITERIA_KEYS.map((key) => (
+                  <div key={key}>
+                    <Label htmlFor={`crit-${key}`}>{ru.criteria[key]}</Label>
+                    <Input id={`crit-${key}`} type="number" min={0} max={10} step={1} {...register(key)} />
+                  </div>
+                ))}
+              </div>
+            </fieldset>
+            {error && <p className="text-table text-action">{error}</p>}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Добавление…" : "Добавить вариант в сравнение"}
             </Button>
-          </CardHeader>
-          {showForm && (
-            <CardContent>
-              <form
-                onSubmit={handleSubmit(async (values) => {
-                  setError(null);
-                  const scores: Record<string, number> = {};
-                  for (const k of CRITERIA_KEYS) scores[k] = Number(values[k]);
-                  const res = await addAlternative(decisionId, {
-                    name: values.name,
-                    description: values.description,
-                    isStatusQuo: values.isStatusQuo === "true",
-                    criteriaScores: scores,
-                  });
-                  if (!res.ok) {
-                    setError(res.error);
-                    return;
-                  }
-                  reset();
-                  router.refresh();
-                })}
-                className="space-y-3"
-              >
-                <div className="grid gap-3 sm:grid-cols-[1fr_200px]">
-                  <div>
-                    <Label htmlFor="alt-name">Название варианта</Label>
-                    <Input id="alt-name" {...register("name")} placeholder="Например: поэтапное расширение собственными силами" />
-                    {errors.name && <p className="mt-1 text-xs text-red-700">{errors.name.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="alt-sq">Тип варианта</Label>
-                    <Select id="alt-sq" {...register("isStatusQuo")}>
-                      <option value="false">Содержательная альтернатива</option>
-                      <option value="true">Статус-кво (бездействие)</option>
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="alt-desc">Описание</Label>
-                  <Textarea id="alt-desc" {...register("description")} placeholder="Суть варианта, объём, сроки, условия реализации" />
-                  {errors.description && (
-                    <p className="mt-1 text-xs text-red-700">{errors.description.message}</p>
-                  )}
-                </div>
-                <div>
-                  <Label>Оценки по единому набору критериев (0–10)</Label>
-                  <div className="grid gap-2 sm:grid-cols-4">
-                    {CRITERIA_KEYS.map((k) => (
-                      <div key={k}>
-                        <label htmlFor={`crit-${k}`} className="mb-0.5 block text-[11px] text-slate-500">
-                          {ru.criteria[k]}
-                        </label>
-                        <Input id={`crit-${k}`} type="number" min={0} max={10} step={1} {...register(k)} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {error && <p className="text-xs text-red-700">{error}</p>}
-                <Button type="submit" size="sm" disabled={isSubmitting}>
-                  {isSubmitting ? "Добавление…" : "Добавить альтернативу"}
-                </Button>
-              </form>
-            </CardContent>
-          )}
-        </Card>
+          </form>
+        </section>
       )}
     </div>
   );
