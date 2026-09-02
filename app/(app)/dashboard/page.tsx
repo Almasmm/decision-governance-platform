@@ -30,11 +30,14 @@ import type { DecisionStatus } from "@/lib/domain";
 import {
   COMPANY_1H2026_SOURCE,
   COMPANY_1H2026_URL,
+  COMPANY_1H2026_PUBLISHED_AT,
   COMPANY_2025_REPORT_SOURCE,
   COMPANY_2025_REPORT_URL,
+  COMPANY_2025_REPORT_PAGE_REFS,
   COMPANY_ACTUALS_1H2026,
   COMPANY_DIGITAL_FACTS_2025,
   COMPANY_GUIDANCE_2026,
+  COMPANY_PUBLIC_DATA_VERIFIED_AT,
   type CompanyFact,
 } from "@/lib/company";
 import { ru } from "@/lib/i18n/ru";
@@ -131,7 +134,7 @@ export default async function DashboardPage() {
   const decisionById = new Map(decisions.map((decision) => [decision.id, decision]));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-tour="dashboard">
       <ExecutiveSituation
         userName={user.name}
         role={ru.roles[user.role]}
@@ -145,7 +148,11 @@ export default async function DashboardPage() {
 
       <ActionQueue actions={actions} />
 
-      <section className="border-y border-rule bg-sheet" aria-labelledby="decision-flow-title">
+      <section
+        className="border-y border-rule bg-sheet"
+        aria-labelledby="decision-flow-title"
+        data-tour="dashboard-process-rail"
+      >
         <header className="flex flex-wrap items-end justify-between gap-3 border-b border-rule px-4 py-3 sm:px-5">
           <div>
             <p className="font-technical text-meta text-ink-muted">От проблемы к обратной связи</p>
@@ -156,7 +163,10 @@ export default async function DashboardPage() {
               Распределение активного портфеля и точки управленческого трения перед следующим переходом.
             </p>
           </div>
-          <div className={cn("text-right", blockedCount > 0 ? "text-signal" : "text-ink-muted")}>
+          <div
+            className={cn("text-right", blockedCount > 0 ? "text-signal" : "text-ink-muted")}
+            data-tour="dashboard-gates"
+          >
             <div className="flex items-center justify-end gap-1.5 text-base font-semibold">
               {blockedCount > 0 ? (
                 <LockKeyhole className="h-4 w-4" aria-hidden="true" />
@@ -225,7 +235,7 @@ export default async function DashboardPage() {
 
       <details className="border-y border-rule bg-sheet">
         <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-base font-medium text-ink sm:px-5">
-          <span>Публичный контекст Казатомпрома · факт на 30 июня 2026</span>
+          <span>Официальный публичный контекст Казатомпрома · 2025–2026</span>
           <span className="text-meta font-normal text-ink-muted">раскрыть</span>
         </summary>
         <div className="border-t border-rule px-4 py-4 sm:px-5">
@@ -250,6 +260,10 @@ export default async function DashboardPage() {
             <PublicSourceLink href={COMPANY_1H2026_URL} label={COMPANY_1H2026_SOURCE} />
             <PublicSourceLink href={COMPANY_2025_REPORT_URL} label={COMPANY_2025_REPORT_SOURCE} />
           </div>
+          <p className="mt-2 max-w-4xl text-meta text-ink-muted">
+            Релиз опубликован {COMPANY_1H2026_PUBLISHED_AT}. Данные по цифровой трансформации:
+            {` ${COMPANY_2025_REPORT_PAGE_REFS}`}. Источники проверены {COMPANY_PUBLIC_DATA_VERIFIED_AT}.
+          </p>
           <p className="mt-2 max-w-4xl text-meta text-ink-muted">
             Внешние показатели приведены в агрегированном виде по официальным публикациям компании.
             Прогноз не является фактом. Показатели внутри паспортов решений остаются синтетическими
@@ -334,7 +348,11 @@ function ExecutiveSituation({
   const focusFailed = focus?.evaluation?.results.filter((result) => !result.passed).length ?? 0;
 
   return (
-    <section className="overflow-hidden border border-graphite bg-graphite text-paper" aria-labelledby="dashboard-title">
+    <section
+      className="overflow-hidden border border-graphite bg-graphite text-paper"
+      aria-labelledby="dashboard-title"
+      data-tour="dashboard-overview"
+    >
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.4fr)]">
         <div className="px-5 py-5 sm:px-6">
           <p className="font-technical text-meta text-rule-strong">Executive Decision Cockpit</p>
@@ -374,12 +392,18 @@ function ExecutiveSituation({
           </p>
         </div>
 
-        <div className="border-t border-graphite-line bg-graphite-soft px-5 py-5 lg:border-l lg:border-t-0 sm:px-6">
+        <div
+          className="border-t border-graphite-line bg-graphite-soft px-5 py-5 lg:border-l lg:border-t-0 sm:px-6"
+          data-tour="dashboard-focus"
+        >
           <p className="text-meta font-semibold text-rule-strong">Сейчас в фокусе</p>
           {focus ? (
             <div className="mt-3">
               <div className="flex items-center gap-2">
-                <span className="border border-paper px-1.5 py-0.5 font-technical text-meta font-semibold text-paper">
+                <span
+                  className="border border-paper px-1.5 py-0.5 font-technical text-meta font-semibold text-paper"
+                  data-tour="dashboard-criticality"
+                >
                   УРОВЕНЬ A
                 </span>
                 <span className="font-technical text-meta text-rule-strong">{focus.decision.code}</span>
@@ -396,6 +420,7 @@ function ExecutiveSituation({
               <Link
                 href={`/decisions/${focus.decision.id}`}
                 className="mt-4 inline-flex items-center gap-2 border border-paper px-3 py-2 text-base font-semibold text-paper hover:bg-paper hover:text-graphite"
+                data-tour="dashboard-open-passport"
               >
                 Открыть паспорт
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -414,7 +439,11 @@ function ActionQueue({ actions }: { actions: DashboardAction[] }) {
   const visible = actions.slice(0, 3);
 
   return (
-    <section className="border-y border-rule bg-sheet" aria-labelledby="action-queue-title">
+    <section
+      className="border-y border-rule bg-sheet"
+      aria-labelledby="action-queue-title"
+      data-tour="dashboard-action-queue"
+    >
       <header className="flex flex-wrap items-end justify-between gap-3 border-b border-rule px-4 py-3 sm:px-5">
         <div>
           <h2 id="action-queue-title" className="font-ui text-section font-semibold text-ink">
