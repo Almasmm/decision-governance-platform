@@ -1,5 +1,13 @@
 import { test, expect, type Page } from "@playwright/test";
 
+const ONBOARDING_E2E_BYPASS_KEY = "decision-passport:onboarding:e2e-bypass";
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript((storageKey) => {
+    window.localStorage.setItem(storageKey, "1");
+  }, ONBOARDING_E2E_BYPASS_KEY);
+});
+
 /**
  * Сквозной сценарий жизненного цикла решения уровня A:
  * вход инициатором → создание паспорта → блокировка перехода без альтернатив

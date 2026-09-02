@@ -12,7 +12,7 @@
 
 | Принцип | Как обеспечен технически |
 | --- | --- |
-| **Human-in-the-loop.** Система не принимает решение за человека | Переход со стадии «Решение» невозможен, пока `status ≠ APPROVED` ([lib/gate-service.ts](lib/gate-service.ts)); утверждение требует явного выбора альтернативы и мотивировки от роли `BOARD_MEMBER`; ни одно предложение ИИ не применяется без вердикта человека (`AiSuggestion.humanVerdict`), «Отклонить рекомендацию» — равноправная кнопка |
+| **Human-in-the-loop.** Система не принимает решение за человека | Переход со стадии «Решение» невозможен, пока `status ≠ APPROVED` ([lib/gate-service.ts](lib/gate-service.ts)); утверждение требует явного выбора альтернативы и мотивировки уполномоченным человеком (`BOARD_MEMBER`, а в демо-контуре также аудируемый `ADMIN`); ни одно предложение ИИ не применяется без вердикта человека (`AiSuggestion.humanVerdict`), «Отклонить рекомендацию» — равноправная кнопка |
 | **Сначала данные и процесс — затем интеллект** | Аналитическая ступень ИИ открывается только для показателей с заполненными источником и владельцем; рекомендательная — только при наличии валидированной модели в реестре, допущенной для данного уровня критичности ([lib/ai/eligibility.ts](lib/ai/eligibility.ts)) |
 | **Прослеживаемость.** Любое число кликабельно до источника | Компонент [components/provenance.tsx](components/provenance.tsx) у каждого значения раскрывает систему-источник, дату актуальности, владельца и формулу; карточка показателя содержит граф происхождения данных |
 
@@ -38,10 +38,19 @@ npm run dev         # http://localhost:3000
 ```bash
 npm run typecheck      # TypeScript strict, без any и @ts-ignore
 npm run lint           # ESLint
-npm run test           # Vitest: 77 юнит-тестов
-npm run test:e2e       # Playwright: сквозной сценарий уровня A
+npm run test           # Vitest: бизнес-логика + onboarding registry/progress
+npm run test:e2e       # Playwright: lifecycle, responsive и guided onboarding
 npm run build          # production-сборка
 ```
+
+Для запуска из PowerShell на текущем компьютере:
+
+```powershell
+cd "C:\Users\almas\OneDrive\Desktop\ms\decision-passport"
+npm.cmd run dev
+```
+
+После строки `Ready` откройте <http://localhost:3000/login>. Закрытие терминала останавливает локальный сервер.
 
 ### PostgreSQL вместо SQLite
 
@@ -69,9 +78,25 @@ npm run build          # production-сборка
 | `analyst2@kap.kz` | Марат Касымов | ANALYST | Независимая проверка критических расчётов (второй пользователь) |
 | `secretary@kap.kz` | Сауле Жумабаева | SECRETARY | Проверяет маршрут и компетенцию органа, возвращает на доработку |
 | `board@kap.kz` | Нурлан Абишев | BOARD_MEMBER | Ролевые дашборды, принятие решения с мотивировкой, вердикт по ИИ |
-| `admin@kap.kz` | Администратор системы | ADMIN | Пользователи, справочники, настройка правил контрольных ворот |
+| `admin@kap.kz` | Администратор системы | ADMIN | Пользователи, справочники и правила; в демо-контуре также расширенные аудируемые полномочия восстановления |
 
 Права проверяются **на сервере** в каждом server action и route handler через [lib/authz.ts](lib/authz.ts), а не только скрытием элементов интерфейса.
+
+---
+
+## Guided onboarding
+
+Платформа имеет три независимых режима обучения:
+
+- **PAGE** автоматически объясняет ещё не изученную страницу или вкладку при первом посещении текущей версии;
+- **ROLE** проводит через сквозной рабочий маршрут конкретной роли;
+- **THESIS / JURY** за 10–15 минут раскрывает научную модель от управленческого вопроса до post-evaluation, уроков и baseline → pilot.
+
+Кнопка «Обучение» доступна на `/login` и в верхней панели приложения. Через неё можно повторить текущую инструкцию, запустить ролевой или jury-сценарий и сбросить только учебный прогресс. Решения, пользователи, показатели и аудит при этом не изменяются.
+
+Прогресс хранится локально по ключу `userId + role + tourId + version`. Семантика состояний различается: «Готово» — `completed`, «Пропустить» — `skipped`, крестик или `Escape` — `dismissed`; ни одно из этих действий не завершает остальные tours. Центральный registry находится в [lib/onboarding](lib/onboarding), стабильные UI-контракты используют `data-tour`, а карта покрытия — в [ONBOARDING-COVERAGE.md](ONBOARDING-COVERAGE.md).
+
+Самостоятельный сценарий защиты описан в [JURY-SELF-GUIDED-SCENARIO.md](JURY-SELF-GUIDED-SCENARIO.md), визуальный протокол — в [ONBOARDING-VISUAL-QA.md](ONBOARDING-VISUAL-QA.md), эталонные кадры создаются в `.artifacts/onboarding-final/`.
 
 ---
 
@@ -116,6 +141,7 @@ app/
     auth/[...nextauth]/     NextAuth (Credentials, JWT)
     decisions/[id]/advance/ единственная точка перехода по стадиям
 lib/
+  onboarding/                registry PAGE / ROLE / THESIS, resolver и local progress
   domain.ts                 перечисления и zod-схемы предметной области
   gates.ts                  чистые функции правил контрольных ворот
   gate-service.ts           серверный слой: конфигурация из БД + переход по стадиям
@@ -129,6 +155,7 @@ lib/
   connectors/               заглушки SAP / eKAP / Power BI / DWH с единым fetchIndicator(code)
   i18n/ru.ts                все интерфейсные строки (готово к добавлению KZ/EN)
 components/
+  onboarding/               spotlight, coach card, Help и graceful error boundary
   decision/                 паспорт: шапка, степпер, чек-лист ворот, панели вкладок
   charts/                   Decision Flow, парное сравнение KPI, история значений
   provenance.tsx            происхождение любого числа
@@ -175,14 +202,15 @@ tests/ e2e/                 Vitest и Playwright
 
 ## Тестовое покрытие
 
-**Vitest — 77 юнит-тестов:**
+**Vitest — 97 юнит-тестов:**
 
 - `tests/effects.test.ts` — три формулы эффекта, включая поведение при незаполненных параметрах;
 - `tests/gates.test.ts` — все 11 правил контрольных ворот и их применимость по уровням A/B/C;
 - `tests/maturity.test.ts` — нормирование KPI и расчёт индекса зрелости;
 - `tests/authz.test.ts` — матрица прав по всем ролям.
+- `tests/onboarding-*.test.ts` — уникальность и полнота контента, route/role coverage, target contracts, versioned progress и безопасный reset.
 
-**Playwright — сквозной сценарий уровня A:** вход инициатором → создание паспорта → попытка двинуться к принятию решения без альтернатив блокируется с объяснением, чего не хватает и кто отвечает → добавление альтернатив со «статус-кво», допущений и риск-профиля → подтверждение качества данных владельцем → независимая проверка расчёта вторым пользователем → принятие решения членом СД с мотивировкой → поручение с KPI → пост-оценка → запись урока в базу знаний → проверка, что аудит зафиксировал все мутации.
+**Playwright:** сквозной сценарий уровня A; responsive-матрица 1920×1080 → 768×1024; обязательные onboarding-сценарии для INITIATOR, DATA_OWNER, BOARD_MEMBER и ADMIN; missing-target recovery; cross-route ROLE/THESIS handoff; 18 golden screenshots.
 
 ---
 

@@ -1,8 +1,8 @@
-# Guided Onboarding — factual coverage inventory
+# Guided Onboarding — post-implementation coverage inventory
 
-> Audit snapshot: 2 September 2026, tracked baseline `db16d89` (`data: add verified Kazatomprom public context`).
+> Baseline audited on 2 September 2026 at `db16d89`; the coverage matrix below is reconciled with the current `ONBOARDING_ROUTES`, role profiles and `TOUR_REGISTRY`.
 >
-> Purpose: source-of-truth inventory for PAGE, ROLE and THESIS onboarding before coverage is declared complete.
+> Purpose: source-of-truth inventory and structural coverage record for PAGE, ROLE and THESIS onboarding.
 >
 > Scope: routes, layouts, navigation, roles, page access, action permissions, passport states, forms and disclosure surfaces. No business rule is redefined here.
 
@@ -14,14 +14,13 @@ The inventory separates three things that must not be conflated:
 2. **Action authority** — whether that role may mutate a particular business object.
 3. **Tour coverage** — whether an accessible page has a tested onboarding definition and stable targets.
 
-At the start of this audit the tracked application had no mounted onboarding provider, central registry or stable `data-tour` contract. Therefore every accessible working page is recorded below as a **baseline gap**, even where the required tour and its step budget are already specified. Concurrent onboarding files may be added in the working tree after this snapshot; their existence alone does not turn a row into PASS. A row becomes PASS only after registry, route resolution, target resolution and content tests all pass.
+The original baseline had no central onboarding registry. The matrix is now a post-implementation reconciliation: route access comes from `ONBOARDING_ROUTES`, role scope from `ROLES`/role profiles, and tour ids and step counts from `TOUR_REGISTRY`. `PASS` in this document is a structural coverage result; it does not by itself claim production build, visual-regression or manual-browser acceptance.
 
 Status legend:
 
-- `BASELINE GAP` — accessible working page; a PAGE tour is mandatory but was not complete at the inventory baseline.
+- `PASS` — an accessible role-route obligation has a matching role-compatible PAGE definition in the current registry.
 - `N/A — RBAC` — the role is redirected before the page renders; no tour for that role-route pair.
 - `EXCEPTION` — deliberately no PAGE tour because the route has no user-facing page.
-- `PASS` — reserved for post-implementation verification; not asserted by this inventory.
 
 Symbols in permission tables: `✓` allowed; `—` denied.
 
@@ -39,6 +38,11 @@ Symbols in permission tables: `✓` allowed; `—` denied.
 | Off-sidebar working page patterns | 4 |
 | Domain roles | 7 |
 | Role × accessible-page obligations | 94 |
+| Structurally covered obligations | 94/94 PASS |
+| PAGE definitions / steps | 28 / 144 |
+| ROLE definitions / steps | 7 / 58 |
+| THESIS definitions / steps | 2 / 30 |
+| All registered tours / steps | 37 / 232 |
 | Permission actions in `PERMISSIONS` | 23 |
 | Server mutation entry points | 26 (25 currently exposed in UI, 1 server-only) |
 | Passport top-level tabs | 7 |
@@ -48,7 +52,7 @@ Symbols in permission tables: `✓` allowed; `—` denied.
 | Role-dashboard panel states | 4 |
 | Pre-onboarding business dialogs/drawers | 0 |
 
-The 16 page patterns are `/`, `/login`, and 14 pages inside the authenticated `(app)` route group. The 94 obligation cells count `/login` for every eventual role because it remains directly renderable, although it should use one shared GUEST introduction rather than seven duplicated tours.
+The 16 page patterns are `/`, `/login`, and 14 pages inside the authenticated `(app)` route group. The 94 PASS cells count `/login` for every eventual role because it remains directly renderable, while all seven rows correctly resolve to the one shared five-step GUEST tour `page-login`.
 
 ## Sources of truth
 
@@ -131,154 +135,210 @@ All seeded demo accounts use `demo1234`. The login screen exposes eight quick-lo
 
 ## Role × route coverage matrix
 
-Step counts below are the required coverage budget established by the screen inventory, not a claim that those steps existed at the baseline. The passport budget includes a 12-step core tour plus contextual tab tours; individual PAGE tours should normally remain within 4–10 steps.
+This is the post-implementation structural matrix. Counts are read from the current registry, not from the earlier design budget. The decision-passport row deliberately includes the base tour and all seven registered query-state tours, including the dedicated post-evaluation context. A PASS asserts that the accessible role-route obligation resolves to a role-compatible PAGE definition; runtime visual/build acceptance remains a separate check.
 
-### INITIATOR
+### Registered PAGE definitions
 
-| Role | Route | Page | Accessible | Tour required | Step budget | Baseline status |
+| Route pattern | Exact PAGE tour id(s) | Actual steps | Registry role scope |
+|---|---|---:|---|
+| `/login` | `page-login` | 5 | Shared GUEST introduction |
+| `/dashboard` | `page-dashboard-initiator`<br>`page-dashboard-data-owner`<br>`page-dashboard-risk-officer`<br>`page-dashboard-analyst`<br>`page-dashboard-secretary`<br>`page-dashboard-board-member`<br>`page-dashboard-admin` | 7 each; 49 total | One role-specific definition for each of 7 roles |
+| `/decisions` | `page-decisions` | 5 | All authenticated roles |
+| `/decisions/new` | `page-decision-new` | 4 | INITIATOR, ADMIN |
+| `/decisions/:id` | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 9 + 7 + 5 + 6 + 5 + 4 + 6 + 2 = 44 | Base passport plus seven query-state contexts; post-evaluation is the specific `tab=passport&block=POST_EVALUATION` context; all authenticated roles |
+| `/indicators` | `page-indicators` | 9 | All authenticated roles |
+| `/indicators/:id` | `page-indicator-detail` | 6 | All authenticated roles |
+| `/kpi` | `page-kpi` | 4 | All authenticated roles |
+| `/models` | `page-models` | 3 | All authenticated roles |
+| `/lessons` | `page-lessons` | 3 | All authenticated roles |
+| `/boards` | `page-boards` | 2 | All authenticated roles |
+| `/roadmap` | `page-roadmap` | 2 | All authenticated roles |
+| `/audit` | `page-audit` | 3 | All authenticated roles |
+| `/admin` | `page-admin` | 3 | ADMIN |
+| `/search` | `page-search` | 2 | All authenticated roles |
+
+Unique PAGE registry total: **28 definitions / 144 steps**. `/` is not included because it is a non-visual redirect exception. The post-evaluation definition adds depth to the existing `/decisions/:id` obligation, so it does not create a new role × route cell.
+
+### Registered ROLE and THESIS definitions
+
+| Mode | Exact tour id | Actual steps | Scope / purpose |
+|---|---|---:|---|
+| ROLE | `role-initiator` | 9 | INITIATOR working route |
+| ROLE | `role-data-owner` | 9 | DATA_OWNER working route, including owned-data confirmation |
+| ROLE | `role-risk-officer` | 7 | RISK_OFFICER working route |
+| ROLE | `role-analyst` | 9 | ANALYST working route |
+| ROLE | `role-secretary` | 8 | SECRETARY working route |
+| ROLE | `role-board-member` | 9 | BOARD_MEMBER working route |
+| ROLE | `role-admin` | 7 | ADMIN working route |
+| THESIS | `thesis-jury-methodology` | 26 | End-to-end jury methodology and decision lifecycle |
+| THESIS | `thesis-evidence-natures` | 4 | Separate fact / forecast / assumption evidence-nature explanation |
+
+Registry totals for these modes: **7 ROLE definitions / 58 steps** and **2 THESIS definitions / 30 steps**.
+
+### Post-implementation role obligations
+
+#### INITIATOR
+
+| Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
-| INITIATOR | `/` | Redirect resolver | redirect only | No | 0 | EXCEPTION |
-| INITIATOR | `/login` | Login and role selection | Yes | Yes | 5 shared | BASELINE GAP |
-| INITIATOR | `/dashboard` | Executive dashboard | Yes | Yes | 7 role-aware | BASELINE GAP |
-| INITIATOR | `/decisions` | Decision registry | Yes | Yes | 8 | BASELINE GAP |
-| INITIATOR | `/decisions/new` | New decision passport | Yes | Yes | 6 | BASELINE GAP |
-| INITIATOR | `/decisions/:id` | Decision passport | Yes | Yes | 12 core + tab context | BASELINE GAP |
-| INITIATOR | `/indicators` | Indicator catalogue | Yes | Yes | 8 | BASELINE GAP |
-| INITIATOR | `/indicators/:id` | Indicator evidence card | Yes | Yes | 9 | BASELINE GAP |
-| INITIATOR | `/kpi` | KPI, effect and maturity | Yes | Yes | 8 | BASELINE GAP |
-| INITIATOR | `/models` | Model governance registry | Yes | Yes | 7 | BASELINE GAP |
-| INITIATOR | `/lessons` | Corporate lessons | Yes | Yes | 6 | BASELINE GAP |
-| INITIATOR | `/boards` | Governance panels | Yes | Yes | 8 | BASELINE GAP |
-| INITIATOR | `/roadmap` | Transformation roadmap | Yes | Yes | 7 | BASELINE GAP |
-| INITIATOR | `/audit` | Audit timeline | Yes | Yes | 6 | BASELINE GAP |
-| INITIATOR | `/admin` | Administration | No; → `/dashboard` | No | 0 | N/A — RBAC |
-| INITIATOR | `/search` | Global search results | Yes | Yes | 4 | BASELINE GAP |
+| INITIATOR | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
+| INITIATOR | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| INITIATOR | `/dashboard` | Executive dashboard | Yes | `page-dashboard-initiator` | 7 | PASS |
+| INITIATOR | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| INITIATOR | `/decisions/new` | New decision passport | Yes | `page-decision-new` | 4 | PASS |
+| INITIATOR | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 44 (9+7+5+6+5+4+6+2) | PASS |
+| INITIATOR | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
+| INITIATOR | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
+| INITIATOR | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
+| INITIATOR | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
+| INITIATOR | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
+| INITIATOR | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
+| INITIATOR | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
+| INITIATOR | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| INITIATOR | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
+| INITIATOR | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
 
-### DATA_OWNER
+Accessible obligations: **14 PASS**; referenced PAGE steps eligible for this role: **99**.
 
-| Role | Route | Page | Accessible | Tour required | Step budget | Baseline status |
+#### DATA_OWNER
+
+| Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
-| DATA_OWNER | `/` | Redirect resolver | redirect only | No | 0 | EXCEPTION |
-| DATA_OWNER | `/login` | Login and role selection | Yes | Yes | 5 shared | BASELINE GAP |
-| DATA_OWNER | `/dashboard` | Executive dashboard | Yes | Yes | 7 role-aware | BASELINE GAP |
-| DATA_OWNER | `/decisions` | Decision registry | Yes | Yes | 8 | BASELINE GAP |
-| DATA_OWNER | `/decisions/new` | New decision passport | No; → `/decisions` | No | 0 | N/A — RBAC |
-| DATA_OWNER | `/decisions/:id` | Decision passport | Yes | Yes | 12 core + tab context | BASELINE GAP |
-| DATA_OWNER | `/indicators` | Indicator catalogue | Yes | Yes | 8 | BASELINE GAP |
-| DATA_OWNER | `/indicators/:id` | Indicator evidence card | Yes | Yes | 9 | BASELINE GAP |
-| DATA_OWNER | `/kpi` | KPI, effect and maturity | Yes | Yes | 8 | BASELINE GAP |
-| DATA_OWNER | `/models` | Model governance registry | Yes | Yes | 7 | BASELINE GAP |
-| DATA_OWNER | `/lessons` | Corporate lessons | Yes | Yes | 6 | BASELINE GAP |
-| DATA_OWNER | `/boards` | Governance panels | Yes | Yes | 8 | BASELINE GAP |
-| DATA_OWNER | `/roadmap` | Transformation roadmap | Yes | Yes | 7 | BASELINE GAP |
-| DATA_OWNER | `/audit` | Audit timeline | Yes | Yes | 6 | BASELINE GAP |
-| DATA_OWNER | `/admin` | Administration | No; → `/dashboard` | No | 0 | N/A — RBAC |
-| DATA_OWNER | `/search` | Global search results | Yes | Yes | 4 | BASELINE GAP |
+| DATA_OWNER | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
+| DATA_OWNER | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| DATA_OWNER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-data-owner` | 7 | PASS |
+| DATA_OWNER | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| DATA_OWNER | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
+| DATA_OWNER | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 42 (9+6+5+6+5+4+5+2) | PASS |
+| DATA_OWNER | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
+| DATA_OWNER | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
+| DATA_OWNER | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
+| DATA_OWNER | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
+| DATA_OWNER | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
+| DATA_OWNER | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
+| DATA_OWNER | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
+| DATA_OWNER | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| DATA_OWNER | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
+| DATA_OWNER | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
 
-### RISK_OFFICER
+Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **93**.
 
-| Role | Route | Page | Accessible | Tour required | Step budget | Baseline status |
+#### RISK_OFFICER
+
+| Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
-| RISK_OFFICER | `/` | Redirect resolver | redirect only | No | 0 | EXCEPTION |
-| RISK_OFFICER | `/login` | Login and role selection | Yes | Yes | 5 shared | BASELINE GAP |
-| RISK_OFFICER | `/dashboard` | Executive dashboard | Yes | Yes | 7 role-aware | BASELINE GAP |
-| RISK_OFFICER | `/decisions` | Decision registry | Yes | Yes | 8 | BASELINE GAP |
-| RISK_OFFICER | `/decisions/new` | New decision passport | No; → `/decisions` | No | 0 | N/A — RBAC |
-| RISK_OFFICER | `/decisions/:id` | Decision passport | Yes | Yes | 12 core + tab context | BASELINE GAP |
-| RISK_OFFICER | `/indicators` | Indicator catalogue | Yes | Yes | 8 | BASELINE GAP |
-| RISK_OFFICER | `/indicators/:id` | Indicator evidence card | Yes | Yes | 9 | BASELINE GAP |
-| RISK_OFFICER | `/kpi` | KPI, effect and maturity | Yes | Yes | 8 | BASELINE GAP |
-| RISK_OFFICER | `/models` | Model governance registry | Yes | Yes | 7 | BASELINE GAP |
-| RISK_OFFICER | `/lessons` | Corporate lessons | Yes | Yes | 6 | BASELINE GAP |
-| RISK_OFFICER | `/boards` | Governance panels | Yes | Yes | 8 | BASELINE GAP |
-| RISK_OFFICER | `/roadmap` | Transformation roadmap | Yes | Yes | 7 | BASELINE GAP |
-| RISK_OFFICER | `/audit` | Audit timeline | Yes | Yes | 6 | BASELINE GAP |
-| RISK_OFFICER | `/admin` | Administration | No; → `/dashboard` | No | 0 | N/A — RBAC |
-| RISK_OFFICER | `/search` | Global search results | Yes | Yes | 4 | BASELINE GAP |
+| RISK_OFFICER | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
+| RISK_OFFICER | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| RISK_OFFICER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-risk-officer` | 7 | PASS |
+| RISK_OFFICER | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| RISK_OFFICER | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
+| RISK_OFFICER | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 42 (9+6+5+6+5+4+5+2) | PASS |
+| RISK_OFFICER | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
+| RISK_OFFICER | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
+| RISK_OFFICER | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
+| RISK_OFFICER | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
+| RISK_OFFICER | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
+| RISK_OFFICER | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
+| RISK_OFFICER | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
+| RISK_OFFICER | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| RISK_OFFICER | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
+| RISK_OFFICER | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
 
-### ANALYST
+Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **93**.
 
-| Role | Route | Page | Accessible | Tour required | Step budget | Baseline status |
+#### ANALYST
+
+| Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
-| ANALYST | `/` | Redirect resolver | redirect only | No | 0 | EXCEPTION |
-| ANALYST | `/login` | Login and role selection | Yes | Yes | 5 shared | BASELINE GAP |
-| ANALYST | `/dashboard` | Executive dashboard | Yes | Yes | 7 role-aware | BASELINE GAP |
-| ANALYST | `/decisions` | Decision registry | Yes | Yes | 8 | BASELINE GAP |
-| ANALYST | `/decisions/new` | New decision passport | No; → `/decisions` | No | 0 | N/A — RBAC |
-| ANALYST | `/decisions/:id` | Decision passport | Yes | Yes | 12 core + tab context | BASELINE GAP |
-| ANALYST | `/indicators` | Indicator catalogue | Yes | Yes | 8 | BASELINE GAP |
-| ANALYST | `/indicators/:id` | Indicator evidence card | Yes | Yes | 9 | BASELINE GAP |
-| ANALYST | `/kpi` | KPI, effect and maturity | Yes | Yes | 8 | BASELINE GAP |
-| ANALYST | `/models` | Model governance registry | Yes | Yes | 7 | BASELINE GAP |
-| ANALYST | `/lessons` | Corporate lessons | Yes | Yes | 6 | BASELINE GAP |
-| ANALYST | `/boards` | Governance panels | Yes | Yes | 8 | BASELINE GAP |
-| ANALYST | `/roadmap` | Transformation roadmap | Yes | Yes | 7 | BASELINE GAP |
-| ANALYST | `/audit` | Audit timeline | Yes | Yes | 6 | BASELINE GAP |
-| ANALYST | `/admin` | Administration | No; → `/dashboard` | No | 0 | N/A — RBAC |
-| ANALYST | `/search` | Global search results | Yes | Yes | 4 | BASELINE GAP |
+| ANALYST | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
+| ANALYST | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| ANALYST | `/dashboard` | Executive dashboard | Yes | `page-dashboard-analyst` | 7 | PASS |
+| ANALYST | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| ANALYST | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
+| ANALYST | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 43 (9+6+5+6+5+4+6+2) | PASS |
+| ANALYST | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
+| ANALYST | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
+| ANALYST | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
+| ANALYST | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
+| ANALYST | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
+| ANALYST | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
+| ANALYST | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
+| ANALYST | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| ANALYST | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
+| ANALYST | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
 
-### SECRETARY
+Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **94**.
 
-| Role | Route | Page | Accessible | Tour required | Step budget | Baseline status |
+#### SECRETARY
+
+| Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
-| SECRETARY | `/` | Redirect resolver | redirect only | No | 0 | EXCEPTION |
-| SECRETARY | `/login` | Login and role selection | Yes | Yes | 5 shared | BASELINE GAP |
-| SECRETARY | `/dashboard` | Executive dashboard | Yes | Yes | 7 role-aware | BASELINE GAP |
-| SECRETARY | `/decisions` | Decision registry | Yes | Yes | 8 | BASELINE GAP |
-| SECRETARY | `/decisions/new` | New decision passport | No; → `/decisions` | No | 0 | N/A — RBAC |
-| SECRETARY | `/decisions/:id` | Decision passport | Yes | Yes | 12 core + tab context | BASELINE GAP |
-| SECRETARY | `/indicators` | Indicator catalogue | Yes | Yes | 8 | BASELINE GAP |
-| SECRETARY | `/indicators/:id` | Indicator evidence card | Yes | Yes | 9 | BASELINE GAP |
-| SECRETARY | `/kpi` | KPI, effect and maturity | Yes | Yes | 8 | BASELINE GAP |
-| SECRETARY | `/models` | Model governance registry | Yes | Yes | 7 | BASELINE GAP |
-| SECRETARY | `/lessons` | Corporate lessons | Yes | Yes | 6 | BASELINE GAP |
-| SECRETARY | `/boards` | Governance panels | Yes | Yes | 8 | BASELINE GAP |
-| SECRETARY | `/roadmap` | Transformation roadmap | Yes | Yes | 7 | BASELINE GAP |
-| SECRETARY | `/audit` | Audit timeline | Yes | Yes | 6 | BASELINE GAP |
-| SECRETARY | `/admin` | Administration | No; → `/dashboard` | No | 0 | N/A — RBAC |
-| SECRETARY | `/search` | Global search results | Yes | Yes | 4 | BASELINE GAP |
+| SECRETARY | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
+| SECRETARY | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| SECRETARY | `/dashboard` | Executive dashboard | Yes | `page-dashboard-secretary` | 7 | PASS |
+| SECRETARY | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| SECRETARY | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
+| SECRETARY | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 43 (9+7+5+6+5+4+5+2) | PASS |
+| SECRETARY | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
+| SECRETARY | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
+| SECRETARY | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
+| SECRETARY | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
+| SECRETARY | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
+| SECRETARY | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
+| SECRETARY | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
+| SECRETARY | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| SECRETARY | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
+| SECRETARY | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
 
-### BOARD_MEMBER
+Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **94**.
 
-| Role | Route | Page | Accessible | Tour required | Step budget | Baseline status |
+#### BOARD_MEMBER
+
+| Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
-| BOARD_MEMBER | `/` | Redirect resolver | redirect only | No | 0 | EXCEPTION |
-| BOARD_MEMBER | `/login` | Login and role selection | Yes | Yes | 5 shared | BASELINE GAP |
-| BOARD_MEMBER | `/dashboard` | Executive dashboard | Yes | Yes | 7 role-aware | BASELINE GAP |
-| BOARD_MEMBER | `/decisions` | Decision registry | Yes | Yes | 8 | BASELINE GAP |
-| BOARD_MEMBER | `/decisions/new` | New decision passport | No; → `/decisions` | No | 0 | N/A — RBAC |
-| BOARD_MEMBER | `/decisions/:id` | Decision passport | Yes | Yes | 12 core + tab context | BASELINE GAP |
-| BOARD_MEMBER | `/indicators` | Indicator catalogue | Yes | Yes | 8 | BASELINE GAP |
-| BOARD_MEMBER | `/indicators/:id` | Indicator evidence card | Yes | Yes | 9 | BASELINE GAP |
-| BOARD_MEMBER | `/kpi` | KPI, effect and maturity | Yes | Yes | 8 | BASELINE GAP |
-| BOARD_MEMBER | `/models` | Model governance registry | Yes | Yes | 7 | BASELINE GAP |
-| BOARD_MEMBER | `/lessons` | Corporate lessons | Yes | Yes | 6 | BASELINE GAP |
-| BOARD_MEMBER | `/boards` | Governance panels | Yes | Yes | 8 | BASELINE GAP |
-| BOARD_MEMBER | `/roadmap` | Transformation roadmap | Yes | Yes | 7 | BASELINE GAP |
-| BOARD_MEMBER | `/audit` | Audit timeline | Yes | Yes | 6 | BASELINE GAP |
-| BOARD_MEMBER | `/admin` | Administration | No; → `/dashboard` | No | 0 | N/A — RBAC |
-| BOARD_MEMBER | `/search` | Global search results | Yes | Yes | 4 | BASELINE GAP |
+| BOARD_MEMBER | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
+| BOARD_MEMBER | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| BOARD_MEMBER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-board-member` | 7 | PASS |
+| BOARD_MEMBER | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| BOARD_MEMBER | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
+| BOARD_MEMBER | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 43 (9+6+5+6+5+4+6+2) | PASS |
+| BOARD_MEMBER | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
+| BOARD_MEMBER | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
+| BOARD_MEMBER | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
+| BOARD_MEMBER | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
+| BOARD_MEMBER | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
+| BOARD_MEMBER | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
+| BOARD_MEMBER | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
+| BOARD_MEMBER | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| BOARD_MEMBER | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
+| BOARD_MEMBER | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
 
-### ADMIN
+Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **94**.
 
-| Role | Route | Page | Accessible | Tour required | Step budget | Baseline status |
+#### ADMIN
+
+| Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
-| ADMIN | `/` | Redirect resolver | redirect only | No | 0 | EXCEPTION |
-| ADMIN | `/login` | Login and role selection | Yes | Yes | 5 shared | BASELINE GAP |
-| ADMIN | `/dashboard` | Executive dashboard | Yes | Yes | 7 role-aware | BASELINE GAP |
-| ADMIN | `/decisions` | Decision registry | Yes | Yes | 8 | BASELINE GAP |
-| ADMIN | `/decisions/new` | New decision passport | Yes | Yes | 6 | BASELINE GAP |
-| ADMIN | `/decisions/:id` | Decision passport | Yes | Yes | 12 core + tab context | BASELINE GAP |
-| ADMIN | `/indicators` | Indicator catalogue | Yes | Yes | 8 | BASELINE GAP |
-| ADMIN | `/indicators/:id` | Indicator evidence card | Yes | Yes | 9 | BASELINE GAP |
-| ADMIN | `/kpi` | KPI, effect and maturity | Yes | Yes | 8 | BASELINE GAP |
-| ADMIN | `/models` | Model governance registry | Yes | Yes | 7 | BASELINE GAP |
-| ADMIN | `/lessons` | Corporate lessons | Yes | Yes | 6 | BASELINE GAP |
-| ADMIN | `/boards` | Governance panels | Yes | Yes | 8 | BASELINE GAP |
-| ADMIN | `/roadmap` | Transformation roadmap | Yes | Yes | 7 | BASELINE GAP |
-| ADMIN | `/audit` | Audit timeline | Yes | Yes | 6 | BASELINE GAP |
-| ADMIN | `/admin` | Administration | Yes | Yes | 7 | BASELINE GAP |
-| ADMIN | `/search` | Global search results | Yes | Yes | 4 | BASELINE GAP |
+| ADMIN | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
+| ADMIN | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| ADMIN | `/dashboard` | Executive dashboard | Yes | `page-dashboard-admin` | 7 | PASS |
+| ADMIN | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| ADMIN | `/decisions/new` | New decision passport | Yes | `page-decision-new` | 4 | PASS |
+| ADMIN | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 44 (9+7+5+6+5+4+6+2) | PASS |
+| ADMIN | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
+| ADMIN | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
+| ADMIN | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
+| ADMIN | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
+| ADMIN | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
+| ADMIN | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
+| ADMIN | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
+| ADMIN | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| ADMIN | `/admin` | Administration | Yes | `page-admin` | 3 | PASS |
+| ADMIN | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
+
+Accessible obligations: **15 PASS**; referenced PAGE steps eligible for this role: **102**.
+
+Matrix total: **94 PASS**, **11 N/A — RBAC**, and **7 EXCEPTION** cells across 7 roles × 16 route patterns. The 94 PASS cells are obligations, not unique tour instances; shared definitions are intentionally reused. Referenced step totals apply step-level eligibility: the post-evaluation close step is available only to INITIATOR, SECRETARY and ADMIN, while the AI human-verdict step is available only to INITIATOR, ANALYST, BOARD_MEMBER and ADMIN.
 
 ## Route and screen inventory
 
@@ -452,6 +512,8 @@ Recommended ROLE-tour route sequences derived from those responsibilities:
 
 These ROLE tours are cross-page scenarios. They do not replace any mandatory PAGE tour.
 
+The THESIS layer contains two complementary narratives: `thesis-jury-methodology` follows the complete decision lifecycle, while `thesis-evidence-natures` separately distinguishes fact, forecast and assumption so users do not present unlike forms of evidence as interchangeable.
+
 ## Forms, disclosures, dialogs and drawers
 
 ### Persistent and inline forms
@@ -491,7 +553,7 @@ These are not additional App Router pages, but a complete tour system must resol
 | Page | Query states | Coverage rule |
 |---|---|---|
 | Decision registry | `q`, `criticality`, `stage`, `status`, `type`, `body`, `overdue` | One PAGE tour; filtered/empty states must not break targets |
-| Decision passport | `tab` plus `block` | Base passport tour plus contextual tours for six specialist tabs and nine evidence-block deep links |
+| Decision passport | `tab` plus `block` | Base passport tour, six specialist-tab tours and one dedicated `POST_EVALUATION` block tour; the Evidence Index explains all nine block kinds |
 | Indicators | `q`, `source`, `critical` | One PAGE tour; filtered/empty table is a valid state |
 | Lessons | `q`, `cause`, `type` | One PAGE tour; selected cause and empty result are valid states |
 | Boards | `panel=strategy|investment|production|risk` | One PAGE route with four governed perspectives; tour must explain all four |
@@ -522,6 +584,8 @@ Additional required target families follow directly from the inventory: login li
 
 ## Documented exceptions and asymmetries
 
+The structural matrix has one route-level PAGE exception (`/`), two non-page API exceptions, 11 role-route cells excluded by RBAC and no exception for an accessible working page.
+
 1. **`/` has no PAGE tour.** It renders no UI and immediately redirects according to session state.
 2. **API routes have no PAGE tour.** `/api/auth/[...nextauth]` is authentication transport; `/api/decisions/:id/advance` is explained through the passport gate/advance UI.
 3. **404 output is not a tour route.** Unknown decision or indicator ids call `notFound()` and are not stable demonstration targets.
@@ -539,32 +603,40 @@ Additional required target families follow directly from the inventory: login li
 15. **No pre-existing business dialogs or drawers need separate coverage.** Native details and inline expansion states do.
 16. **External public-company source links leave the product.** They are supporting provenance, not additional DecisionPassport routes.
 
-## Coverage acceptance rules
+## Structural verification performed for this matrix
 
-Coverage may move from `BASELINE GAP` to `PASS` only when all applicable checks hold:
+This document reconciles the current route inventory, route role scopes, role profiles and central registry. The resulting source-level checks are:
 
-1. Every one of the 15 user-facing page patterns resolves to a PAGE tour; `/` is the sole page exception.
-2. `/dashboard` resolves role-aware responsibility copy for all seven roles.
-3. `/decisions/new` and `/admin` never auto-start for roles redirected away from them.
-4. `/decisions/:id` and `/indicators/:id` use valid seeded ids in ROLE/THESIS routes.
-5. All seven passport tabs and all nine evidence blocks are either directly explained or explicitly grouped by a meaningful contextual step.
-6. Optional RBAC targets skip without delay; required missing targets emit diagnostics and do not deadlock.
-7. Tour progress is isolated by `userId + role + tourId + tourVersion`; complete, skip and dismiss remain distinct.
-8. Replay, role tour, methodology tour, progress display and onboarding-only reset are available from the help surface.
-9. Tour content names real responsibilities and never exposes raw enum codes as user instructions.
-10. Automated coverage compares the actual App Router/navigation inventory with the tour registry and documented exception list.
-11. Browser E2E verifies first visit, no repeat after completion, replay, role variance, missing target, route transition and 1366×768 behavior.
-12. PASS is not inferred from TypeScript alone; viewport and keyboard/focus behavior require browser verification.
+1. All 15 user-facing page patterns have at least one PAGE definition; `/` remains the sole non-visual page exception.
+2. Dashboard resolution has one distinct seven-step PAGE definition for each of the seven authenticated roles.
+3. `/decisions/new` is scoped to INITIATOR and ADMIN; `/admin` is scoped to ADMIN. The other roles retain `N/A — RBAC` rather than false PASS rows.
+4. The shared login definition is `page-login` with exactly five steps.
+5. The decision-passport route has one nine-step base definition and seven contextual definitions totalling 35 more registered steps: 44 across the complete route suite. Per-role runnable totals are 42–44 because the post-evaluation close and AI human-verdict steps have narrower role eligibility.
+6. Registry arithmetic is internally consistent: 28 PAGE / 144 steps, 7 ROLE / 58 steps and 2 THESIS / 30 steps, for 37 tours / 232 steps overall.
+7. The expanded role matrix is internally consistent: 94 PASS + 11 N/A — RBAC + 7 EXCEPTION = 112 cells (7 roles × 16 route patterns).
 
-## Initial coverage conclusion
+The PASS labels above are intentionally limited to this structural reconciliation. This document does not claim production-build, visual-regression, keyboard/focus or manual-browser results; those require their own execution evidence.
 
-The application exposes one shared evidence environment to seven roles, with page-level restriction only for new-decision creation and administration. The onboarding design must therefore be broadly page-complete but selectively action-aware. Its highest-risk coverage areas are the passport query states, object-level ownership rules, decision gates, data lineage, independent calculation review and Human-in-the-loop verdicts.
+## Runtime acceptance criteria outside this matrix
 
-At the inventory baseline:
+The following remain separate release checks and do not alter the source-coverage arithmetic above:
 
-- 15/15 user-facing page patterns required PAGE tours;
-- 0 were eligible to be marked PASS before registry/provider/targets/tests were integrated;
-- 1 page pattern (`/`) had a documented exception;
-- 2 API patterns had documented non-visual exceptions;
-- 94 role × accessible-page obligations were identified;
-- no accessible working page was granted a permanent `Tour: NO` exception.
+1. Dynamic decision and indicator routes must use valid seeded ids during ROLE/THESIS navigation.
+2. Optional RBAC targets must skip without delay; required missing targets must emit diagnostics and avoid deadlock.
+3. Progress must remain isolated by `userId + role + tourId + tourVersion`; complete, skip and dismiss must remain distinct.
+4. Replay, role tour, methodology tour, progress display and onboarding-only reset must remain available from Help.
+5. Runtime E2E must cover first visit, non-repeat after completion, replay, role variance, missing targets, route transitions and the 1366×768 viewport.
+6. Visual placement and keyboard/focus behavior require browser-level verification.
+
+## Post-implementation coverage conclusion
+
+The application exposes one shared evidence environment to seven roles, with page-level restriction only for new-decision creation and administration. The current registry structurally covers every accessible page obligation while preserving those RBAC boundaries.
+
+- **15/15** user-facing page patterns have PAGE coverage.
+- **94/94** accessible role-route obligations are marked PASS.
+- **28 PAGE tours / 144 PAGE steps** cover the route layer, including the shared five-step login, seven role-aware dashboard variants and dedicated post-evaluation context.
+- **7 ROLE tours / 58 ROLE steps** explain role-specific responsibilities.
+- **2 THESIS tours / 30 THESIS steps** provide the jury methodology walkthrough and a separate evidence-nature explanation.
+- **37 tours / 232 steps** are registered overall.
+- **1** non-visual page pattern (`/`) and **2** API patterns remain documented exceptions.
+- **11** matrix cells remain `N/A — RBAC`; no accessible working page is granted a `Tour: NO` exception.

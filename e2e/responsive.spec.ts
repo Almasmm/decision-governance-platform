@@ -1,5 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
+const ONBOARDING_E2E_BYPASS_KEY = "decision-passport:onboarding:e2e-bypass";
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript((storageKey) => {
+    window.localStorage.setItem(storageKey, "1");
+  }, ONBOARDING_E2E_BYPASS_KEY);
+});
+
 const VIEWPORTS = [
   { width: 1920, height: 1080 },
   { width: 1600, height: 900 },
@@ -7,6 +15,7 @@ const VIEWPORTS = [
   { width: 1366, height: 768 },
   { width: 1280, height: 800 },
   { width: 1024, height: 768 },
+  { width: 768, height: 1024 },
 ] as const;
 
 const PASSPORT_TABS = [
