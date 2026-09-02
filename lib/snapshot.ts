@@ -14,7 +14,7 @@ export const decisionInclude = {
   assumptions: { include: { owner: true } },
   risks: { include: { owner: true } },
   assignments: { include: { assignee: true, linkedKpi: true } },
-  calculations: { include: { reviews: true, calculatedBy: true } },
+  calculations: { include: { reviews: { include: { reviewer: true } }, calculatedBy: true } },
   suggestions: { include: { model: true, verifiedBy: true } },
   lessons: true,
   indicatorLinks: { include: { indicator: { include: { owner: true } } } },
