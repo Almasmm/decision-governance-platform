@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { getDashboardStats, getMaturityIndex } from "@/lib/analytics";
 import { ru } from "@/lib/i18n/ru";
 import { formatMoney, cn } from "@/lib/utils";
-import type { Criticality, DecisionType, SourceSystem, Stage } from "@/lib/domain";
+import type { DecisionType, SourceSystem, Stage } from "@/lib/domain";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, CriticalityBadge } from "@/components/ui/badge";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
@@ -246,8 +246,8 @@ export default async function BoardsPage({
       </Card>
 
       <p className="text-[11px] text-slate-500">
-        Уровни критичности: {ru.criticality.A as string} · {ru.criticality.B} · {ru.criticality.C}.
-        Демо-контур: значения внутри паспортов синтетические.
+        Уровни критичности: {ru.criticality.A} · {ru.criticality.B} · {ru.criticality.C}. Демо-контур:
+        значения внутри паспортов синтетические.
       </p>
     </div>
   );
