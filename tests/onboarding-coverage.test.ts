@@ -129,7 +129,17 @@ describe("onboarding route and role coverage", () => {
     const guestTours = listToursForRole("GUEST");
     const loginTour = resolvePageTour("/login", "GUEST");
     expect(loginTour?.id).toBe("page-login");
-    expect(loginTour?.steps).toHaveLength(5);
+    expect(loginTour?.steps).toHaveLength(12);
+    expect(loginTour?.steps.slice(4).map((step) => step.target)).toEqual([
+      '[data-tour="login-role-option"]',
+      '[data-tour="login-role-data-owner"]',
+      '[data-tour="login-role-analyst"]',
+      '[data-tour="login-role-analyst-reviewer"]',
+      '[data-tour="login-role-risk-officer"]',
+      '[data-tour="login-role-secretary"]',
+      '[data-tour="login-role-board-member"]',
+      '[data-tour="login-role-admin"]',
+    ]);
     expect(guestTours.some((tour) => tour.id === "page-login")).toBe(true);
     const thesis = guestTours.find((tour) => tour.id === "thesis-jury-methodology");
     expect(thesis?.roles ?? []).toHaveLength(0);

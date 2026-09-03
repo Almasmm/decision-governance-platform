@@ -252,7 +252,7 @@ test("создаёт 18 эталонных PNG guided onboarding без изме
   await clearOnlyOnboardingProgress(page);
   await advanceTourToStep(page, "page-login:welcome");
   await capture("01-login-welcome.png");
-  await advanceTourToStep(page, "page-login:roles");
+  await advanceTourToStep(page, "page-login:role-board-member");
   await capture("02-login-role-model.png");
   await skipTourIfPresent(page);
 

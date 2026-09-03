@@ -111,7 +111,25 @@ export default function LoginPage() {
               className="group grid min-h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-rule px-1 py-2.5 text-left transition-colors duration-150 hover:bg-paper disabled:cursor-wait disabled:opacity-50"
               aria-label={busy ? `Выполняется вход как ${user.name}, ${ru.roles[user.role]}` : `Войти как ${user.name}, ${ru.roles[user.role]}`}
               aria-busy={busy}
-              data-tour={user.email === "initiator@kap.kz" ? "login-role-option" : undefined}
+              data-tour={
+                user.email === "initiator@kap.kz"
+                  ? "login-role-option"
+                  : user.email === "dataowner@kap.kz"
+                    ? "login-role-data-owner"
+                    : user.email === "analyst@kap.kz"
+                      ? "login-role-analyst"
+                      : user.email === "analyst2@kap.kz"
+                        ? "login-role-analyst-reviewer"
+                        : user.email === "risk@kap.kz"
+                          ? "login-role-risk-officer"
+                          : user.email === "secretary@kap.kz"
+                            ? "login-role-secretary"
+                            : user.email === "board@kap.kz"
+                              ? "login-role-board-member"
+                              : user.email === "admin@kap.kz"
+                                ? "login-role-admin"
+                                : undefined
+              }
             >
               <span className="min-w-0">
                 <span className="flex flex-wrap items-baseline gap-x-2">

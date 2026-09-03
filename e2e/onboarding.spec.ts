@@ -92,6 +92,28 @@ test("1 · login и dashboard инициатора запускают page tour 
   await expect(page.locator(TOUR).getByText("Очередь подготовки вопроса", { exact: true })).toBeVisible();
 });
 
+test("1.1 · login подробно объясняет каждого демонстрационного пользователя", async ({ page }) => {
+  const tour = await expectTour(page);
+  const expectedRoles = [
+    ["page-login:role-option", "Динара Ахметова · Инициатор"],
+    ["page-login:role-data-owner", "Ержан Смагулов · Владелец данных"],
+    ["page-login:role-analyst", "Алия Нурланова · Аналитик"],
+    ["page-login:role-analyst-reviewer", "Марат Касымов · Независимый аналитик"],
+    ["page-login:role-risk-officer", "Тимур Бекетов · Риск-офицер"],
+    ["page-login:role-secretary", "Сауле Жумабаева · Корпоративный секретарь"],
+    ["page-login:role-board-member", "Нурлан Абишев · Член Совета директоров"],
+    ["page-login:role-admin", "Администратор · Контроль платформы"],
+  ] as const;
+
+  for (let index = 0; index < 3; index += 1) await advanceTour(page, tour);
+  for (const [stepId, title] of expectedRoles) {
+    await advanceTour(page, tour);
+    await expect(tour).toHaveAttribute("data-tour-id", stepId);
+    await expect(tour.getByRole("heading", { name: title })).toBeVisible();
+    await expect(page.getByTestId("onboarding-spotlight")).toBeVisible();
+  }
+});
+
 test("2 · после dashboard новая страница получает собственную инструкцию", async ({ page }) => {
   await loginAs(page, "Динара Ахметова");
   await completeTour(page);

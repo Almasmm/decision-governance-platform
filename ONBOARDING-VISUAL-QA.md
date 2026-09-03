@@ -31,7 +31,7 @@
 | № | Файл | Сценарий | Статус |
 |---:|---|---|---|
 | 01 | `01-login-welcome.png` | Вводный экран | PASS |
-| 02 | `02-login-role-model.png` | Ролевая модель | PASS |
+| 02 | `02-login-role-model.png` | Подробное объяснение пользователя и роли | PASS |
 | 03 | `03-initiator-dashboard.png` | Dashboard инициатора | PASS |
 | 04 | `04-data-owner-dashboard.png` | Dashboard владельца данных | PASS |
 | 05 | `05-risk-officer-dashboard.png` | Dashboard риск-офицера | PASS |

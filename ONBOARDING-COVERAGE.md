@@ -39,10 +39,10 @@ Symbols in permission tables: `✓` allowed; `—` denied.
 | Domain roles | 7 |
 | Role × accessible-page obligations | 94 |
 | Structurally covered obligations | 94/94 PASS |
-| PAGE definitions / steps | 28 / 193 |
+| PAGE definitions / steps | 28 / 200 |
 | ROLE definitions / steps | 7 / 58 |
 | THESIS definitions / steps | 2 / 30 |
-| All registered tours / steps | 37 / 281 |
+| All registered tours / steps | 37 / 288 |
 | Permission actions in `PERMISSIONS` | 23 |
 | Server mutation entry points | 26 (25 currently exposed in UI, 1 server-only) |
 | Passport top-level tabs | 7 |
@@ -52,7 +52,7 @@ Symbols in permission tables: `✓` allowed; `—` denied.
 | Role-dashboard panel states | 4 |
 | Pre-onboarding business dialogs/drawers | 0 |
 
-The 16 page patterns are `/`, `/login`, and 14 pages inside the authenticated `(app)` route group. The 94 PASS cells count `/login` for every eventual role because it remains directly renderable, while all seven rows correctly resolve to the one shared five-step GUEST tour `page-login`.
+The 16 page patterns are `/`, `/login`, and 14 pages inside the authenticated `(app)` route group. The 94 PASS cells count `/login` for every eventual role because it remains directly renderable, while all seven rows correctly resolve to the one shared twelve-step GUEST tour `page-login`.
 
 ## Sources of truth
 
@@ -141,7 +141,7 @@ This is the post-implementation structural matrix. Counts are read from the curr
 
 | Route pattern | Exact PAGE tour id(s) | Actual steps | Registry role scope |
 |---|---|---:|---|
-| `/login` | `page-login` | 5 | Shared GUEST introduction |
+| `/login` | `page-login` | 12 | Shared GUEST introduction plus every demo user and role |
 | `/dashboard` | `page-dashboard-initiator`<br>`page-dashboard-data-owner`<br>`page-dashboard-risk-officer`<br>`page-dashboard-analyst`<br>`page-dashboard-secretary`<br>`page-dashboard-board-member`<br>`page-dashboard-admin` | 10 each; 70 total | One role-specific definition for each of 7 roles; navigation, search and training controls included |
 | `/decisions` | `page-decisions` | 8 | All authenticated roles; create step is filtered to INITIATOR and ADMIN |
 | `/decisions/new` | `page-decision-new` | 4 | INITIATOR, ADMIN |
@@ -157,7 +157,7 @@ This is the post-implementation structural matrix. Counts are read from the curr
 | `/admin` | `page-admin` | 7 | ADMIN |
 | `/search` | `page-search` | 4 | All authenticated roles |
 
-Unique PAGE registry total: **28 definitions / 193 steps**. Every authenticated PAGE tour opens with a page-specific explanation plus a role brief rendered from the current identity. `/` is not included because it is a non-visual redirect exception.
+Unique PAGE registry total: **28 definitions / 200 steps**. Every authenticated PAGE tour opens with a page-specific explanation plus a role brief rendered from the current identity. `/` is not included because it is a non-visual redirect exception.
 
 ### Registered ROLE and THESIS definitions
 
@@ -182,7 +182,7 @@ Registry totals for these modes: **7 ROLE definitions / 58 steps** and **2 THESI
 | Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
 | INITIATOR | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
-| INITIATOR | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| INITIATOR | `/login` | Login and role selection | Yes | `page-login` | 12 | PASS |
 | INITIATOR | `/dashboard` | Executive dashboard | Yes | `page-dashboard-initiator` | 10 | PASS |
 | INITIATOR | `/decisions` | Decision registry | Yes | `page-decisions` | 8 | PASS |
 | INITIATOR | `/decisions/new` | New decision passport | Yes | `page-decision-new` | 4 | PASS |
@@ -205,7 +205,7 @@ Accessible obligations: **14 PASS**; referenced PAGE steps eligible for this rol
 | Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
 | DATA_OWNER | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
-| DATA_OWNER | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| DATA_OWNER | `/login` | Login and role selection | Yes | `page-login` | 12 | PASS |
 | DATA_OWNER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-data-owner` | 10 | PASS |
 | DATA_OWNER | `/decisions` | Decision registry | Yes | `page-decisions` | 7 | PASS |
 | DATA_OWNER | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
@@ -228,7 +228,7 @@ Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this rol
 | Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
 | RISK_OFFICER | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
-| RISK_OFFICER | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| RISK_OFFICER | `/login` | Login and role selection | Yes | `page-login` | 12 | PASS |
 | RISK_OFFICER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-risk-officer` | 10 | PASS |
 | RISK_OFFICER | `/decisions` | Decision registry | Yes | `page-decisions` | 7 | PASS |
 | RISK_OFFICER | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
@@ -251,7 +251,7 @@ Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this rol
 | Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
 | ANALYST | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
-| ANALYST | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| ANALYST | `/login` | Login and role selection | Yes | `page-login` | 12 | PASS |
 | ANALYST | `/dashboard` | Executive dashboard | Yes | `page-dashboard-analyst` | 10 | PASS |
 | ANALYST | `/decisions` | Decision registry | Yes | `page-decisions` | 7 | PASS |
 | ANALYST | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
@@ -274,7 +274,7 @@ Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this rol
 | Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
 | SECRETARY | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
-| SECRETARY | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| SECRETARY | `/login` | Login and role selection | Yes | `page-login` | 12 | PASS |
 | SECRETARY | `/dashboard` | Executive dashboard | Yes | `page-dashboard-secretary` | 10 | PASS |
 | SECRETARY | `/decisions` | Decision registry | Yes | `page-decisions` | 7 | PASS |
 | SECRETARY | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
@@ -297,7 +297,7 @@ Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this rol
 | Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
 | BOARD_MEMBER | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
-| BOARD_MEMBER | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| BOARD_MEMBER | `/login` | Login and role selection | Yes | `page-login` | 12 | PASS |
 | BOARD_MEMBER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-board-member` | 10 | PASS |
 | BOARD_MEMBER | `/decisions` | Decision registry | Yes | `page-decisions` | 7 | PASS |
 | BOARD_MEMBER | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
@@ -320,7 +320,7 @@ Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this rol
 | Role | Route | Page | Accessible | Exact PAGE tour id(s) | Actual steps | Status |
 |---|---|---|---|---|---:|---|
 | ADMIN | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
-| ADMIN | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
+| ADMIN | `/login` | Login and role selection | Yes | `page-login` | 12 | PASS |
 | ADMIN | `/dashboard` | Executive dashboard | Yes | `page-dashboard-admin` | 10 | PASS |
 | ADMIN | `/decisions` | Decision registry | Yes | `page-decisions` | 8 | PASS |
 | ADMIN | `/decisions/new` | New decision passport | Yes | `page-decision-new` | 4 | PASS |
@@ -610,9 +610,9 @@ This document reconciles the current route inventory, route role scopes, role pr
 1. All 15 user-facing page patterns have at least one PAGE definition; `/` remains the sole non-visual page exception.
 2. Dashboard resolution has one distinct ten-step PAGE definition for each of the seven authenticated roles.
 3. `/decisions/new` is scoped to INITIATOR and ADMIN; `/admin` is scoped to ADMIN. The other roles retain `N/A — RBAC` rather than false PASS rows.
-4. The shared login definition is `page-login` with exactly five steps.
+4. The shared login definition is `page-login` with exactly twelve steps: four platform concepts and eight concrete demo users across seven roles.
 5. The decision-passport route has one nine-step base definition and seven contextual definitions totalling 44 more registered steps: 53 across the complete route suite. Per-role runnable totals are 49–53 because action steps preserve RBAC.
-6. Registry arithmetic is internally consistent: 28 PAGE / 193 steps, 7 ROLE / 58 steps and 2 THESIS / 30 steps, for 37 tours / 281 steps overall.
+6. Registry arithmetic is internally consistent: 28 PAGE / 200 steps, 7 ROLE / 58 steps and 2 THESIS / 30 steps, for 37 tours / 288 steps overall.
 7. The expanded role matrix is internally consistent: 94 PASS + 11 N/A — RBAC + 7 EXCEPTION = 112 cells (7 roles × 16 route patterns).
 
 The PASS labels above are intentionally limited to this structural reconciliation. This document does not claim production-build, visual-regression, keyboard/focus or manual-browser results; those require their own execution evidence.
@@ -634,9 +634,9 @@ The application exposes one shared evidence environment to seven roles, with pag
 
 - **15/15** user-facing page patterns have PAGE coverage.
 - **94/94** accessible role-route obligations are marked PASS.
-- **28 PAGE tours / 193 PAGE steps** cover the route layer, including the shared five-step login, seven ten-step role-aware dashboard variants and dedicated post-evaluation context.
+- **28 PAGE tours / 200 PAGE steps** cover the route layer, including the shared twelve-step login, seven ten-step role-aware dashboard variants and dedicated post-evaluation context.
 - **7 ROLE tours / 58 ROLE steps** explain role-specific responsibilities.
 - **2 THESIS tours / 30 THESIS steps** provide the jury methodology walkthrough and a separate evidence-nature explanation.
-- **37 tours / 281 steps** are registered overall.
+- **37 tours / 288 steps** are registered overall.
 - **1** non-visual page pattern (`/`) and **2** API patterns remain documented exceptions.
 - **11** matrix cells remain `N/A — RBAC`; no accessible working page is granted a `Tour: NO` exception.
