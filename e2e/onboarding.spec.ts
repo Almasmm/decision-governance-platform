@@ -1,6 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const TOUR = '[data-testid="onboarding-tour"]';
+const AUTO_START_BYPASS_KEY = "decision-passport:onboarding:e2e-bypass";
+
+async function enableMandatoryTours(page: Page): Promise<void> {
+  await page.evaluate((key) => localStorage.removeItem(key), AUTO_START_BYPASS_KEY);
+}
 
 async function expectTour(page: Page) {
   const tour = page.locator(TOUR);
@@ -11,7 +16,8 @@ async function expectTour(page: Page) {
 async function skipTour(page: Page): Promise<void> {
   const tour = page.locator(TOUR);
   if (await tour.isVisible().catch(() => false)) {
-    await tour.getByRole("button", { name: "Пропустить", exact: true }).click();
+    await page.evaluate((key) => localStorage.setItem(key, "1"), AUTO_START_BYPASS_KEY);
+    await page.keyboard.press("Escape");
     await expect(tour).toBeHidden();
     await expect(tour).not.toBeAttached();
   }
@@ -35,13 +41,19 @@ async function completeTour(page: Page, maximumSteps = 20): Promise<void> {
   const tour = await expectTour(page);
   for (let index = 0; index < maximumSteps; index += 1) {
     const currentStepId = await tour.getAttribute("data-tour-id");
-    const action = tour.getByRole("button", { name: /^(Далее|Готово)$/ });
+    const action = tour.getByRole("button", { name: /^(Далее|Готово|Сначала)$/ });
     await expect(action).toBeVisible();
-    const completesTour = (await action.textContent())?.trim() === "Готово";
+    const actionLabel = (await action.textContent())?.trim();
+    const completesTour = actionLabel === "Готово";
+    const restartsTour = actionLabel === "Сначала";
     await action.click();
     if (completesTour) {
       await expect(tour).toBeHidden();
       await expect(tour).not.toBeAttached();
+      return;
+    }
+    if (restartsTour) {
+      await expect(tour).toHaveAttribute("data-tour-id", /:navigation$|:welcome$/);
       return;
     }
     await page.waitForFunction(
@@ -69,6 +81,7 @@ async function openLoginWithoutCompletedTour(page: Page): Promise<void> {
 
 async function loginAs(page: Page, name: string, keepDashboardTour = true): Promise<void> {
   await skipTour(page);
+  await enableMandatoryTours(page);
   await page.getByRole("button", { name: new RegExp(`Войти как ${name}`) }).click();
   await page.waitForURL("**/dashboard");
   if (keepDashboardTour) await expectTour(page);
@@ -99,13 +112,18 @@ test("2 · после dashboard новая страница получает с�
   await expect(registryTour.getByText("Реестр управленческих решений", { exact: true })).toBeVisible();
 });
 
-test("3 · завершённый dashboard не запускается повторно", async ({ page }) => {
+test("3 · обязательный dashboard запускается повторно при каждом возвращении", async ({ page }) => {
   await loginAs(page, "Динара Ахметова");
   await completeTour(page);
   await page.goto("/decisions");
-  await skipTour(page);
+  await expectTour(page);
   await page.goto("/dashboard");
-  await expect(page.locator(TOUR)).toBeHidden({ timeout: 1_200 });
+  const tour = await expectTour(page);
+  await expect(tour).toHaveAttribute("data-tour-id", "page-dashboard-initiator:navigation");
+  await expect(tour.getByRole("button", { name: "Пропустить" })).toHaveCount(0);
+  await expect(tour.getByRole("button", { name: "Закрыть текущую инструкцию" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(tour).toBeVisible();
 });
 
 test("4 · обучение текущей страницы можно повторить из центра помощи", async ({ page }) => {
@@ -134,6 +152,7 @@ test("6 · член Совета директоров видит Human-in-the-lo
   await skipTour(page);
   const href = await page.getByRole("link", { name: "INV-2026-001", exact: true }).first().getAttribute("href");
   expect(href).toBeTruthy();
+  await enableMandatoryTours(page);
   await page.goto(`${href}?tab=ai`);
   const tour = await expectTour(page);
   await expect(tour).toContainText(/ИИ|модел/i);
@@ -146,6 +165,7 @@ test("6 · член Совета директоров видит Human-in-the-lo
 
 test("7 · администратор получает tour конфигурации, а не бизнес-решения", async ({ page }) => {
   await loginAs(page, "Администратор", false);
+  await enableMandatoryTours(page);
   await page.goto("/admin");
   const tour = await expectTour(page);
   await expect(tour).toContainText(/Администрирование цифрового контура/i);
@@ -268,7 +288,7 @@ test("12 · spotlight и coach card корректны во всей обяза�
   }
 
   await page.keyboard.press("Escape");
-  await expect(page.locator(TOUR)).toBeHidden();
+  await expect(page.locator(TOUR)).toBeVisible();
 });
 
 test("13 · отдельный page tour открывается для блока пост-оценки", async ({ page }) => {
@@ -281,6 +301,7 @@ test("13 · отдельный page tour открывается для блок�
     .getAttribute("href");
   expect(decisionHref).toBeTruthy();
 
+  await enableMandatoryTours(page);
   await page.goto(`${decisionHref}?tab=passport&block=POST_EVALUATION`);
   const tour = await expectTour(page);
   await expect(tour).toHaveAttribute(

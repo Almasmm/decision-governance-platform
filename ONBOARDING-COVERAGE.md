@@ -623,9 +623,9 @@ The following remain separate release checks and do not alter the source-coverag
 
 1. Dynamic decision and indicator routes must use valid seeded ids during ROLE/THESIS navigation.
 2. Optional RBAC targets must skip without delay; required missing targets must emit diagnostics and avoid deadlock.
-3. Progress must remain isolated by `userId + role + tourId + tourVersion`; complete, skip and dismiss must remain distinct.
+3. PAGE tours are mandatory and continuous: stored progress cannot suppress auto-start, close/skip are absent, and the final step cycles to the first. ROLE/THESIS progress remains isolated by identity and version.
 4. Replay, role tour, methodology tour, progress display and onboarding-only reset must remain available from Help.
-5. Runtime E2E must cover first visit, non-repeat after completion, replay, role variance, missing targets, route transitions and the 1366×768 viewport.
+5. Runtime E2E must cover permanent restart on return, resistance to `Escape`, absence of close/skip, role variance, missing targets, route transitions and the 1366×768 viewport.
 6. Visual placement and keyboard/focus behavior require browser-level verification.
 
 ## Post-implementation coverage conclusion

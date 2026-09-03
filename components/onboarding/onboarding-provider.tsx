@@ -12,11 +12,9 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getTourById, listToursForRole, resolvePageTour } from "@/lib/onboarding";
 import {
-  getTourState,
   listProgress,
   resetOnboardingProgress,
   setTourState,
-  shouldAutoStartTour,
 } from "@/lib/onboarding/progress";
 import type {
   OnboardingRole,
@@ -80,6 +78,14 @@ function writeActiveSession(session: ActiveTourSession | null): void {
     else window.sessionStorage.removeItem(ACTIVE_TOUR_SESSION_KEY);
   } catch {
     // Guidance persistence is optional; the product remains usable without it.
+  }
+}
+
+function pageTourAutoStartIsBypassed(): boolean {
+  try {
+    return window.localStorage.getItem(E2E_AUTO_START_BYPASS_KEY) === "1";
+  } catch {
+    return false;
   }
 }
 
@@ -174,7 +180,6 @@ export function OnboardingProvider({
   const previousFocus = useRef<HTMLElement | null>(null);
   const closeTimer = useRef(0);
   const closingRef = useRef(false);
-  const autoStartGuard = useRef<string | null>(null);
   const requiredMissingSteps = useRef(new Set<string>());
 
   const [progress, setProgress] = useState<TourProgressRecord[]>([]);
@@ -307,6 +312,17 @@ export function OnboardingProvider({
         candidate += direction;
       }
       if (candidate >= activeTour.steps.length) {
+        if (activeTour.mode === "PAGE") {
+          setStepIndex(0);
+          setTargetRect(null);
+          setTargetReady(false);
+          setTourState(progressKey(activeTour), {
+            status: "in_progress",
+            currentStepId: activeTour.steps[0]!.id,
+          });
+          setProgressRevision((value) => value + 1);
+          return;
+        }
         finishWith(requiredMissingSteps.current.size > 0 ? "dismissed" : "completed");
         return;
       }
@@ -369,34 +385,14 @@ export function OnboardingProvider({
   }, [progressKey, role, userId]);
 
   useEffect(() => {
-    if (!restorationComplete || !pageTour || activeTour) return;
-    try {
-      if (window.localStorage.getItem(E2E_AUTO_START_BYPASS_KEY) === "1") return;
-    } catch {
-      // Auto-start remains available when storage access is restricted.
-    }
-    const guard = `${userId}:${role}:${pageTour.id}:v${pageTour.version}`;
-    if (autoStartGuard.current === guard) return;
-    autoStartGuard.current = guard;
-    const state = getTourState(progressKey(pageTour));
-    if (!shouldAutoStartTour(pageTour, state) && state?.status !== "in_progress") return;
+    if (!restorationComplete || !pageTour || pageTourAutoStartIsBypassed()) return;
+    if (activeTour?.mode !== "PAGE" && activeTour !== null) return;
+    if (activeTour?.id === pageTour.id) return;
     const frame = window.requestAnimationFrame(() => {
       startTour(pageTour);
-      if (state?.status === "in_progress" && state.currentStepId) {
-        const restoredIndex = runnableSteps(pageTour, role).findIndex(
-          (step) => step.id === state.currentStepId
-        );
-        if (restoredIndex >= 0) {
-          setStepIndex(restoredIndex);
-          setTourState(progressKey(pageTour), {
-            status: "in_progress",
-            currentStepId: state.currentStepId,
-          });
-        }
-      }
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [activeTour, pageTour, progressKey, restorationComplete, role, startTour, userId]);
+  }, [activeTour, pageTour, restorationComplete, startTour]);
 
   const activeStep = activeTour?.steps[stepIndex] ?? null;
 
@@ -404,6 +400,14 @@ export function OnboardingProvider({
     if (!activeTour || !activeStep) return;
     if (!stepIsEligible(activeStep, role)) {
       moveToStep(1);
+      return;
+    }
+
+    if (
+      activeTour.mode === "PAGE" &&
+      pageTour &&
+      activeTour.id !== pageTour.id
+    ) {
       return;
     }
 
@@ -586,7 +590,7 @@ export function OnboardingProvider({
       window.removeEventListener("resize", updateRect);
       window.removeEventListener("scroll", updateRect, true);
     };
-  }, [activeStep, activeTour, currentRoute, finishWith, moveToStep, role, router]);
+  }, [activeStep, activeTour, currentRoute, finishWith, moveToStep, pageTour, role, router]);
 
   useEffect(() => {
     if (!activeTour) return;
@@ -596,6 +600,7 @@ export function OnboardingProvider({
       if (target?.matches("input, textarea, select, [contenteditable='true']")) return;
       if (event.key === "Escape") {
         event.preventDefault();
+        if (activeTour.mode === "PAGE" && !pageTourAutoStartIsBypassed()) return;
         finishWith("dismissed");
       }
       if (event.key === "ArrowRight" && !(role === "GUEST" && activeStep?.advance === "target-click")) {
@@ -614,7 +619,6 @@ export function OnboardingProvider({
   const resetTraining = useCallback(() => {
     const removed = resetOnboardingProgress({ userId, role });
     writeActiveSession(null);
-    autoStartGuard.current = null;
     setProgressRevision((value) => value + 1);
     closeTour();
     return removed;
@@ -695,6 +699,7 @@ export function OnboardingProvider({
           closing={closing}
           targetPending={!targetReady && activeStep.target !== "body"}
           roleBrief={activeTour.mode === "PAGE" ? roleBrief : undefined}
+          mandatory={activeTour.mode === "PAGE"}
         />
       )}
     </OnboardingContext.Provider>

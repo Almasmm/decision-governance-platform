@@ -36,6 +36,7 @@ interface TourSurfaceProps {
   requireTargetAction?: boolean;
   closing?: boolean;
   targetPending?: boolean;
+  mandatory?: boolean;
   roleBrief?: {
     label: string;
     purpose: string;
@@ -196,6 +197,7 @@ export function TourSurface({
   requireTargetAction = false,
   closing = false,
   targetPending = false,
+  mandatory = false,
   roleBrief,
 }: TourSurfaceProps) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -235,7 +237,7 @@ export function TourSurface({
   }, [mounted, requireTargetAction, step.id, step.target]);
 
   function trapFocus(event: React.KeyboardEvent<HTMLDivElement>) {
-    if (event.key !== "Tab" || requireTargetAction) return;
+    if (event.key !== "Tab" || requireTargetAction || mandatory) return;
     const focusable = Array.from(
       event.currentTarget.querySelectorAll<HTMLElement>(
         'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
@@ -258,7 +260,9 @@ export function TourSurface({
 
   if (!mounted) return null;
 
-  const dimmerClass = "onboarding-dimmer pointer-events-auto fixed z-[90] transition-[top,left,width,height] duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
+  const dimmerClass = `onboarding-dimmer fixed z-[90] transition-[top,left,width,height] duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+    mandatory ? "pointer-events-none" : "pointer-events-auto"
+  }`;
   const progress = ((stepIndex + 1) / stepCount) * 100;
 
   return createPortal(
@@ -308,7 +312,7 @@ export function TourSurface({
               Фокус · шаг {stepIndex + 1}
             </span>
           </div>
-          {!allowTargetInteraction && (
+          {!mandatory && !allowTargetInteraction && (
             <div
               className="pointer-events-auto fixed z-[92]"
               style={targetRect}
@@ -318,7 +322,7 @@ export function TourSurface({
         </>
       ) : (
         <div
-          className="onboarding-dimmer pointer-events-auto fixed inset-0 z-[90]"
+          className={`onboarding-dimmer fixed inset-0 z-[90] ${mandatory ? "pointer-events-none" : "pointer-events-auto"}`}
           aria-hidden="true"
           data-testid="onboarding-dimmer"
         />
@@ -327,7 +331,7 @@ export function TourSurface({
       <div
         ref={cardRef}
         role="dialog"
-        aria-modal={!requireTargetAction}
+        aria-modal={!mandatory && !requireTargetAction}
         aria-labelledby="tour-step-title"
         aria-describedby="tour-step-body"
         tabIndex={-1}
@@ -341,6 +345,7 @@ export function TourSurface({
           transform: position ? undefined : "translate(-50%, -50%)",
         }}
         data-placement={position?.placement ?? "center"}
+        data-mandatory={mandatory ? "true" : "false"}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -350,14 +355,20 @@ export function TourSurface({
               {step.title}
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="-mr-2 -mt-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-muted hover:bg-canvas hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            aria-label="Закрыть текущую инструкцию"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
+          {mandatory ? (
+            <span className="shrink-0 rounded-full border border-accent bg-accent-soft px-2.5 py-1 text-meta font-semibold uppercase tracking-[0.08em] text-accent">
+              Всегда включено
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={onDismiss}
+              className="-mr-2 -mt-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-muted hover:bg-canvas hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-label="Закрыть текущую инструкцию"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+          )}
         </div>
 
         <div key={step.id} data-tour-step-content>
@@ -437,13 +448,15 @@ export function TourSurface({
             </>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={onSkip}
-                className="mr-auto min-h-10 px-1 text-table font-medium text-muted hover:text-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                Пропустить
-              </button>
+              {!mandatory && (
+                <button
+                  type="button"
+                  onClick={onSkip}
+                  className="mr-auto min-h-10 px-1 text-table font-medium text-muted hover:text-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  Пропустить
+                </button>
+              )}
               <Button type="button" variant="secondary" onClick={onBack} disabled={stepIndex === 0}>
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                 Назад
@@ -454,7 +467,7 @@ export function TourSurface({
                 </span>
               ) : (
                 <Button type="button" onClick={onNext}>
-                  {isLast ? "Готово" : "Далее"}
+                  {isLast ? (mandatory ? "Сначала" : "Готово") : "Далее"}
                   {!isLast && <ChevronRight className="h-4 w-4" aria-hidden="true" />}
                 </Button>
               )}

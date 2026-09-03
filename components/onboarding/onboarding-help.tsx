@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BookOpenCheck, Check, CircleHelp, GraduationCap, RotateCcw, X } from "lucide-react";
+import { BookOpenCheck, CircleHelp, GraduationCap, RotateCcw, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOptionalOnboarding } from "@/components/onboarding/onboarding-provider";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ function ConnectedOnboardingHelp({
   const {
     pageTour,
     availableTours,
-    progress,
     replayPageTour,
     startRoleTour,
     startTourById,
@@ -41,14 +40,6 @@ function ConnectedOnboardingHelp({
   const roleTour = availableTours.find((tour) => tour.mode === "ROLE");
   const thesisTours = availableTours.filter((tour) => tour.mode === "THESIS");
   const pageTours = availableTours.filter((tour) => tour.mode === "PAGE");
-  const completedCount = pageTours.filter((tour) =>
-    progress.some(
-      (record) =>
-        record.tourId === tour.id &&
-        record.tourVersion === tour.version &&
-        record.status === "completed"
-    )
-  ).length;
 
   useEffect(() => {
     if (!open) return;
@@ -165,46 +156,20 @@ function ConnectedOnboardingHelp({
             </div>
 
             {pageTours.length > 0 && (
-              <section aria-labelledby="training-progress-title">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 id="training-progress-title" className="text-table font-semibold">
-                    Пройденные разделы
-                  </h3>
-                  <span className="font-technical text-meta text-muted">
-                    {completedCount} / {pageTours.length}
-                  </span>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line" aria-hidden="true">
-                  <div
-                    className="h-full bg-accent transition-[width] duration-200 motion-reduce:transition-none"
-                    style={{ width: `${pageTours.length ? (completedCount / pageTours.length) * 100 : 0}%` }}
-                  />
-                </div>
-                <ul className="mt-3 max-h-36 space-y-1 overflow-y-auto pr-1 text-meta text-muted">
-                  {pageTours.map((tour) => {
-                    const done = progress.some(
-                      (record) =>
-                        record.tourId === tour.id &&
-                        record.tourVersion === tour.version &&
-                        record.status === "completed"
-                    );
-                    return (
-                      <li key={tour.id} className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
-                            done ? "border-accent bg-accent text-surface" : "border-line-strong"
-                          )}
-                          aria-hidden="true"
-                        >
-                          {done && <Check className="h-3 w-3" />}
-                        </span>
-                        <span className={done ? "text-text" : undefined}>{tour.title}</span>
-                        <span className="sr-only">{done ? "пройдено" : "не начато"}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
+              <section
+                aria-labelledby="training-progress-title"
+                className="rounded-control border border-accent bg-accent-soft px-3.5 py-3"
+              >
+                <h3 id="training-progress-title" className="text-table font-semibold text-text">
+                  Постоянное обучение включено
+                </h3>
+                <p className="mt-1.5 text-meta leading-5 text-muted">
+                  На каждой доступной странице автоматически работает её инструкция. Закрыть или
+                  пропустить PAGE-обучение нельзя; после последнего шага оно начинается сначала.
+                </p>
+                <p className="mt-2 font-technical text-meta font-semibold text-accent">
+                  {pageTours.length} инструкций доступны вашей роли
+                </p>
               </section>
             )}
 
