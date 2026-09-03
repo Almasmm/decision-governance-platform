@@ -96,6 +96,25 @@ function clampPosition(position: { top: number; left: number }, width: number, h
   };
 }
 
+function overlapArea(
+  position: { top: number; left: number },
+  width: number,
+  height: number,
+  target: SpotlightRect
+): number {
+  const overlapWidth = Math.max(
+    0,
+    Math.min(position.left + width, target.left + target.width) -
+      Math.max(position.left, target.left)
+  );
+  const overlapHeight = Math.max(
+    0,
+    Math.min(position.top + height, target.top + target.height) -
+      Math.max(position.top, target.top)
+  );
+  return overlapWidth * overlapHeight;
+}
+
 function resolvePosition(
   target: SpotlightRect | null,
   preferred: TourPlacement,
@@ -131,8 +150,26 @@ function resolvePosition(
     if (fitsViewport(candidate, width, height)) return { ...candidate, placement };
   }
 
-  const fallback = candidatePosition(preferred, target, width, height);
-  return { ...clampPosition(fallback, width, height), placement: preferred };
+  const fallback = preferredPlacements(preferred)
+    .map((placement) => {
+      const clamped = clampPosition(
+        candidatePosition(placement, target, width, height),
+        width,
+        height
+      );
+      return {
+        ...clamped,
+        placement,
+        overlap: overlapArea(clamped, width, height, target),
+      };
+    })
+    .sort((left, right) => left.overlap - right.overlap)[0]!;
+
+  return {
+    top: fallback.top,
+    left: fallback.left,
+    placement: fallback.placement,
+  };
 }
 
 export function TourSurface({
@@ -211,7 +248,7 @@ export function TourSurface({
 
   if (!mounted) return null;
 
-  const dimmerClass = "pointer-events-auto fixed z-[90] bg-obsidian/55 transition-[top,left,width,height] duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
+  const dimmerClass = "onboarding-dimmer pointer-events-auto fixed z-[90] transition-[top,left,width,height] duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
   const progress = ((stepIndex + 1) / stepCount) * 100;
 
   return createPortal(
@@ -227,7 +264,11 @@ export function TourSurface({
       )}
       {targetRect ? (
         <>
-          <div className={dimmerClass} style={{ inset: `0 0 auto 0`, height: targetRect.top }} />
+          <div
+            className={dimmerClass}
+            style={{ inset: `0 0 auto 0`, height: targetRect.top }}
+            data-testid="onboarding-dimmer"
+          />
           <div className={dimmerClass} style={{ top: targetRect.top, left: 0, width: targetRect.left, height: targetRect.height }} />
           <div
             className={dimmerClass}
@@ -243,7 +284,7 @@ export function TourSurface({
             style={{ top: targetRect.top + targetRect.height, right: 0, bottom: 0, left: 0 }}
           />
           <div
-            className="pointer-events-none fixed z-[91] rounded-control border-2 border-paper shadow-[0_0_0_2px_var(--obsidian)] transition-[top,left,width,height] duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+            className="onboarding-spotlight pointer-events-none fixed z-[91] rounded-control transition-[top,left,width,height] duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
             style={targetRect}
             aria-hidden="true"
             data-testid="onboarding-spotlight"
@@ -257,7 +298,11 @@ export function TourSurface({
           )}
         </>
       ) : (
-        <div className="pointer-events-auto fixed inset-0 z-[90] bg-obsidian/55" aria-hidden="true" />
+        <div
+          className="onboarding-dimmer pointer-events-auto fixed inset-0 z-[90]"
+          aria-hidden="true"
+          data-testid="onboarding-dimmer"
+        />
       )}
 
       <div

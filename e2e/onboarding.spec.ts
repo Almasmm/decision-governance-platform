@@ -221,8 +221,12 @@ test("12 · spotlight и coach card корректны во всей обяза�
     await page.setViewportSize(viewport);
     const dialog = page.locator(TOUR).getByRole("dialog");
     const spotlight = page.getByTestId("onboarding-spotlight");
+    const dimmer = page.getByTestId("onboarding-dimmer");
     await expect(dialog).toBeVisible();
     await expect(spotlight).toBeVisible();
+    await expect(dimmer).toHaveCSS("background-color", "rgba(16, 25, 28, 0.72)");
+    await expect(spotlight).toHaveCSS("border-top-width", "3px");
+    await expect(spotlight).toHaveCSS("outline-width", "2px");
     await expect
       .poll(async () => {
         const box = await dialog.boundingBox();
