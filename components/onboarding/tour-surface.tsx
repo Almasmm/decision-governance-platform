@@ -21,6 +21,7 @@ interface Position {
 
 interface TourSurfaceProps {
   tourTitle: string;
+  tourDescription: string;
   step: TourStep;
   stepIndex: number;
   stepCount: number;
@@ -34,6 +35,12 @@ interface TourSurfaceProps {
   allowTargetInteraction?: boolean;
   requireTargetAction?: boolean;
   closing?: boolean;
+  targetPending?: boolean;
+  roleBrief?: {
+    label: string;
+    purpose: string;
+    responsibilities: readonly string[];
+  };
 }
 
 const VIEWPORT_MARGIN = 12;
@@ -174,6 +181,7 @@ function resolvePosition(
 
 export function TourSurface({
   tourTitle,
+  tourDescription,
   step,
   stepIndex,
   stepCount,
@@ -187,6 +195,8 @@ export function TourSurface({
   allowTargetInteraction = false,
   requireTargetAction = false,
   closing = false,
+  targetPending = false,
+  roleBrief,
 }: TourSurfaceProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -288,7 +298,16 @@ export function TourSurface({
             style={targetRect}
             aria-hidden="true"
             data-testid="onboarding-spotlight"
-          />
+          >
+            <span
+              className={`onboarding-focus-label absolute left-0 whitespace-nowrap rounded-control ${
+                targetRect.top >= 44 ? "bottom-[calc(100%+11px)]" : "top-[calc(100%+11px)]"
+              }`}
+              data-testid="onboarding-focus-label"
+            >
+              Фокус · шаг {stepIndex + 1}
+            </span>
+          </div>
           {!allowTargetInteraction && (
             <div
               className="pointer-events-auto fixed z-[92]"
@@ -341,9 +360,36 @@ export function TourSurface({
         </div>
 
         <div key={step.id} data-tour-step-content>
+          {targetPending && step.target !== "body" && (
+            <p className="mt-3 flex items-center gap-2 text-table font-medium text-accent" role="status">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-accent motion-reduce:animate-none" aria-hidden="true" />
+              Подготавливаем выделение области…
+            </p>
+          )}
           <p id="tour-step-body" className="mt-3 text-base leading-6 text-muted">
             {step.body}
           </p>
+          {stepIndex === 0 && roleBrief && (
+            <section
+              className="mt-4 rounded-control border-2 border-line-strong bg-canvas px-3.5 py-3"
+              data-testid="onboarding-role-brief"
+              aria-label={`Рабочий кабинет роли ${roleBrief.label}`}
+            >
+              <p className="text-meta font-semibold uppercase tracking-[0.08em] text-accent">
+                Ваш кабинет · {roleBrief.label}
+              </p>
+              <p className="mt-1.5 text-table leading-5 text-text">{tourDescription}</p>
+              <p className="mt-2 text-table leading-5 text-muted">{roleBrief.purpose}</p>
+              <ul className="mt-2 space-y-1.5 text-table leading-5 text-text">
+                {roleBrief.responsibilities.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="font-bold text-accent" aria-hidden="true">→</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           {step.responsibility && (
             <div className="mt-4 border-l-2 border-accent pl-3">
               <p className="text-meta font-semibold uppercase tracking-[0.08em] text-muted">Что сделать</p>

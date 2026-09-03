@@ -23,6 +23,7 @@ import type {
   TourDefinition,
   TourProgressRecord,
 } from "@/lib/onboarding/types";
+import { getOnboardingRoleProfile } from "@/lib/onboarding/roles";
 import { TourSurface, type SpotlightRect } from "@/components/onboarding/tour-surface";
 
 interface OnboardingContextValue {
@@ -43,6 +44,7 @@ const ACTIVE_TOUR_SESSION_KEY = "decision-passport:onboarding:active-tour";
 const LAST_DECISION_ROUTE_KEY = "decision-passport:onboarding:last-decision-route";
 const LAST_INDICATOR_ROUTE_KEY = "decision-passport:onboarding:last-indicator-route";
 const E2E_AUTO_START_BYPASS_KEY = "decision-passport:onboarding:e2e-bypass";
+const TARGET_WAIT_MS = 2_400;
 
 interface ActiveTourSession {
   tourId: string;
@@ -155,6 +157,10 @@ export function OnboardingProvider({
   );
   const availableTours = useMemo(
     () => listToursForRole(role).filter((tour) => eligibleForRole(tour, role)),
+    [role]
+  );
+  const roleBrief = useMemo(
+    () => (role === "GUEST" ? undefined : getOnboardingRoleProfile(role)),
     [role]
   );
 
@@ -509,9 +515,10 @@ export function OnboardingProvider({
 
     const findTarget = () => {
       try {
-        const candidate = document.querySelector(activeStep.target);
+        const candidate = Array.from(document.querySelectorAll(activeStep.target)).find(
+          isUsableTarget
+        );
         if (!candidate) return false;
-        if (!isUsableTarget(candidate)) return false;
         activate(candidate);
         window.clearTimeout(timeout);
         timeout = 0;
@@ -542,7 +549,7 @@ export function OnboardingProvider({
         } else {
           moveToStep(1);
         }
-      }, 650);
+      }, TARGET_WAIT_MS);
     };
 
     observer = new MutationObserver(() => {
@@ -668,9 +675,10 @@ export function OnboardingProvider({
   return (
     <OnboardingContext.Provider value={value}>
       {children}
-      {activeTour && activeStep && (targetReady || targetRect !== null) && (
+      {activeTour && activeStep && (
         <TourSurface
           tourTitle={activeTour.title}
+          tourDescription={activeTour.description}
           step={activeStep}
           stepIndex={stepIndex}
           stepCount={activeTour.steps.length}
@@ -684,6 +692,8 @@ export function OnboardingProvider({
           allowTargetInteraction={activeStep.advance === "target-click"}
           requireTargetAction={role === "GUEST" && activeStep.advance === "target-click"}
           closing={closing}
+          targetPending={!targetReady && activeStep.target !== "body"}
+          roleBrief={activeTour.mode === "PAGE" ? roleBrief : undefined}
         />
       )}
     </OnboardingContext.Provider>

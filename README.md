@@ -1,6 +1,22 @@
 # DecisionPassport
 
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)](https://www.prisma.io/)
+[![Tests](https://img.shields.io/badge/tests-Vitest%20%2B%20Playwright-22c55e)](#тестовое-покрытие)
+[![License](https://img.shields.io/badge/license-Private-informational)](#)
+
 **Цифровой контур принятия управленческих решений для предприятия атомной отрасли.**
+
+## Быстрая навигация
+
+- [Запуск](#запуск)
+- [Демо-аккаунты](#демо-аккаунты)
+- [Guided onboarding](#guided-onboarding)
+- [Реализованные экраны](#реализованные-экраны)
+- [Архитектура](#архитектура)
+- [Тестовое покрытие](#тестовое-покрытие)
+- [О демо-данных](#о-демо-данных)
 
 Платформа реализует научный результат магистерской диссертации «Совершенствование процессов принятия управленческих решений в системе корпоративного управления предприятием атомной отрасли в условиях цифровой трансформации» (НИЯУ МИФИ, 2026). Эмпирическая база — АО «НАК «Казатомпром».
 
