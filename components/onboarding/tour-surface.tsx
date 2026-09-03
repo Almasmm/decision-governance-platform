@@ -336,6 +336,7 @@ export function TourSurface({
         style={{
           top: position?.top ?? "50%",
           left: position?.left ?? "50%",
+          maxHeight: "calc(100vh - 24px)",
           opacity: position ? 1 : 0,
           transform: position ? undefined : "translate(-50%, -50%)",
         }}

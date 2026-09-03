@@ -39,10 +39,10 @@ Symbols in permission tables: `✓` allowed; `—` denied.
 | Domain roles | 7 |
 | Role × accessible-page obligations | 94 |
 | Structurally covered obligations | 94/94 PASS |
-| PAGE definitions / steps | 28 / 144 |
+| PAGE definitions / steps | 28 / 193 |
 | ROLE definitions / steps | 7 / 58 |
 | THESIS definitions / steps | 2 / 30 |
-| All registered tours / steps | 37 / 232 |
+| All registered tours / steps | 37 / 281 |
 | Permission actions in `PERMISSIONS` | 23 |
 | Server mutation entry points | 26 (25 currently exposed in UI, 1 server-only) |
 | Passport top-level tabs | 7 |
@@ -142,22 +142,22 @@ This is the post-implementation structural matrix. Counts are read from the curr
 | Route pattern | Exact PAGE tour id(s) | Actual steps | Registry role scope |
 |---|---|---:|---|
 | `/login` | `page-login` | 5 | Shared GUEST introduction |
-| `/dashboard` | `page-dashboard-initiator`<br>`page-dashboard-data-owner`<br>`page-dashboard-risk-officer`<br>`page-dashboard-analyst`<br>`page-dashboard-secretary`<br>`page-dashboard-board-member`<br>`page-dashboard-admin` | 7 each; 49 total | One role-specific definition for each of 7 roles |
-| `/decisions` | `page-decisions` | 5 | All authenticated roles |
+| `/dashboard` | `page-dashboard-initiator`<br>`page-dashboard-data-owner`<br>`page-dashboard-risk-officer`<br>`page-dashboard-analyst`<br>`page-dashboard-secretary`<br>`page-dashboard-board-member`<br>`page-dashboard-admin` | 10 each; 70 total | One role-specific definition for each of 7 roles; navigation, search and training controls included |
+| `/decisions` | `page-decisions` | 8 | All authenticated roles; create step is filtered to INITIATOR and ADMIN |
 | `/decisions/new` | `page-decision-new` | 4 | INITIATOR, ADMIN |
-| `/decisions/:id` | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 9 + 7 + 5 + 6 + 5 + 4 + 6 + 2 = 44 | Base passport plus seven query-state contexts; post-evaluation is the specific `tab=passport&block=POST_EVALUATION` context; all authenticated roles |
+| `/decisions/:id` | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 9 + 7 + 7 + 6 + 8 + 6 + 6 + 4 = 53 | Base passport plus seven query-state contexts; role-filtered action steps preserve RBAC |
 | `/indicators` | `page-indicators` | 9 | All authenticated roles |
 | `/indicators/:id` | `page-indicator-detail` | 6 | All authenticated roles |
 | `/kpi` | `page-kpi` | 4 | All authenticated roles |
-| `/models` | `page-models` | 3 | All authenticated roles |
-| `/lessons` | `page-lessons` | 3 | All authenticated roles |
-| `/boards` | `page-boards` | 2 | All authenticated roles |
-| `/roadmap` | `page-roadmap` | 2 | All authenticated roles |
-| `/audit` | `page-audit` | 3 | All authenticated roles |
-| `/admin` | `page-admin` | 3 | ADMIN |
-| `/search` | `page-search` | 2 | All authenticated roles |
+| `/models` | `page-models` | 5 | All authenticated roles |
+| `/lessons` | `page-lessons` | 5 | All authenticated roles |
+| `/boards` | `page-boards` | 5 | All authenticated roles |
+| `/roadmap` | `page-roadmap` | 4 | All authenticated roles |
+| `/audit` | `page-audit` | 4 | All authenticated roles |
+| `/admin` | `page-admin` | 7 | ADMIN |
+| `/search` | `page-search` | 4 | All authenticated roles |
 
-Unique PAGE registry total: **28 definitions / 144 steps**. `/` is not included because it is a non-visual redirect exception. The post-evaluation definition adds depth to the existing `/decisions/:id` obligation, so it does not create a new role × route cell.
+Unique PAGE registry total: **28 definitions / 193 steps**. Every authenticated PAGE tour opens with a page-specific explanation plus a role brief rendered from the current identity. `/` is not included because it is a non-visual redirect exception.
 
 ### Registered ROLE and THESIS definitions
 
@@ -183,22 +183,22 @@ Registry totals for these modes: **7 ROLE definitions / 58 steps** and **2 THESI
 |---|---|---|---|---|---:|---|
 | INITIATOR | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
 | INITIATOR | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
-| INITIATOR | `/dashboard` | Executive dashboard | Yes | `page-dashboard-initiator` | 7 | PASS |
-| INITIATOR | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| INITIATOR | `/dashboard` | Executive dashboard | Yes | `page-dashboard-initiator` | 10 | PASS |
+| INITIATOR | `/decisions` | Decision registry | Yes | `page-decisions` | 8 | PASS |
 | INITIATOR | `/decisions/new` | New decision passport | Yes | `page-decision-new` | 4 | PASS |
-| INITIATOR | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 44 (9+7+5+6+5+4+6+2) | PASS |
+| INITIATOR | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 53 (9+7+7+6+8+6+6+4) | PASS |
 | INITIATOR | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
 | INITIATOR | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
 | INITIATOR | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
-| INITIATOR | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
-| INITIATOR | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
-| INITIATOR | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
-| INITIATOR | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
-| INITIATOR | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| INITIATOR | `/models` | Model governance registry | Yes | `page-models` | 5 | PASS |
+| INITIATOR | `/lessons` | Corporate lessons | Yes | `page-lessons` | 5 | PASS |
+| INITIATOR | `/boards` | Governance panels | Yes | `page-boards` | 5 | PASS |
+| INITIATOR | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 4 | PASS |
+| INITIATOR | `/audit` | Audit timeline | Yes | `page-audit` | 4 | PASS |
 | INITIATOR | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
-| INITIATOR | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
+| INITIATOR | `/search` | Global search results | Yes | `page-search` | 4 | PASS |
 
-Accessible obligations: **14 PASS**; referenced PAGE steps eligible for this role: **99**.
+Accessible obligations: **14 PASS**; referenced PAGE steps eligible for this role: **126**.
 
 #### DATA_OWNER
 
@@ -206,22 +206,22 @@ Accessible obligations: **14 PASS**; referenced PAGE steps eligible for this rol
 |---|---|---|---|---|---:|---|
 | DATA_OWNER | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
 | DATA_OWNER | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
-| DATA_OWNER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-data-owner` | 7 | PASS |
-| DATA_OWNER | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| DATA_OWNER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-data-owner` | 10 | PASS |
+| DATA_OWNER | `/decisions` | Decision registry | Yes | `page-decisions` | 7 | PASS |
 | DATA_OWNER | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
-| DATA_OWNER | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 42 (9+6+5+6+5+4+5+2) | PASS |
+| DATA_OWNER | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 49 (9+6+6+6+8+5+5+4) | PASS |
 | DATA_OWNER | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
 | DATA_OWNER | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
 | DATA_OWNER | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
-| DATA_OWNER | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
-| DATA_OWNER | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
-| DATA_OWNER | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
-| DATA_OWNER | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
-| DATA_OWNER | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| DATA_OWNER | `/models` | Model governance registry | Yes | `page-models` | 5 | PASS |
+| DATA_OWNER | `/lessons` | Corporate lessons | Yes | `page-lessons` | 5 | PASS |
+| DATA_OWNER | `/boards` | Governance panels | Yes | `page-boards` | 5 | PASS |
+| DATA_OWNER | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 4 | PASS |
+| DATA_OWNER | `/audit` | Audit timeline | Yes | `page-audit` | 4 | PASS |
 | DATA_OWNER | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
-| DATA_OWNER | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
+| DATA_OWNER | `/search` | Global search results | Yes | `page-search` | 4 | PASS |
 
-Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **93**.
+Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **117**.
 
 #### RISK_OFFICER
 
@@ -229,22 +229,22 @@ Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this rol
 |---|---|---|---|---|---:|---|
 | RISK_OFFICER | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
 | RISK_OFFICER | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
-| RISK_OFFICER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-risk-officer` | 7 | PASS |
-| RISK_OFFICER | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| RISK_OFFICER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-risk-officer` | 10 | PASS |
+| RISK_OFFICER | `/decisions` | Decision registry | Yes | `page-decisions` | 7 | PASS |
 | RISK_OFFICER | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
-| RISK_OFFICER | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 42 (9+6+5+6+5+4+5+2) | PASS |
+| RISK_OFFICER | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 49 (9+6+6+6+8+5+5+4) | PASS |
 | RISK_OFFICER | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
 | RISK_OFFICER | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
 | RISK_OFFICER | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
-| RISK_OFFICER | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
-| RISK_OFFICER | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
-| RISK_OFFICER | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
-| RISK_OFFICER | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
-| RISK_OFFICER | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| RISK_OFFICER | `/models` | Model governance registry | Yes | `page-models` | 5 | PASS |
+| RISK_OFFICER | `/lessons` | Corporate lessons | Yes | `page-lessons` | 5 | PASS |
+| RISK_OFFICER | `/boards` | Governance panels | Yes | `page-boards` | 5 | PASS |
+| RISK_OFFICER | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 4 | PASS |
+| RISK_OFFICER | `/audit` | Audit timeline | Yes | `page-audit` | 4 | PASS |
 | RISK_OFFICER | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
-| RISK_OFFICER | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
+| RISK_OFFICER | `/search` | Global search results | Yes | `page-search` | 4 | PASS |
 
-Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **93**.
+Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **117**.
 
 #### ANALYST
 
@@ -252,22 +252,22 @@ Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this rol
 |---|---|---|---|---|---:|---|
 | ANALYST | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
 | ANALYST | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
-| ANALYST | `/dashboard` | Executive dashboard | Yes | `page-dashboard-analyst` | 7 | PASS |
-| ANALYST | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| ANALYST | `/dashboard` | Executive dashboard | Yes | `page-dashboard-analyst` | 10 | PASS |
+| ANALYST | `/decisions` | Decision registry | Yes | `page-decisions` | 7 | PASS |
 | ANALYST | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
-| ANALYST | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 43 (9+6+5+6+5+4+6+2) | PASS |
+| ANALYST | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 51 (9+6+7+6+8+5+6+4) | PASS |
 | ANALYST | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
 | ANALYST | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
 | ANALYST | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
-| ANALYST | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
-| ANALYST | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
-| ANALYST | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
-| ANALYST | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
-| ANALYST | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| ANALYST | `/models` | Model governance registry | Yes | `page-models` | 5 | PASS |
+| ANALYST | `/lessons` | Corporate lessons | Yes | `page-lessons` | 5 | PASS |
+| ANALYST | `/boards` | Governance panels | Yes | `page-boards` | 5 | PASS |
+| ANALYST | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 4 | PASS |
+| ANALYST | `/audit` | Audit timeline | Yes | `page-audit` | 4 | PASS |
 | ANALYST | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
-| ANALYST | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
+| ANALYST | `/search` | Global search results | Yes | `page-search` | 4 | PASS |
 
-Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **94**.
+Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **119**.
 
 #### SECRETARY
 
@@ -275,22 +275,22 @@ Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this rol
 |---|---|---|---|---|---:|---|
 | SECRETARY | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
 | SECRETARY | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
-| SECRETARY | `/dashboard` | Executive dashboard | Yes | `page-dashboard-secretary` | 7 | PASS |
-| SECRETARY | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| SECRETARY | `/dashboard` | Executive dashboard | Yes | `page-dashboard-secretary` | 10 | PASS |
+| SECRETARY | `/decisions` | Decision registry | Yes | `page-decisions` | 7 | PASS |
 | SECRETARY | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
-| SECRETARY | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 43 (9+7+5+6+5+4+5+2) | PASS |
+| SECRETARY | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 51 (9+7+6+6+8+6+5+4) | PASS |
 | SECRETARY | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
 | SECRETARY | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
 | SECRETARY | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
-| SECRETARY | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
-| SECRETARY | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
-| SECRETARY | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
-| SECRETARY | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
-| SECRETARY | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| SECRETARY | `/models` | Model governance registry | Yes | `page-models` | 5 | PASS |
+| SECRETARY | `/lessons` | Corporate lessons | Yes | `page-lessons` | 5 | PASS |
+| SECRETARY | `/boards` | Governance panels | Yes | `page-boards` | 5 | PASS |
+| SECRETARY | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 4 | PASS |
+| SECRETARY | `/audit` | Audit timeline | Yes | `page-audit` | 4 | PASS |
 | SECRETARY | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
-| SECRETARY | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
+| SECRETARY | `/search` | Global search results | Yes | `page-search` | 4 | PASS |
 
-Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **94**.
+Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **119**.
 
 #### BOARD_MEMBER
 
@@ -298,22 +298,22 @@ Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this rol
 |---|---|---|---|---|---:|---|
 | BOARD_MEMBER | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
 | BOARD_MEMBER | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
-| BOARD_MEMBER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-board-member` | 7 | PASS |
-| BOARD_MEMBER | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| BOARD_MEMBER | `/dashboard` | Executive dashboard | Yes | `page-dashboard-board-member` | 10 | PASS |
+| BOARD_MEMBER | `/decisions` | Decision registry | Yes | `page-decisions` | 7 | PASS |
 | BOARD_MEMBER | `/decisions/new` | New decision passport | No; → `/decisions` | — | 0 | N/A — RBAC |
-| BOARD_MEMBER | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 43 (9+6+5+6+5+4+6+2) | PASS |
+| BOARD_MEMBER | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 50 (9+6+6+6+8+5+6+4) | PASS |
 | BOARD_MEMBER | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
 | BOARD_MEMBER | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
 | BOARD_MEMBER | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
-| BOARD_MEMBER | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
-| BOARD_MEMBER | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
-| BOARD_MEMBER | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
-| BOARD_MEMBER | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
-| BOARD_MEMBER | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
+| BOARD_MEMBER | `/models` | Model governance registry | Yes | `page-models` | 5 | PASS |
+| BOARD_MEMBER | `/lessons` | Corporate lessons | Yes | `page-lessons` | 5 | PASS |
+| BOARD_MEMBER | `/boards` | Governance panels | Yes | `page-boards` | 5 | PASS |
+| BOARD_MEMBER | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 4 | PASS |
+| BOARD_MEMBER | `/audit` | Audit timeline | Yes | `page-audit` | 4 | PASS |
 | BOARD_MEMBER | `/admin` | Administration | No; → `/dashboard` | — | 0 | N/A — RBAC |
-| BOARD_MEMBER | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
+| BOARD_MEMBER | `/search` | Global search results | Yes | `page-search` | 4 | PASS |
 
-Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **94**.
+Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this role: **118**.
 
 #### ADMIN
 
@@ -321,22 +321,22 @@ Accessible obligations: **13 PASS**; referenced PAGE steps eligible for this rol
 |---|---|---|---|---|---:|---|
 | ADMIN | `/` | Redirect resolver | redirect only | — | 0 | EXCEPTION |
 | ADMIN | `/login` | Login and role selection | Yes | `page-login` | 5 | PASS |
-| ADMIN | `/dashboard` | Executive dashboard | Yes | `page-dashboard-admin` | 7 | PASS |
-| ADMIN | `/decisions` | Decision registry | Yes | `page-decisions` | 5 | PASS |
+| ADMIN | `/dashboard` | Executive dashboard | Yes | `page-dashboard-admin` | 10 | PASS |
+| ADMIN | `/decisions` | Decision registry | Yes | `page-decisions` | 8 | PASS |
 | ADMIN | `/decisions/new` | New decision passport | Yes | `page-decision-new` | 4 | PASS |
-| ADMIN | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 44 (9+7+5+6+5+4+6+2) | PASS |
+| ADMIN | `/decisions/:id` | Decision passport + seven contextual tours | Yes | `page-decision-passport`<br>`page-decision-post-evaluation`<br>`page-decision-alternatives`<br>`page-decision-risks`<br>`page-decision-economics`<br>`page-decision-assignments`<br>`page-decision-ai`<br>`page-decision-audit` | 53 (9+7+7+6+8+6+6+4) | PASS |
 | ADMIN | `/indicators` | Indicator catalogue | Yes | `page-indicators` | 9 | PASS |
 | ADMIN | `/indicators/:id` | Indicator evidence card | Yes | `page-indicator-detail` | 6 | PASS |
 | ADMIN | `/kpi` | KPI, effect and maturity | Yes | `page-kpi` | 4 | PASS |
-| ADMIN | `/models` | Model governance registry | Yes | `page-models` | 3 | PASS |
-| ADMIN | `/lessons` | Corporate lessons | Yes | `page-lessons` | 3 | PASS |
-| ADMIN | `/boards` | Governance panels | Yes | `page-boards` | 2 | PASS |
-| ADMIN | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 2 | PASS |
-| ADMIN | `/audit` | Audit timeline | Yes | `page-audit` | 3 | PASS |
-| ADMIN | `/admin` | Administration | Yes | `page-admin` | 3 | PASS |
-| ADMIN | `/search` | Global search results | Yes | `page-search` | 2 | PASS |
+| ADMIN | `/models` | Model governance registry | Yes | `page-models` | 5 | PASS |
+| ADMIN | `/lessons` | Corporate lessons | Yes | `page-lessons` | 5 | PASS |
+| ADMIN | `/boards` | Governance panels | Yes | `page-boards` | 5 | PASS |
+| ADMIN | `/roadmap` | Transformation roadmap | Yes | `page-roadmap` | 4 | PASS |
+| ADMIN | `/audit` | Audit timeline | Yes | `page-audit` | 4 | PASS |
+| ADMIN | `/admin` | Administration | Yes | `page-admin` | 7 | PASS |
+| ADMIN | `/search` | Global search results | Yes | `page-search` | 4 | PASS |
 
-Accessible obligations: **15 PASS**; referenced PAGE steps eligible for this role: **102**.
+Accessible obligations: **15 PASS**; referenced PAGE steps eligible for this role: **133**.
 
 Matrix total: **94 PASS**, **11 N/A — RBAC**, and **7 EXCEPTION** cells across 7 roles × 16 route patterns. The 94 PASS cells are obligations, not unique tour instances; shared definitions are intentionally reused. Referenced step totals apply step-level eligibility: the post-evaluation close step is available only to INITIATOR, SECRETARY and ADMIN, while the AI human-verdict step is available only to INITIATOR, ANALYST, BOARD_MEMBER and ADMIN.
 
@@ -345,7 +345,7 @@ Matrix total: **94 PASS**, **11 N/A — RBAC**, and **7 EXCEPTION** cells across
 | Route | Screen and important states | Inputs/actions visible on the page | Tour content obligation |
 |---|---|---|---|
 | `/login` | Welcome thesis, seven-stage lifecycle, Human-in-the-loop statement, four role groups, eight quick-login identities | Quick role login buttons; collapsible manual email/password form | Explain the product before highlighting a person; lifecycle; human authority; role groups; role selection |
-| `/dashboard` | Executive situation, active/action/blocked/A-attention signals, level-A focus, personal responsibility queue, seven-stage flow, process health, maturity, significant events, public context disclosure | Links to passport, audit and KPI; no business mutation | Seven-step role-aware tour; the action queue copy must change by role and must distinguish evidence gates from decisions |
+| `/dashboard` | Executive situation, active/action/blocked/A-attention signals, level-A focus, personal responsibility queue, seven-stage flow, process health, maturity, significant events, public context disclosure | Links to passport, audit and KPI; no business mutation | Ten-step role-aware tour including navigation, global search and training controls; action-queue copy changes by role |
 | `/decisions` | Portfolio signals, registry filters, table with code, A/B/C, stage, gate, responsibility, body, deadline and status | Search and filters `q`, `criticality`, `stage`, `status`; advanced `type`, `body`, `overdue`; reset; create CTA for INITIATOR/ADMIN | Explain “stuck” as missing evidence, not UI failure; cover every operational column and filters |
 | `/decisions/new` | New passport form and lifecycle/criticality guidance | Title, goal, type, criticality, decision body, optional deadline; create | Explain why the unit is a decision, how A/B/C changes required evidence, and why the body is selected before creation |
 | `/decisions/:id` | Decision Control Header, readiness, stage rail, gate checklist, evidence index, seven tabs and audit | Role/state-dependent mutations listed below | Central walkthrough; more than ten steps permitted; role-aware optional targets must skip safely |
@@ -608,11 +608,11 @@ The structural matrix has one route-level PAGE exception (`/`), two non-page API
 This document reconciles the current route inventory, route role scopes, role profiles and central registry. The resulting source-level checks are:
 
 1. All 15 user-facing page patterns have at least one PAGE definition; `/` remains the sole non-visual page exception.
-2. Dashboard resolution has one distinct seven-step PAGE definition for each of the seven authenticated roles.
+2. Dashboard resolution has one distinct ten-step PAGE definition for each of the seven authenticated roles.
 3. `/decisions/new` is scoped to INITIATOR and ADMIN; `/admin` is scoped to ADMIN. The other roles retain `N/A — RBAC` rather than false PASS rows.
 4. The shared login definition is `page-login` with exactly five steps.
-5. The decision-passport route has one nine-step base definition and seven contextual definitions totalling 35 more registered steps: 44 across the complete route suite. Per-role runnable totals are 42–44 because the post-evaluation close and AI human-verdict steps have narrower role eligibility.
-6. Registry arithmetic is internally consistent: 28 PAGE / 144 steps, 7 ROLE / 58 steps and 2 THESIS / 30 steps, for 37 tours / 232 steps overall.
+5. The decision-passport route has one nine-step base definition and seven contextual definitions totalling 44 more registered steps: 53 across the complete route suite. Per-role runnable totals are 49–53 because action steps preserve RBAC.
+6. Registry arithmetic is internally consistent: 28 PAGE / 193 steps, 7 ROLE / 58 steps and 2 THESIS / 30 steps, for 37 tours / 281 steps overall.
 7. The expanded role matrix is internally consistent: 94 PASS + 11 N/A — RBAC + 7 EXCEPTION = 112 cells (7 roles × 16 route patterns).
 
 The PASS labels above are intentionally limited to this structural reconciliation. This document does not claim production-build, visual-regression, keyboard/focus or manual-browser results; those require their own execution evidence.
@@ -634,9 +634,9 @@ The application exposes one shared evidence environment to seven roles, with pag
 
 - **15/15** user-facing page patterns have PAGE coverage.
 - **94/94** accessible role-route obligations are marked PASS.
-- **28 PAGE tours / 144 PAGE steps** cover the route layer, including the shared five-step login, seven role-aware dashboard variants and dedicated post-evaluation context.
+- **28 PAGE tours / 193 PAGE steps** cover the route layer, including the shared five-step login, seven ten-step role-aware dashboard variants and dedicated post-evaluation context.
 - **7 ROLE tours / 58 ROLE steps** explain role-specific responsibilities.
 - **2 THESIS tours / 30 THESIS steps** provide the jury methodology walkthrough and a separate evidence-nature explanation.
-- **37 tours / 232 steps** are registered overall.
+- **37 tours / 281 steps** are registered overall.
 - **1** non-visual page pattern (`/`) and **2** API patterns remain documented exceptions.
 - **11** matrix cells remain `N/A — RBAC`; no accessible working page is granted a `Tour: NO` exception.

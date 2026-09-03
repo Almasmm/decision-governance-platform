@@ -183,7 +183,14 @@ test("9 · role tour сохраняется при переходе между �
 test("10 · coach card остаётся внутри viewport 1366×768", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   const tour = await expectTour(page);
-  const bounds = await tour.getByRole("dialog").boundingBox();
+  const dialog = tour.getByRole("dialog");
+  await expect
+    .poll(async () => {
+      const box = await dialog.boundingBox();
+      return Boolean(box && box.x >= 0 && box.y >= 0 && box.x + box.width <= 1366 && box.y + box.height <= 768);
+    })
+    .toBe(true);
+  const bounds = await dialog.boundingBox();
   expect(bounds).not.toBeNull();
   expect(bounds!.x).toBeGreaterThanOrEqual(0);
   expect(bounds!.y).toBeGreaterThanOrEqual(0);

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ROLES } from "@/lib/domain";
 import { TOUR_REGISTRY } from "@/lib/onboarding/registry";
 import { ONBOARDING_ROUTES } from "@/lib/onboarding/routes";
+import { ONBOARDING_ROLE_PROFILES } from "@/lib/onboarding/roles";
 
 const VALID_MODES = new Set(["PAGE", "ROLE", "THESIS"]);
 const VALID_PLACEMENTS = new Set(["top", "right", "bottom", "left", "center"]);
@@ -92,5 +93,24 @@ describe("onboarding content registry", () => {
     expect(dataOwner?.steps.find((step) => step.id.endsWith(":confirm-quality"))?.target).toBe(
       '[data-tour="decision-indicator-quality-control"]'
     );
+  });
+
+  it("keeps every working page substantial and every dashboard role-specific", () => {
+    const pageTours = TOUR_REGISTRY.filter((tour) => tour.mode === "PAGE");
+    expect(pageTours).toHaveLength(28);
+    expect(pageTours.every((tour) => tour.version >= 2)).toBe(true);
+    expect(pageTours.every((tour) => tour.steps.length >= 4)).toBe(true);
+
+    const dashboardTours = pageTours.filter((tour) => tour.routeRef.routeId === "dashboard");
+    expect(dashboardTours).toHaveLength(ROLES.length);
+    expect(dashboardTours.every((tour) => tour.steps.length >= 10)).toBe(true);
+
+    for (const role of ROLES) {
+      const profile = ONBOARDING_ROLE_PROFILES[role];
+      expect(profile.label.trim().length, role).toBeGreaterThan(4);
+      expect(profile.purpose.trim().length, role).toBeGreaterThan(40);
+      expect(profile.responsibilities, role).toHaveLength(3);
+      expect(profile.responsibilities.every((item) => item.trim().length > 25), role).toBe(true);
+    }
   });
 });
