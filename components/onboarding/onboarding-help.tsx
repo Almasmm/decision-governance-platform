@@ -161,11 +161,11 @@ function ConnectedOnboardingHelp({
                 className="rounded-control border border-accent bg-accent-soft px-3.5 py-3"
               >
                 <h3 id="training-progress-title" className="text-table font-semibold text-text">
-                  Постоянное обучение включено
+                  Обучение всегда доступно
                 </h3>
                 <p className="mt-1.5 text-meta leading-5 text-muted">
-                  На каждой доступной странице автоматически работает её инструкция. Закрыть или
-                  пропустить PAGE-обучение нельзя; после последнего шага оно начинается сначала.
+                  Инструкция автоматически открывается при переходе на каждую страницу. Её можно
+                  закрыть для текущего просмотра и в любой момент вернуть кнопкой «Обучение по этой странице».
                 </p>
                 <p className="mt-2 font-technical text-meta font-semibold text-accent">
                   {pageTours.length} инструкций доступны вашей роли

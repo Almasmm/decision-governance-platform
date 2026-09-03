@@ -510,7 +510,7 @@ Recommended ROLE-tour route sequences derived from those responsibilities:
 - BOARD_MEMBER: dashboard → registry → passport alternatives/risk/economics/AI → explicit human verdict → audit.
 - ADMIN: dashboard → users/roles → bodies → gate policy → audit/models/roadmap.
 
-These ROLE tours are cross-page scenarios. They do not replace any mandatory PAGE tour.
+These ROLE tours are cross-page scenarios. They do not replace the automatic PAGE guidance available on each route.
 
 The THESIS layer contains two complementary narratives: `thesis-jury-methodology` follows the complete decision lifecycle, while `thesis-evidence-natures` separately distinguishes fact, forecast and assumption so users do not present unlike forms of evidence as interchangeable.
 
@@ -623,9 +623,9 @@ The following remain separate release checks and do not alter the source-coverag
 
 1. Dynamic decision and indicator routes must use valid seeded ids during ROLE/THESIS navigation.
 2. Optional RBAC targets must skip without delay; required missing targets must emit diagnostics and avoid deadlock.
-3. PAGE tours are mandatory and continuous: stored progress cannot suppress auto-start, close/skip are absent, and the final step cycles to the first. ROLE/THESIS progress remains isolated by identity and version.
+3. PAGE tours auto-start on every new page visit regardless of stored progress. Close, skip, `Escape` and completion dismiss the current visit without an immediate restart; navigation or explicit replay starts guidance again. ROLE/THESIS progress remains isolated by identity and version.
 4. Replay, role tour, methodology tour, progress display and onboarding-only reset must remain available from Help.
-5. Runtime E2E must cover permanent restart on return, resistance to `Escape`, absence of close/skip, role variance, missing targets, route transitions and the 1366×768 viewport.
+5. Runtime E2E must cover dismissal for the current visit, auto-start after navigation and return, explicit replay, role variance, missing targets, route transitions and the 1366×768 viewport.
 6. Visual placement and keyboard/focus behavior require browser-level verification.
 
 ## Post-implementation coverage conclusion

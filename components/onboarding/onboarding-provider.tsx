@@ -89,6 +89,10 @@ function pageTourAutoStartIsBypassed(): boolean {
   }
 }
 
+function pageVisitKey(currentRoute: string, tour: TourDefinition): string {
+  return `${currentRoute}:${tour.id}:v${tour.version}`;
+}
+
 function routeMatches(pattern: string, currentRoute: string): boolean {
   const [patternPath = "", patternQuery = ""] = pattern.split("?");
   const [currentPath = "", currentQuery = ""] = currentRoute.split("?");
@@ -181,6 +185,8 @@ export function OnboardingProvider({
   const closeTimer = useRef(0);
   const closingRef = useRef(false);
   const requiredMissingSteps = useRef(new Set<string>());
+  const activePageVisit = useRef<string | null>(null);
+  const suppressedPageVisit = useRef<string | null>(null);
 
   const [progress, setProgress] = useState<TourProgressRecord[]>([]);
 
@@ -248,6 +254,10 @@ export function OnboardingProvider({
   const startTour = useCallback(
     (tour: TourDefinition) => {
       if (!eligibleForRole(tour, role)) return;
+      if (tour.mode === "PAGE") {
+        activePageVisit.current = pageVisitKey(currentRoute, tour);
+        suppressedPageVisit.current = null;
+      }
       previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       const eligibleSteps = runnableSteps(tour, role);
       if (eligibleSteps.length === 0) return;
@@ -276,7 +286,7 @@ export function OnboardingProvider({
       }
       setProgressRevision((value) => value + 1);
     },
-    [progressKey, role, userId]
+    [currentRoute, progressKey, role, userId]
   );
 
   const startTourById = useCallback(
@@ -292,12 +302,16 @@ export function OnboardingProvider({
   const finishWith = useCallback(
     (status: "completed" | "skipped" | "dismissed") => {
       if (!activeTour || closingRef.current) return;
+      if (activeTour.mode === "PAGE" && pageTour) {
+        suppressedPageVisit.current = pageVisitKey(currentRoute, pageTour);
+        activePageVisit.current = null;
+      }
       setTourState(progressKey(activeTour), { status });
       writeActiveSession(null);
       setProgressRevision((value) => value + 1);
       closeTour();
     },
-    [activeTour, closeTour, progressKey]
+    [activeTour, closeTour, currentRoute, pageTour, progressKey]
   );
 
   const moveToStep = useCallback(
@@ -312,17 +326,6 @@ export function OnboardingProvider({
         candidate += direction;
       }
       if (candidate >= activeTour.steps.length) {
-        if (activeTour.mode === "PAGE") {
-          setStepIndex(0);
-          setTargetRect(null);
-          setTargetReady(false);
-          setTourState(progressKey(activeTour), {
-            status: "in_progress",
-            currentStepId: activeTour.steps[0]!.id,
-          });
-          setProgressRevision((value) => value + 1);
-          return;
-        }
         finishWith(requiredMissingSteps.current.size > 0 ? "dismissed" : "completed");
         return;
       }
@@ -386,13 +389,15 @@ export function OnboardingProvider({
 
   useEffect(() => {
     if (!restorationComplete || !pageTour || pageTourAutoStartIsBypassed()) return;
+    const visitKey = pageVisitKey(currentRoute, pageTour);
+    if (suppressedPageVisit.current === visitKey) return;
     if (activeTour?.mode !== "PAGE" && activeTour !== null) return;
-    if (activeTour?.id === pageTour.id) return;
+    if (activeTour?.mode === "PAGE" && activePageVisit.current === visitKey) return;
     const frame = window.requestAnimationFrame(() => {
       startTour(pageTour);
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [activeTour, pageTour, restorationComplete, startTour]);
+  }, [activeTour, currentRoute, pageTour, restorationComplete, startTour]);
 
   const activeStep = activeTour?.steps[stepIndex] ?? null;
 
@@ -600,7 +605,6 @@ export function OnboardingProvider({
       if (target?.matches("input, textarea, select, [contenteditable='true']")) return;
       if (event.key === "Escape") {
         event.preventDefault();
-        if (activeTour.mode === "PAGE" && !pageTourAutoStartIsBypassed()) return;
         finishWith("dismissed");
       }
       if (event.key === "ArrowRight" && !(role === "GUEST" && activeStep?.advance === "target-click")) {
@@ -699,7 +703,6 @@ export function OnboardingProvider({
           closing={closing}
           targetPending={!targetReady && activeStep.target !== "body"}
           roleBrief={activeTour.mode === "PAGE" ? roleBrief : undefined}
-          mandatory={activeTour.mode === "PAGE"}
         />
       )}
     </OnboardingContext.Provider>

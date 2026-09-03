@@ -1,7 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const ONBOARDING_STORAGE_PREFIX = "decision-passport:onboarding:";
-const E2E_AUTO_START_BYPASS_KEY = "decision-passport:onboarding:e2e-bypass";
 const ACTIVE_TOUR_SESSION_KEY = "decision-passport:onboarding:active-tour";
 const TOUR = '[data-testid="onboarding-tour"]';
 const SCREENSHOT_DIRECTORY = ".artifacts/onboarding-final";
@@ -104,7 +103,6 @@ async function advanceTourToStep(
   expectedStepId: string,
   maximumSteps = 24
 ): Promise<Locator> {
-  await page.evaluate((key) => localStorage.removeItem(key), E2E_AUTO_START_BYPASS_KEY);
   if (!(await page.locator(TOUR).isVisible().catch(() => false))) await page.reload();
   const tour = await waitForTour(page);
 
@@ -145,8 +143,7 @@ async function skipTourIfPresent(page: Page, waitForAppearance = false): Promise
 
   if (!visible) return;
 
-  await page.evaluate((key) => localStorage.setItem(key, "1"), E2E_AUTO_START_BYPASS_KEY);
-  await page.keyboard.press("Escape");
+  await tour.getByRole("button", { name: "Пропустить", exact: true }).click();
   await expect(tour).toBeHidden();
   await expect(tour).not.toBeAttached();
 }
@@ -167,7 +164,6 @@ async function clearOnlyOnboardingProgress(page: Page): Promise<void> {
 async function loginAs(page: Page, userName: string): Promise<void> {
   await expect(page).toHaveURL(/\/login(?:\?.*)?$/);
   await skipTourIfPresent(page);
-  await page.evaluate((key) => localStorage.removeItem(key), E2E_AUTO_START_BYPASS_KEY);
 
   const loginButton = page.getByRole("button", {
     name: new RegExp(`^Войти как ${escapeRegExp(userName)}(?:,|$)`),
