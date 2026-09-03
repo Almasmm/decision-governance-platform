@@ -86,7 +86,8 @@ test("1 · login и dashboard инициатора запускают page tour 
   const loginTour = await expectTour(page);
   await expect(loginTour.getByRole("heading", { name: "Добро пожаловать в DecisionPassport" })).toBeVisible();
   await loginAs(page, "Динара Ахметова");
-  await page.locator(TOUR).getByRole("button", { name: "Далее" }).click();
+  await advanceTour(page);
+  await advanceTour(page);
   await expect(page.locator(TOUR).getByText("Очередь подготовки вопроса", { exact: true })).toBeVisible();
 });
 
@@ -118,7 +119,11 @@ test("4 · обучение текущей страницы можно повт�
 test("5 · владелец данных получает собственную очередь ответственности", async ({ page }) => {
   await loginAs(page, "Ержан Смагулов");
   const tour = await expectTour(page);
-  await tour.getByRole("button", { name: "Далее" }).click();
+  const roleBrief = page.getByTestId("onboarding-role-brief");
+  await expect(roleBrief).toContainText("Ваш кабинет · Владелец данных");
+  await expect(roleBrief.locator("li")).toHaveCount(3);
+  await advanceTour(page, tour);
+  await advanceTour(page, tour);
   await expect(tour.getByText("Очередь подтверждения данных", { exact: true })).toBeVisible();
   await expect(tour).toContainText("источника, актуальности и владельца");
 });
@@ -155,6 +160,7 @@ test("8 · отсутствующий target диагностируется и �
     });
     document.querySelector('[data-tour="dashboard-action-queue"]')?.removeAttribute("data-tour");
   });
+  await advanceTour(page);
   await page.locator(TOUR).getByRole("button", { name: "Далее" }).click();
   await expect(page.locator("body")).toHaveAttribute("data-onboarding-missing-observed", "true");
   await expect(page.locator(TOUR)).toContainText(/Уровень A/);
@@ -224,9 +230,10 @@ test("12 · spotlight и coach card корректны во всей обяза�
     const dimmer = page.getByTestId("onboarding-dimmer");
     await expect(dialog).toBeVisible();
     await expect(spotlight).toBeVisible();
-    await expect(dimmer).toHaveCSS("background-color", "rgba(16, 25, 28, 0.72)");
-    await expect(spotlight).toHaveCSS("border-top-width", "3px");
-    await expect(spotlight).toHaveCSS("outline-width", "2px");
+    await expect(dimmer).toHaveCSS("background-color", "rgba(10, 17, 19, 0.84)");
+    await expect(spotlight).toHaveCSS("border-top-width", "4px");
+    await expect(spotlight).toHaveCSS("outline-width", "4px");
+    await expect(page.getByTestId("onboarding-focus-label")).toContainText(/Фокус · шаг/);
     await expect
       .poll(async () => {
         const box = await dialog.boundingBox();

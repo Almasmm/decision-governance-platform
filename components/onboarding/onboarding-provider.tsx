@@ -313,6 +313,7 @@ export function OnboardingProvider({
       if (candidate < 0) return;
       setClosing(false);
       setStepIndex(candidate);
+      setTargetRect(null);
       setTargetReady(false);
       setTourState(progressKey(activeTour), {
         status: "in_progress",
